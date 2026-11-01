@@ -1,0 +1,83 @@
+import { test, expect, type Route } from '@playwright/test';
+test('complete rehearsal, adversarial block, persistent allowance and browser receipt verification', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: /Your agents. Your rules/ })).toBeVisible();
+  await page.getByLabel('Use the reproducible reference dataset').check();
+  await expect(page.locator('.research-preview .source-foot')).toContainText('Reference snapshot · 1 Nov 2026');
+  await page.getByRole('button', { name: 'Overspend', exact: false }).click();
+  await expect(page.getByText('Boundary held. Execution blocked.')).toBeVisible();
+  await expect(page.locator('.main-metric .metric-value')).toContainText('$500.00');
+  await page.getByRole('button', { name: 'Inspect guardian decision', exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.locator('.guardian-check.fail')).not.toHaveCount(0);
+  await page.getByRole('button', { name: 'Close dialog' }).click();
+  await page.getByRole('button', { name: 'Launch rehearsal', exact: false }).click();
+  await expect(page.getByText('Mission settled. Receipt sealed.')).toBeVisible();
+  await expect(page.locator('.main-metric .metric-value')).toContainText('$350.00');
+  await expect(page.locator('.research-preview .markets-table tbody tr')).toHaveCount(4, { timeout: 25_000 });
+  await expect(page.locator('.research-preview .source-foot')).toContainText('Reference snapshot · 1 Nov 2026');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({ path: 'artifacts/neslos-desktop.png', fullPage: true });
+  await page.getByRole('link', { name: 'Policy vault', exact: true }).click();
+  await page.getByLabel('Maximum daily spend', { exact: true }).fill('400');
+  await page.getByRole('button', { name: 'Save policy', exact: true }).click();
+  await expect(page.getByText('Policy v2 saved.', { exact: false })).toBeVisible();
+  await expect(page.locator('.policy-summary')).toContainText('$150.00 USDC');
+  await page.screenshot({ path: 'artifacts/neslos-policy.png', fullPage: true });
+  await page.getByRole('link', { name: /Audit trail/ }).click();
+  await page.getByRole('button', { name: 'Verify integrity', exact: true }).click();
+  await expect(page.locator('.verification-result.valid')).toBeVisible();
+  await page.getByRole('button', { name: 'Test a tampered copy' }).click();
+  await expect(page.locator('.verification-result.invalid')).toBeVisible();
+  await page.getByRole('button', { name: 'Verify integrity', exact: true }).click();
+  await expect(page.locator('.verification-result.valid')).toBeVisible();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export audit bundle' }).click();
+  await (await download).saveAs('artifacts/verified-rehearsal-audit.json');
+  await page.screenshot({ path: 'artifacts/neslos-audit.png', fullPage: true });
+  expect(errors).toEqual([]);
+});
+test('mobile navigation, research filtering and no horizontal viewport overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: /Your agents. Your rules/ })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: 'artifacts/neslos-mobile.png', fullPage: true });
+  await page.getByRole('link', { name: 'Yield research' }).click();
+  await expect(page.locator('.research-full tbody tr').first()).toBeVisible({ timeout: 25_000 });
+  await page.getByLabel('Search markets').fill('USDC');
+  const rows = page.locator('.research-full tbody tr');
+  expect(await rows.count()).toBeGreaterThan(0);
+  for (const row of await rows.all()) await expect(row).toContainText('USDC');
+  await page.getByLabel('Eligible only').check();
+  for (const row of await rows.all()) await expect(row).toContainText('Eligible');
+  await rows.first().getByRole('button').click();
+  await expect(page.getByRole('dialog')).toContainText('Risk review');
+  await page.getByRole('button', { name: 'Close dialog' }).click();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: 'artifacts/neslos-research-mobile.png', fullPage: true });
+});
+test('reference selection updates research and resists a late live-feed response', async ({ page }) => {
+  let delayedLive: Route | undefined;
+  await page.route('**/api/markets?**', route => {
+    if (new URL(route.request().url()).searchParams.get('reference') === 'false') delayedLive = route;
+    else return route.continue();
+  });
+  await page.goto('/');
+  await expect(page.getByLabel('Use the reproducible reference dataset')).toBeVisible();
+  await expect.poll(() => delayedLive !== undefined).toBe(true);
+  await page.getByLabel('Use the reproducible reference dataset').check();
+  await expect(page.locator('.research-preview .source-foot')).toContainText('Reference snapshot · 1 Nov 2026');
+
+  // Complete the older request after the reference response. Its data must not replace
+  // the user's selected source; this response is deliberately synthetic, not a live feed.
+  const fixtureResponse = await delayedLive!.fetch({ url: new URL('/api/markets?reference=true', page.url()).href });
+  const fixture = await fixtureResponse.json();
+  await delayedLive!.fulfill({ response: fixtureResponse, json: { ...fixture, sourceMode: 'live' } });
+  await page.waitForLoadState('networkidle');
+  await expect(page.locator('.research-preview .source-foot')).toContainText('Reference snapshot · 1 Nov 2026');
+  await page.getByRole('link', { name: 'Yield research' }).click();
+  await expect(page.locator('.research-full .source-foot')).toContainText('Reproducible reference snapshot');
+});
