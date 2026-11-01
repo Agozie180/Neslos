@@ -1,0 +1,20 @@
+[package]
+name = "neslos-test-token"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.93"
+publish = false
+description = "Local sandbox-only USDC test fixture for Neslos"
+[lib]
+crate-type = ["cdylib", "rlib"]
+[dependencies]
+near-sdk = "=5.29.0"
+[profile.release]
+codegen-units = 1
+opt-level = "z"
+lto = true
+panic = "abort"
+overflow-checks = true
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = ['cfg(near)']
