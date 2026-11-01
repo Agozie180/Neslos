@@ -1,0 +1,52 @@
+{
+  "name": "neslos",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Private NEAR agents with an on-chain spending policy.",
+  "engines": {
+    "node": ">=24.22.1"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/run.mjs build",
+    "start": "node scripts/run.mjs start",
+    "test": "node scripts/run.mjs test",
+    "verify": "node scripts/run.mjs verify",
+    "test:browser": "node scripts/run.mjs browser",
+    "research": "node scripts/run.mjs research",
+    "quote:dry": "node scripts/run.mjs quote",
+    "tee": "node scripts/run.mjs tee",
+    "build:contract": "node scripts/contract.mjs build",
+    "test:contract": "node scripts/contract.mjs test",
+    "test:contract:unit": "node scripts/contract.mjs unit",
+    "verify:attestation": "node scripts/run.mjs attestation"
+  },
+  "dependencies": {
+    "@defuse-protocol/one-click-sdk-typescript": "0.1.26",
+    "@nearai/inference-sdk": "0.2.1",
+    "@phala/dcap-qvl": "0.7.0",
+    "@phala/dstack-sdk": "0.5.8",
+    "express": "5.3.0",
+    "hpke": "1.1.7",
+    "lucide-react": "1.66.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.8",
+    "@types/express": "5.0.6",
+    "@types/node": "^24.10.0",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "jsdom": "30.1.3",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}
