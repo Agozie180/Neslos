@@ -27,6 +27,7 @@ switch (process.argv[2]) {
   case 'quote': run(['--import', 'tsx', 'scripts/quote.ts', ...extra]); break;
   case 'attestation': run(['--import', 'tsx', 'scripts/verify-attestation.ts', ...extra]); break;
   case 'tee': run(['--import', 'tsx', 'src/tee/index.ts', ...extra]); break;
+  case 'testnet': run(['--import', 'tsx', 'scripts/testnet.ts', ...extra]); break;
   case 'start': run(['dist/server/server/index.js', ...extra]); break;
   default: throw new Error('Unknown Neslos task.');
 }

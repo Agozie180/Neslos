@@ -6,7 +6,7 @@ Neslos is an agent treasury for people who want automated research and payments 
 
 Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. Target: **$55,000 grand prize** and Security, Privacy, DeFi and Swarms tracks ($15,000 per track). This project has not been submitted or awarded a prize.
 
-**Verified locally, 1 November:** 76 application tests · 12 contract unit tests · 1 NEAR sandbox integration suite · 3 browser tests. [Evidence and limits](docs/PROOF.md).
+**Verified:** 91 application tests and 3 browser tests in Ubuntu on 3 November; 12 contract unit tests and 1 NEAR sandbox suite on 2 November. The public testnet proof also completed all 12 steps. [Evidence and limits](docs/PROOF.md).
 
 | Start here | What you can inspect |
 | --- | --- |
@@ -17,7 +17,7 @@ Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. Ta
 | [Contract](contracts/policy-vault/README.md) · [Deployment](docs/DEPLOYMENT.md) | Vault interface and provisioning the attested runtime |
 | [Hackathon research](docs/RESEARCH.md) | Official rules, source links, track fit and deadline |
 
-Public hosting, demo video, live contract address and hardware evidence are pending. The application works locally; the live private path requires provisioning and credentials.
+The public testnet vault is [vault.neslos.testnet](https://testnet.nearblocks.io/address/vault.neslos.testnet). [Deployment](deploy/testnet.json) and [proof receipts](deploy/testnet-proof.json) verify a public test-token demonstration. Public hosting, demo video and hardware evidence remain pending; the private path requires provisioning and credentials.
 
 ## What we built
 
@@ -49,9 +49,9 @@ Try the complete flow:
 4. Launch the default **$150 allocation reserve** mission. Watch research, proposal, guardian, execution and settlement; the remaining allowance becomes $350.
 5. In **Audit trail**, click **Verify integrity**, then **Test a tampered copy**. The original passes; the changed copy fails.
 
-Example mission: “Research NEAR stablecoin yields and prepare a reserve for the best eligible opportunity.” The typed objective informs the research. The structured amount, counterparty and policy determine authority.
+Example mission: “Research NEAR stablecoin yields and prepare a reserve for the best eligible opportunity.” Rehearsal records the objective and uses deterministic, policy-based research. In the separate private runtime, the objective is passed to the verified NEAR AI researchers. The structured amount, counterparty and policy determine spending authority.
 
-**An allocation reserve is not a lending deposit.** The rehearsal simulates funds and settlement; it produces real cryptographic receipts, not chain transactions or hardware attestations. The on-chain contract is exercised separately in the local NEAR sandbox.
+**An allocation reserve is not a lending deposit.** The rehearsal simulates funds and settlement; it produces real cryptographic receipts, not chain transactions or hardware attestations. The on-chain contract is exercised separately in the local NEAR sandbox and public testnet.
 
 For the compiled local application:
 
@@ -101,7 +101,7 @@ The on-chain vault can check private commitment membership, but opening those co
 | --- | --- |
 | Rhea Finance | Live `/list_token_data` queries; 18 raw markets in the captured response, 10 supported by the normalizer. Explicitly dated fallback; no fabricated upstream observation timestamp. |
 | DeFiLlama | Additional NEAR protocol discovery. These rows are research-only until liquidity and execution are verified. |
-| NEAR policy vault | Rust/near-sdk WASM built and executed in a local NEAR sandbox; real local receipts and test-token balances. |
+| NEAR policy vault | Rust/near-sdk WASM executed in a local sandbox and deployed on public testnet; downloaded code hashes, finalized receipts, spending limits and test-token balances verified. |
 | Confidential Intents / 1Click | Official token discovery and quote-signature verifier. Requires signed `CONFIDENTIAL_INTENTS` routing. The live confidential quote probe returned **HTTP 401 without a JWT**; no successful live quote is claimed. |
 | Intel TDX / dstack | DCAP verification, pinned MRTD/RTMR measurements, debug rejection, fresh nonce and signing/transport-key binding. Real hardware has not been provisioned here. |
 | NEAR AI | E2EE, pinned gateway/model deployment, strict TCB checks, GPU evidence and explicit provider response verification. Implemented and compiled; a live inference call is pending credentials. |
@@ -132,9 +132,9 @@ The wrapper builds both contracts and starts a local NEAR sandbox. It exercises 
 - The browser application is a **rehearsal**. It is not connected to a funded contract or live TEE. Its sessions are isolated, memory-only and expire after two hours.
 - Sensitive production computation is designed for an attested runtime. Public NEAR deposits, amounts, policy fields, output minima and timing remain visible. A public lending position stays public.
 - The 1Click provider sees routing fields. Neslos does not independently attest that HTTPS endpoint. Provider settlement status is an observation, not an independent destination-chain proof.
-- The implemented live actions prepare private payments and allocation-reserve funding. They do not manage a lending position, run unattended schedules or submit transactions automatically.
+- The private runtime prepares payments and allocation-reserve funding without submitting them. A separate owner CLI submits a fixed public testnet demonstration with durable transaction recovery. Neither flow manages a lending position or unattended schedules.
 - Spending limits cover the fixed USDC token and UTC calendar days. NEAR gas/storage, inference and TEE hosting have separate budgets. Unknown/late-refund outcomes remain charged.
-- Real TEE deployment, live encrypted inference and funded settlement are unverified. Docker and GitHub CI configurations are supplied, but were not executed in this workspace.
+- Real TEE deployment, live encrypted inference and funded Intents settlement are unverified. Docker build/startup passed on 2 November. The original GitHub CI run failed; its fixes and the current verification status are tracked in [STATUS](docs/STATUS.md).
 - This is an AI-assisted hackathon implementation, not an independently audited custody product. [Security notes](SECURITY.md) include the known transitive dependency advisory. No yield or prize result is guaranteed.
 
 Built from the official NEAR contract scaffold and the libraries pinned in the npm and Cargo lockfiles. The bundled Inter font retains its OFL license. See [research](docs/RESEARCH.md) for source provenance and [MIT license](LICENSE) for project code.

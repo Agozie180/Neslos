@@ -35,6 +35,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: contracts/policy-vault
+      - name: Install cargo-near system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libudev-dev pkg-config
       - run: cargo install cargo-near --version 0.22.0 --locked
       - run: npm run test:contract
       - uses: actions/upload-artifact@v4

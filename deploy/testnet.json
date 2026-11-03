@@ -1,0 +1,62 @@
+{
+  "format": "neslos-testnet-deployment-v1",
+  "network": "testnet",
+  "owner": "neslos.testnet",
+  "vault": "vault.neslos.testnet",
+  "token": "token.neslos.testnet",
+  "outcomes": [
+    {
+      "account": "token.neslos.testnet",
+      "reused": true,
+      "transactionHash": "Hjb2H7c8gYMdrXe8DbCffFEd7upKYtF2gvJbVukFkdQs",
+      "explorer": "https://testnet.nearblocks.io/txns/Hjb2H7c8gYMdrXe8DbCffFEd7upKYtF2gvJbVukFkdQs"
+    },
+    {
+      "account": "vault.neslos.testnet",
+      "transactionHash": "21v1MSGTjqgyEJ49m6K7WejdcQFWmULRR71N2wc4oHwu",
+      "explorer": "https://testnet.nearblocks.io/txns/21v1MSGTjqgyEJ49m6K7WejdcQFWmULRR71N2wc4oHwu"
+    }
+  ],
+  "config": {
+    "owner_id": "neslos.testnet",
+    "token_id": "token.neslos.testnet",
+    "network": "testnet",
+    "executor_public_key": "cb215418034d445ff41298003fb152644d9d8da9b0119e796ddfc8b971340a4b",
+    "policy": {
+      "daily_limit": "500000000",
+      "per_action_limit": "200000000",
+      "max_slippage_bps": 50,
+      "max_quote_age_ms": "60000",
+      "venue_commitments": [
+        "61a39eb46a920b50cba3e49259232ff1f0546bad179cfcd826a4fe789cdf457f"
+      ],
+      "counterparty_commitments": [
+        "08b52770f795ea4ebe48e9cc98729c8a28b038a1074d3e4efd8b47603e34cce2"
+      ],
+      "output_assets": [
+        "nep141:token.neslos.testnet"
+      ],
+      "require_confidential": false,
+      "paused": true
+    },
+    "policy_version": "1"
+  },
+  "code": [
+    {
+      "account": "token.neslos.testnet",
+      "sha256": "0ecf777ad2cb1ebb3e07cd589a524de00c190828cb4996de9cb97ff2468b5c31",
+      "chainCodeHash": "zpCABkpiQTWrThMRt5KUKH9PEmyvYyG48oorkEEy2Tz",
+      "blockHash": "5NX3QhY7sEnkLchzPZzSLp326c3pW6zZm6RURj46GWEo"
+    },
+    {
+      "account": "vault.neslos.testnet",
+      "sha256": "196460a40676c7901143a9adf63ce61f63e25bf862e0acb4d9d51ff491e32b73",
+      "chainCodeHash": "2i7y5NUjHC2bzLZQbe7Lbt5EAgDq6Wxvf7cuCBiZ1BG6",
+      "blockHash": "8EaNk8XVzjsrP8BNaU9yNnMeAeZpgiVNbtiUNAHNUaeE"
+    }
+  ],
+  "vaultSha256": "196460a40676c7901143a9adf63ce61f63e25bf862e0acb4d9d51ff491e32b73",
+  "tokenSha256": "0ecf777ad2cb1ebb3e07cd589a524de00c190828cb4996de9cb97ff2468b5c31",
+  "disclosure": "Public testnet contract demonstration. Test fixture token; local executor; no TEE or Intents claim.",
+  "verifiedAt": "2026-11-03T16:52:49.184Z"
+}
