@@ -1,6 +1,6 @@
 # Verification record
 
-Updated **3 November 2026**. Application and browser checks ran in Ubuntu WSL; contract checks last passed on 2 November. Public testnet evidence is listed separately below. None of these results establishes hardware attestation or funded Intents settlement.
+Updated **3 November 2026**. Application and browser checks ran in Ubuntu WSL; local contract checks passed on 2 November. GitHub CI independently passed all application and contract checks on 3 November. Public testnet evidence is listed separately below. None of these results establishes hardware attestation or funded Intents settlement.
 
 | Check | Result | Reproduce |
 | --- | --- | --- |
@@ -9,6 +9,7 @@ Updated **3 November 2026**. Application and browser checks ran in Ubuntu WSL; c
 | Contract unit tests | **12 passed**, 0 failed | `npm run test:contract:unit` |
 | Deployed local NEAR sandbox suite | **1 passed**, 0 failed; multiple real local transactions and receipts | `npm run test:contract` |
 | Chromium desktop/mobile and source-selection tests | **3 passed**, 0 failed | `npm run test:browser` |
+| Clean GitHub runner: application and contract jobs | **Both passed** at source commit `8d2db211d09b145d3cb70197a5ca30b7ed8c1bc7` | [Run 41693429252](https://github.com/Agozie180/Neslos/actions/runs/41693429252) |
 
 Runtime: Node 24.22.2; Rust 1.93.0; cargo-near 0.22.0; near-sdk 5.29.0. The contract build and sandbox ran in WSL Ubuntu. Package versions and transitive resolutions are in the checked-in lockfiles.
 

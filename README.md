@@ -6,7 +6,7 @@ Neslos is an agent treasury for people who want automated research and payments 
 
 Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. Target: **$55,000 grand prize** and Security, Privacy, DeFi and Swarms tracks ($15,000 per track). This project has not been submitted or awarded a prize.
 
-**Verified:** 91 application tests and 3 browser tests in Ubuntu on 3 November; 12 contract unit tests and 1 NEAR sandbox suite on 2 November. The public testnet proof also completed all 12 steps. [Evidence and limits](docs/PROOF.md).
+**Verified:** 91 application tests, 3 browser tests, 12 contract unit tests and 1 NEAR sandbox suite. [GitHub CI passed on 3 November](https://github.com/Agozie180/Neslos/actions/runs/41693429252). The public testnet proof also completed all 12 steps. [Evidence and limits](docs/PROOF.md).
 
 | Start here | What you can inspect |
 | --- | --- |
@@ -134,7 +134,7 @@ The wrapper builds both contracts and starts a local NEAR sandbox. It exercises 
 - The 1Click provider sees routing fields. Neslos does not independently attest that HTTPS endpoint. Provider settlement status is an observation, not an independent destination-chain proof.
 - The private runtime prepares payments and allocation-reserve funding without submitting them. A separate owner CLI submits a fixed public testnet demonstration with durable transaction recovery. Neither flow manages a lending position or unattended schedules.
 - Spending limits cover the fixed USDC token and UTC calendar days. NEAR gas/storage, inference and TEE hosting have separate budgets. Unknown/late-refund outcomes remain charged.
-- Real TEE deployment, live encrypted inference and funded Intents settlement are unverified. Docker build/startup passed on 2 November. The original GitHub CI run failed; its fixes and the current verification status are tracked in [STATUS](docs/STATUS.md).
+- Real TEE deployment, live encrypted inference and funded Intents settlement are unverified. Docker build/startup passed on 2 November; application and contract GitHub CI passed on 3 November. [STATUS](docs/STATUS.md) records the tested revision and remaining work.
 - This is an AI-assisted hackathon implementation, not an independently audited custody product. [Security notes](SECURITY.md) include the known transitive dependency advisory. No yield or prize result is guaranteed.
 
 Built from the official NEAR contract scaffold and the libraries pinned in the npm and Cargo lockfiles. The bundled Inter font retains its OFL license. See [research](docs/RESEARCH.md) for source provenance and [MIT license](LICENSE) for project code.
