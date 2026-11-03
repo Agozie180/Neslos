@@ -1,18 +1,19 @@
 # Verification record
 
-Recorded **1 November 2026** in the local Windows/WSL workspace. These are local test results, not live deployment or hardware evidence.
+Updated **3 November 2026**. Application and browser checks ran in Ubuntu WSL; local contract checks passed on 2 November. GitHub CI independently passed all application and contract checks on 3 November. Public testnet evidence is listed separately below. None of these results establishes hardware attestation or funded Intents settlement.
 
 | Check | Result | Reproduce |
 | --- | --- | --- |
-| Application, policy, API and cryptographic tests | **76 passed**, 0 failed across 7 files | `npm run verify` |
+| Application, policy, API, owner recovery and cryptographic tests | **91 passed**, 0 failed across 8 files | `npm run verify` |
 | Strict TypeScript, frontend and API/TEE compilation | **Passed** | `npm run verify` |
 | Contract unit tests | **12 passed**, 0 failed | `npm run test:contract:unit` |
 | Deployed local NEAR sandbox suite | **1 passed**, 0 failed; multiple real local transactions and receipts | `npm run test:contract` |
 | Chromium desktop/mobile and source-selection tests | **3 passed**, 0 failed | `npm run test:browser` |
+| Clean GitHub runner: application and contract jobs | **Both passed** at source commit `8d2db211d09b145d3cb70197a5ca30b7ed8c1bc7` | [Run 41693429252](https://github.com/Agozie180/Neslos/actions/runs/41693429252) |
 
 Runtime: Node 24.22.2; Rust 1.93.0; cargo-near 0.22.0; near-sdk 5.29.0. The contract build and sandbox ran in WSL Ubuntu. Package versions and transitive resolutions are in the checked-in lockfiles.
 
-The successful application verification was recorded at `2026-11-01T18:12:22.051Z`; the full contract verification at `2026-11-01T17:40:50.041Z`. Tests generate fresh reports in `artifacts/`. Those generated reports are ignored by Git so a source checkout is not mistaken for a new verification run.
+Tests generate fresh reports and timestamps in `artifacts/`. Those generated reports are ignored by Git so a source checkout is not mistaken for a new verification run. The public testnet evidence in `deploy/` is retained with transaction hashes and the block at which final state was verified.
 
 ## Contract artifact
 
@@ -29,7 +30,27 @@ The sandbox deploys that compiled artifact and a minimal **test fixture token**.
 SANDBOX_EVIDENCE: recipient=150000000; failed_dispatch_restored=true; nonce=2; usage=150000000; paused=true; owner_recovered=50000000; real_funds=false
 ```
 
-The test asserts balances and contract state after each operation. The terminal line alone is not the proof; the [test source](../contracts/policy-vault/tests/sandbox.rs), compiled artifact and reproducible execution are the evidence. The sandbox test took 87.89 seconds in this run; total build and contract test time was 185.30 seconds. These are single-run measurements, not performance benchmarks.
+The test asserts balances and contract state after each operation. The terminal line alone is not the proof; the [test source](../contracts/policy-vault/tests/sandbox.rs), compiled artifact and reproducible execution are the evidence. The latest retained full contract check completed in 79.10 seconds on 2 November. This is a single-run measurement, not a performance benchmark.
+
+## Public testnet proof
+
+The owner-controlled [vault.neslos.testnet](https://testnet.nearblocks.io/address/vault.neslos.testnet) uses [token.neslos.testnet](https://testnet.nearblocks.io/address/token.neslos.testnet), a deliberately minimal fixture token. [Deployment evidence](../deploy/testnet.json) includes the finalized creation transactions and code downloaded from both accounts. The vault's SHA-256 equals the local reviewed artifact above.
+
+[Proof evidence](../deploy/testnet-proof.json), finalized on 3 November at `2026-11-03T17:32:18.128Z`, contains 12 transaction links. Four expected rejections are recorded as failed chain transactions; that is the successful result of those negative tests.
+
+| Operation | Verified outcome |
+| --- | --- |
+| Allow 150 test tokens | Recipient received 150; daily usage became 150 |
+| Request 201 / replay the first authorization | Rejected with `PER_ACTION_LIMIT` / `NONCE`; no extra spending |
+| Transfer to an unregistered account | FT dispatch failed; allowance restored; nonce advanced to 2 |
+| Lower daily cap below existing usage | Usage stayed 150; further spending rejected with `DAILY_LIMIT` |
+| Restore policy and record settlement | Usage retained; the first record became `Settled` |
+| Pause and attempt another authorization | Rejected with `PAUSED` |
+| Owner recovery | 50 tokens returned to owner; final vault balance 800, owner balance 200 |
+
+Final state at the recorded block: paused, policy version 5, nonce 2, daily usage 150 and remaining allowance 350. The proof recovered from an RPC interruption by reconciling the original transaction hashes before continuing. Local tests cover transport retries, saved-transaction conflicts, unresolved outcomes, concurrent submission, and invalid proof checkpoints.
+
+This uses a local executor key and public routing. It does not claim TEE execution, private recipients, real USDC, or a 1Click settlement. The browser remains a separate rehearsal. [Owner CLI and recovery instructions](DEPLOYMENT.md#owner-testnet-cli).
 
 ## What the tests establish
 
@@ -56,6 +77,6 @@ The attestation binding fixture is **not a genuine Intel quote**. Passing those 
 
 ## Evidence still required for live claims
 
-There is no provisioned TDX instance, independently approved live measurement set, verified live NEAR AI response, deployed owner vault, funded Intents deposit or mainnet settlement receipt in this workspace. The TEE process prepares calls; it does not submit them. Docker and GitHub CI have not run here.
+The testnet owner vault and fixture-token proof are deployed. There is still no provisioned TDX instance, independently approved live measurement set, verified live NEAR AI response, funded Intents deposit or mainnet settlement receipt. The TEE process prepares calls; it does not submit them. Docker build/startup passed on 2 November; GitHub CI status is tracked in [STATUS](STATUS.md).
 
 The next validation stage is to provision the reviewed private runtime, verify its identity independently, pin that key in an owner-controlled vault, obtain an authenticated signed quote, and explicitly authorize a bounded funded demonstration. Keep public-chain and provider visibility disclosures in that demonstration. See [deployment](DEPLOYMENT.md) and [privacy](PRIVACY.md).

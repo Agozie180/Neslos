@@ -1,0 +1,95 @@
+{
+  "format": "neslos-testnet-proof-v1",
+  "success": true,
+  "network": "testnet",
+  "vault": "vault.neslos.testnet",
+  "token": "token.neslos.testnet",
+  "owner": "neslos.testnet",
+  "results": [
+    {
+      "step": "resume",
+      "hash": "2drz42Guke5SpXtD1WBAUAVuzhxwEpzhrLNxrgEBSa94",
+      "success": true,
+      "explorer": "https://testnet.nearblocks.io/txns/2drz42Guke5SpXtD1WBAUAVuzhxwEpzhrLNxrgEBSa94"
+    },
+    {
+      "step": "allowed",
+      "hash": "5iAg5o7CtYgTbV2JhpPLoDwANAhUP23g86aVz4xQyoYq",
+      "success": true,
+      "explorer": "https://testnet.nearblocks.io/txns/5iAg5o7CtYgTbV2JhpPLoDwANAhUP23g86aVz4xQyoYq"
+    },
+    {
+      "step": "overspend",
+      "hash": "92qRtYLpAH8R4bzfXDHbrSxFHcQ4zbN3MYpb2REnNpMm",
+      "success": false,
+      "explorer": "https://testnet.nearblocks.io/txns/92qRtYLpAH8R4bzfXDHbrSxFHcQ4zbN3MYpb2REnNpMm"
+    },
+    {
+      "step": "replay",
+      "hash": "EyGy7jMQNY2CuY2m5FGpKPa4DqHGAZUbC7TziZGemHPV",
+      "success": false,
+      "explorer": "https://testnet.nearblocks.io/txns/EyGy7jMQNY2CuY2m5FGpKPa4DqHGAZUbC7TziZGemHPV"
+    },
+    {
+      "step": "dispatch-failure",
+      "hash": "Ci46MA6LhoXjMEoWqR66FXLwyYwtfojggdLPTe2VAdU",
+      "success": true,
+      "explorer": "https://testnet.nearblocks.io/txns/Ci46MA6LhoXjMEoWqR66FXLwyYwtfojggdLPTe2VAdU"
+    },
+    {
+      "step": "lower-limit",
+      "hash": "66yrdfmj3QYgzEBGVV6edAHfsMhx6zNUBnxxfQkrnqRo",
+      "success": true,
+      "explorer": "https://testnet.nearblocks.io/txns/66yrdfmj3QYgzEBGVV6edAHfsMhx6zNUBnxxfQkrnqRo"
+    },
+    {
+      "step": "exhausted",
+      "hash": "CsqGjMb9dkG6f3uDfLydFhVmi8fFT9eWbZTBzRDUrwRc",
+      "success": false,
+      "explorer": "https://testnet.nearblocks.io/txns/CsqGjMb9dkG6f3uDfLydFhVmi8fFT9eWbZTBzRDUrwRc"
+    },
+    {
+      "step": "restore-policy",
+      "hash": "Hnn4V5Jc6WuHqeJ4x6qrJVErN9keJvF3UHE39GqHT9pr",
+      "success": true,
+      "explorer": "https://testnet.nearblocks.io/txns/Hnn4V5Jc6WuHqeJ4x6qrJVErN9keJvF3UHE39GqHT9pr"
+    },
+    {
+      "step": "settlement",
+      "hash": "Co3P11uhv3uibDz9B8xX8G4Gfy3nB4HPRmcCBGT217U",
+      "success": true,
+      "explorer": "https://testnet.nearblocks.io/txns/Co3P11uhv3uibDz9B8xX8G4Gfy3nB4HPRmcCBGT217U"
+    },
+    {
+      "step": "pause",
+      "hash": "DsuNt6zRRAgFYG7iWLbL41H19b6hP17yHJAV3JrTPwq1",
+      "success": true,
+      "explorer": "https://testnet.nearblocks.io/txns/DsuNt6zRRAgFYG7iWLbL41H19b6hP17yHJAV3JrTPwq1"
+    },
+    {
+      "step": "paused",
+      "hash": "HWXeeR5pQqzVxpE7sGLV1sWJrdhNtU53hPCyY1SfvDsM",
+      "success": false,
+      "explorer": "https://testnet.nearblocks.io/txns/HWXeeR5pQqzVxpE7sGLV1sWJrdhNtU53hPCyY1SfvDsM"
+    },
+    {
+      "step": "owner-recovery",
+      "hash": "EqmTSZJkhs1Q8U7ibmr75TNRdDpPGfP4jqqYi8N5fTds",
+      "success": true,
+      "explorer": "https://testnet.nearblocks.io/txns/EqmTSZJkhs1Q8U7ibmr75TNRdDpPGfP4jqqYi8N5fTds"
+    }
+  ],
+  "budget": {
+    "day": "20760",
+    "used": "150000000",
+    "remaining": "350000000",
+    "policy_version": "5",
+    "next_nonce": "2",
+    "paused": true
+  },
+  "vaultTokenBalance": "800000000",
+  "ownerTokenBalance": "200000000",
+  "blockHash": "HJP5MiPeDfNkkZJqQ92E42mMgavErnfN1gQ1ckwRU6AU",
+  "verifiedAt": "2026-11-03T17:32:18.128Z",
+  "disclosure": "Public testnet contract demonstration. Test fixture token; local executor; no TEE or Intents claim."
+}

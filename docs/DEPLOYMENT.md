@@ -22,6 +22,8 @@ Open http://127.0.0.1:8787. The default bind address is loopback.
 
 Install Rust 1.93.0 with the wasm32-unknown-unknown target and cargo-near 0.22.0. On Windows, use WSL Ubuntu. The wrapper automatically uses the locally verified cargo-near binary when present.
 
+    sudo apt-get update
+    sudo apt-get install --yes build-essential pkg-config libudev-dev
     cargo install cargo-near --version 0.22.0 --locked
     npm run test:contract
 
@@ -39,6 +41,33 @@ The application uses isolated, bounded, memory-only rehearsal sessions. Use a si
     docker run --rm -p 8787:8787 -e HOST=0.0.0.0 neslos-rehearsal
 
 The example remains local. For public HTTPS hosting, apply the production environment settings above.
+
+## Owner testnet CLI
+
+The official `near-api-js` 7.4.0 SDK drives the owner commands. The public deployment is [vault.neslos.testnet](https://testnet.nearblocks.io/address/vault.neslos.testnet); [deployment evidence](../deploy/testnet.json) records finalized transaction hashes, downloaded code hashes, and its initial configuration. Its asset is a minimal test fixture token, and its executor is a local test key. This deployment does not demonstrate hardware privacy or Intents routing.
+
+For a fresh, funded owner testnet account, use a private NEAR credential JSON containing `account_id`, `public_key`, and `private_key`. Keep that file outside version control. Run these commands individually, inspecting the saved plan before deployment:
+
+```sh
+npm run testnet -- status --credentials /private/owner.testnet.json
+npm run testnet -- plan --credentials /private/owner.testnet.json
+npm run testnet -- deploy --credentials /private/owner.testnet.json
+npm run testnet -- prove --credentials /private/owner.testnet.json
+```
+
+The plan fixes `vault.<owner>` and `token.<owner>`, 3 and 2 testnet NEAR respectively, the exact WASM hashes, and a paused vault with 500/day and 200/action test-token limits. Deployment preserves at least 1 testnet NEAR in the owner account. The proof transfers 150 test tokens, checks overspending and replay rejection, confirms a failed transfer restores allowance, lowers/restores policy without resetting consumption, records settlement, and finishes with pause and a 50-token owner withdrawal. These are public test-token transactions, not USDC or cross-chain settlement.
+
+Signed transaction bytes are saved before broadcast under `.private/testnet/transactions`. A repeated operation checks its saved hash rather than signing another payment. Proof recovery requires a contiguous sequence of finalized, expected receipts and matching on-chain policy, nonce, balances, and records. A different state, an unresolved transaction, a UTC-day change after spending, or an emergency-pause record stops recovery. Preserve the whole private directory; deleting a journal is not a recovery procedure. Repeating a fully completed proof reconciles evidence without making new transfers.
+
+On this Windows workspace, run through Ubuntu WSL:
+
+```powershell
+wsl.exe -d Ubuntu -- bash /mnt/c/Users/USER/Neslos/scripts/ubuntu.sh verify
+wsl.exe -d Ubuntu -- bash /mnt/c/Users/USER/Neslos/scripts/ubuntu.sh test:browser
+wsl.exe -d Ubuntu -- bash /mnt/c/Users/USER/Neslos/scripts/ubuntu.sh testnet -- status
+```
+
+The wrapper syncs source into `$HOME/.cache/neslos-ubuntu`, uses Linux dependencies/builds, and copies public evidence back. It excludes `.env` and `.private`. Its default owner credential is the existing Windows `.private/near/testnet/neslos.testnet.json`; generated executor keys and transaction journals stay in the Linux workspace's `.private/testnet`. Retain that directory across resumes. Install Playwright's Chromium in Ubuntu before browser checks; the Windows download cannot be used there. Docker is not needed for this workflow.
 
 ## Owner-controlled on-chain policy
 
@@ -77,7 +106,7 @@ The complete runtime uses a separate private process and **does not submit trans
 
 After dispatch, the observe command checks the finalized vault record and the matching provider quote/status. It prepares an attested observer-signed settlement record; unknown results never resend funds. This is a trusted provider-status observation, not an independent cross-chain proof of delivery.
 
-The current workspace has no provisioned TEE, pinned live executor, inference credentials or funded contract. Those must be supplied and verified; no example measurement is accepted as a real one.
+The testnet fixture vault is deployed. A provisioned TEE, independently pinned hardware executor, verified inference, and funded mainnet integration remain unverified; no example measurement is accepted as a real one. The testnet CLI does not connect the rehearsal browser to the private runtime.
 
 ## Dry confidential quote probe
 

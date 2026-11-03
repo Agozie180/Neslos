@@ -78,12 +78,20 @@ describe('session API and complete flow', () => {
     expect((await call(s, '/runs', 'POST', { ...mission(), mode: 'attested' })).status).toBe(400);
     expect((await call(s, '/runs', 'POST', { ...mission(), amount: '1e6' })).status).toBe(400);
   });
-  it('multiple concurrent missions share a single atomic reservation', async () => {
+  it('concurrent missions cannot exceed the allowance, regardless of proposal timing', async () => {
     const s = await session();
+    // Only one mission fits. HTTP requests and fixture reads can complete in
+    // different orders, so a nonce collision is not guaranteed at this boundary.
+    const updated = await call(s, '/policy', 'PATCH', {
+      policy: { ...s.state.policy, dailyLimit: '150000000', perTransactionLimit: '150000000' }, expectedVersion: 1,
+    });
+    expect(updated.status).toBe(200);
     const responses = await Promise.all(Array.from({ length: 3 }, async () => (await (await call(s, '/runs', 'POST', mission())).json()).run.id as string));
     const runs = await Promise.all(responses.map(id => terminal(s, id)));
     expect(runs.filter(r => r.status === 'settled')).toHaveLength(1);
     expect(runs.filter(r => r.status === 'blocked')).toHaveLength(2);
-    expect((await (await call(s, '/state')).json()).budget.spent).toBe('150000000');
+    expect((await (await call(s, '/state')).json()).budget).toMatchObject({
+      spent: '150000000', remaining: '0', nextNonce: '1',
+    });
   });
 });

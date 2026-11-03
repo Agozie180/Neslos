@@ -5,6 +5,6 @@
     "outDir": "dist/server", "rootDir": "src", "sourceMap": true,
     "types": ["node"]
   },
-  "include": ["src/core", "src/server", "src/tee"],
+  "include": ["src/core", "src/server", "src/tee", "src/owner"],
   "exclude": ["tests", "src/web"]
 }

@@ -1,14 +1,44 @@
 import { z } from 'zod';
-import { fetchJson } from './research.js';
+import { FailoverRpcError, FailoverRpcProvider, JsonRpcProvider } from 'near-api-js';
+import { AccountDoesNotExistError } from 'near-api-js/rpc-errors';
 import { chainBudgetSchema, nearAccount, vaultConfigSchema } from './wire.js';
 import { units } from './amounts.js';
 
-const rpcUrls = { mainnet: 'https://rpc.mainnet.near.org', testnet: 'https://rpc.testnet.near.org' } as const;
+export const rpcUrls = { mainnet: 'https://rpc.mainnet.near.org', testnet: 'https://test.rpc.fastnear.com' } as const;
+export type NearNetwork = keyof typeof rpcUrls;
+/** Absence must be confirmed for this account by every attempted provider. */
+export function isMissingNearAccount(error: unknown, account: string): boolean {
+  if (error instanceof AccountDoesNotExistError) return error.accountId === account;
+  return error instanceof FailoverRpcError && error.errors.length > 0
+    && error.errors.every(cause => isMissingNearAccount(cause, account));
+}
+function isTransportFailure(error: unknown): boolean {
+  if (error instanceof FailoverRpcError) return error.errors.length > 0 && error.errors.every(isTransportFailure);
+  return error instanceof TypeError && error.message === 'fetch failed';
+}
+/** Retry reads only. The SDK's retry matcher misses Node's lowercase "fetch failed". */
+export async function retryNearRead<T>(read: () => Promise<T>): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    try { return await read(); }
+    catch (error) {
+      if (attempt >= 2 || !isTransportFailure(error)) throw error;
+      await new Promise(resolve => setTimeout(resolve, 250 * (attempt + 1)));
+    }
+  }
+}
+export function nearProvider(network: NearNetwork) {
+  const urls = network === 'testnet'
+    ? [rpcUrls.testnet, 'https://rpc.testnet.near.org']
+    : [rpcUrls.mainnet, 'https://free.rpc.fastnear.com'];
+  return new FailoverRpcProvider(urls.map(url => new JsonRpcProvider({ url }, { retries: 2, wait: 500, backoff: 2 })));
+}
 export async function viewNear(account: string, method: string, args: unknown, network: 'mainnet' | 'testnet', blockHash?: string) {
   nearAccount.parse(account);
-  const response = await fetchJson(rpcUrls[network], { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 'neslos-view', method: 'query', params: { request_type: 'call_function', account_id: account, method_name: method, args_base64: Buffer.from(JSON.stringify(args)).toString('base64'), ...(blockHash ? { block_id: blockHash } : { finality: 'final' }) } }) }) as { error?: unknown; result?: { result: number[]; block_hash: string; block_height: number } };
-  if (response.error || !response.result || !Array.isArray(response.result.result)) throw new Error('NEAR_VIEW: the finalized contract view failed.');
-  return { value: JSON.parse(Buffer.from(response.result.result).toString('utf8')), blockHash: response.result.block_hash, blockHeight: response.result.block_height };
+  const response = await retryNearRead(() => nearProvider(network).callFunctionRaw({
+    contractId: account, method, args: z.record(z.string(), z.unknown()).parse(args),
+    blockQuery: blockHash ? { blockId: blockHash } : { finality: 'final' },
+  }));
+  return { value: JSON.parse(Buffer.from(response.result).toString('utf8')), blockHash: response.block_hash, blockHeight: response.block_height };
 }
 export async function readVault(vault: string, network: 'mainnet' | 'testnet') {
   const configView = await viewNear(vault, 'get_config', {}, network);

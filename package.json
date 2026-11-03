@@ -17,6 +17,7 @@
     "research": "node scripts/run.mjs research",
     "quote:dry": "node scripts/run.mjs quote",
     "tee": "node scripts/run.mjs tee",
+    "testnet": "node scripts/run.mjs testnet",
     "build:contract": "node scripts/contract.mjs build",
     "test:contract": "node scripts/contract.mjs test",
     "test:contract:unit": "node scripts/contract.mjs unit",
@@ -30,6 +31,7 @@
     "express": "5.3.0",
     "hpke": "1.1.7",
     "lucide-react": "1.66.0",
+    "near-api-js": "7.4.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "zod": "4.6.7"
