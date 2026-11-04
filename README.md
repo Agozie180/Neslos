@@ -6,7 +6,7 @@ Neslos is an agent treasury for people who want automated research and payments 
 
 Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. Target: **$55,000 grand prize** and Security, Privacy, DeFi and Swarms tracks ($15,000 per track). This project has not been submitted or awarded a prize.
 
-**Verification repeated on 4 November in Ubuntu WSL:** 193 application tests, 5 browser tests, 12 contract unit tests and 1 NEAR sandbox suite passed. The dedicated Linux TEE image also builds and rejects fake hardware evidence in container tests. [GitHub CI runs](https://github.com/Agozie180/Neslos/actions/workflows/verify.yml) record results for each pushed revision. The public testnet proof completed all 12 steps. [Evidence and limits](docs/PROOF.md).
+**Verification repeated on 4 November in Ubuntu WSL:** 226 application tests, 5 browser tests, 12 contract unit tests and 1 NEAR sandbox suite passed. The dedicated Linux TEE image also builds and rejects fake hardware evidence in container tests. [GitHub CI runs](https://github.com/Agozie180/Neslos/actions/workflows/verify.yml) record results for each pushed revision. The public testnet proof completed all 12 steps. [Evidence and limits](docs/PROOF.md).
 
 | Start here | What you can inspect |
 | --- | --- |
