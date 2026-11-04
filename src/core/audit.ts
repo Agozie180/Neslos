@@ -21,7 +21,12 @@ export class AuditLog {
     const entry = { ...metadata, sealed, hash, signature: signHash(hash, this.signingKey) };
     this.entries.push(entry); return structuredClone(entry);
   }
-  export(): AuditExport { return { format: 'neslos-audit-v1', publicKey: this.publicKey, entries: structuredClone(this.entries), checkpoint: this.entries.at(-1)?.hash ?? GENESIS, scope: this.mode === 'rehearsal' ? 'session-rehearsal' : 'attested-executor' }; }
+  export(checkpoint?: string): AuditExport {
+    const end = checkpoint === undefined ? this.entries.length : checkpoint === GENESIS ? 0 : this.entries.findIndex(e => e.hash === checkpoint) + 1;
+    if (checkpoint !== undefined && checkpoint !== GENESIS && end === 0) throw new Error('AUDIT_CHECKPOINT: checkpoint is absent from this history.');
+    const entries = structuredClone(this.entries.slice(0, end));
+    return { format: 'neslos-audit-v1', publicKey: this.publicKey, entries, checkpoint: entries.at(-1)?.hash ?? GENESIS, scope: this.mode === 'rehearsal' ? 'session-rehearsal' : 'attested-executor' };
+  }
   restore(bundle: AuditExport): void {
     if (this.entries.length || bundle.scope !== this.export().scope || !verifyAudit(bundle, this.publicKey).valid || bundle.entries.some(e => e.mode !== this.mode)) throw new Error('Invalid persisted audit identity, scope, or history.');
     this.entries = structuredClone(bundle.entries);

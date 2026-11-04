@@ -25,9 +25,9 @@ export class PrivateResearchers {
       deploymentPolicy: ({ model, deployment }) => { if (model !== policy.modelId) throw new Error('Unapproved inference model.'); checkDeployment(deployment, policy.model); },
     });
   }
-  async research(evidence: ResearchResult, policy: Policy, prompt: string): Promise<AgentReport[]> {
+  async research(evidence: ResearchResult, policy: Policy, prompt: string, outputAssets?: readonly string[]): Promise<AgentReport[]> {
     if (evidence.sourceMode !== 'live') throw new Error('LIVE_EVIDENCE_REQUIRED: captured data cannot authorize funded activity.');
-    const ranked = rankMarkets(evidence.markets, policy);
+    const ranked = rankMarkets(evidence.markets, policy, outputAssets);
     const inputs = JSON.stringify({ task: prompt, opportunities: ranked, constraints: policy });
     const tasks = [
       { agent: 'lending' as const, title: 'Yield discovery', instruction: 'Compare base yield and rewards. Identify supported opportunities, never promise returns.' },

@@ -18,5 +18,6 @@ playwright-report/
 artifacts/*-results.json
 artifacts/*-verification.json
 artifacts/*-audit.json
+artifacts/wsl-run.json
 artifacts/*.wasm
 artifacts/*_abi.*

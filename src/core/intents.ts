@@ -6,7 +6,7 @@ import { fetchJson, NATIVE_USDC } from './research.js';
 import { nearAccount } from './wire.js';
 
 export const ONECLICK_URL = 'https://1click.chaindefuser.com/v0';
-const tokenSchema = z.object({ assetId: z.string().min(1).max(200), blockchain: z.string(), symbol: z.string(), decimals: z.number().int().min(0).max(30), contractAddress: z.string().optional() }).passthrough();
+const tokenSchema = z.object({ assetId: z.string().min(1).max(200), blockchain: z.string(), symbol: z.string(), decimals: z.number().int().min(0).max(30), contractAddress: z.string().nullish() }).passthrough();
 export interface QuoteParameters { amount: string; maxSlippageBps: number; recipient: string; refundTo: string; dry: boolean; destinationAsset?: string }
 export interface ValidatedQuote { response: QuoteResponse; hash: string; signatureVerified: true; privacyBinding: 'signed-confidential-recipient'; requestedSlippageBps: number; enforcedSlippageBps: number; fetchedAt: string }
 
@@ -62,8 +62,13 @@ export class IntentsClient {
       const result = z.object({ status: z.string(), quoteResponse: z.unknown() }).parse(raw);
       const signed = result.quoteResponse as QuoteResponse;
       if (!verifyQuoteSignature(signed) || sha256(canonical(signed)) !== quote.hash) throw new Error('Status refers to a different or unsigned quote.');
-      const outcome = ({ SUCCESS: 'success', REFUNDED: 'refunded', FAILED: 'failed', PENDING_DEPOSIT: 'pending', PROCESSING: 'pending', INCOMPLETE_DEPOSIT: 'pending' } as const)[result.status as 'SUCCESS'];
-      return { outcome: outcome ?? 'unknown', raw };
+      // A Map cannot accidentally resolve prototype properties from an unknown status.
+      const outcomes = new Map<string, 'pending' | 'success' | 'refunded' | 'failed'>([
+        ['SUCCESS', 'success'], ['REFUNDED', 'refunded'], ['FAILED', 'failed'],
+        ['PENDING_DEPOSIT', 'pending'], ['KNOWN_DEPOSIT_TX', 'pending'],
+        ['PROCESSING', 'pending'], ['INCOMPLETE_DEPOSIT', 'pending'],
+      ]);
+      return { outcome: outcomes.get(result.status) ?? 'unknown', raw };
     } catch { return { outcome: 'unknown', raw: null }; }
   }
 }

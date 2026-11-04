@@ -7,6 +7,8 @@ source_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 work_root="${NESLOS_UBUNTU_WORKDIR:-$HOME/.cache/neslos-ubuntu}"
 node_root="$HOME/.local/share/neslos/node-v24.22.2-linux-x64/bin"
 if [[ -x "$node_root/node" ]]; then export PATH="$node_root:$PATH"; fi
+# Non-login WSL shells otherwise select Ubuntu's older /usr/bin/cargo.
+if [[ -x "$HOME/.cargo/bin/cargo" ]]; then export PATH="$HOME/.cargo/bin:$PATH"; fi
 # This WSL network has no IPv6 route. Let the IPv4 connection complete without
 # Node's family-selection timer abandoning it while trying unreachable IPv6.
 export NODE_OPTIONS="${NODE_OPTIONS:-} --dns-result-order=ipv4first --no-network-family-autoselection"
@@ -18,6 +20,12 @@ mkdir -p "$work_root"
 work_root="$(cd "$work_root" && pwd)"
 if [[ "$work_root" == / || "$work_root" == "$HOME" || "$work_root" == /mnt/* || "$work_root" == "$source_root" ]]; then
   echo 'NESLOS_UBUNTU_WORKDIR must be a separate directory on the Linux filesystem.' >&2
+  exit 1
+fi
+# Source sync, builds and evidence copying share one workspace. Do not race them.
+exec 9>"$work_root/.neslos-run.lock"
+if ! flock -n 9; then
+  echo 'Another Neslos WSL task is using this workspace. Wait for it to finish.' >&2
   exit 1
 fi
 rsync -a --exclude=node_modules --exclude=.git --exclude=.tools --exclude=.private \
@@ -35,17 +43,11 @@ if [[ ! -f node_modules/.neslos-lock-sha256 ]] || [[ "$(cat node_modules/.neslos
 fi
 export NESLOS_SOURCE_ROOT="$source_root"
 if [[ $# == 0 ]]; then set -- verify; fi
+mkdir -p .private
+snapshot="$(mktemp "$work_root/.private/evidence-XXXXXX.json")"
+trap 'rm -f -- "$snapshot"' EXIT
+node scripts/evidence.mjs snapshot "$1" "$snapshot"
 result=0
 npm run "$@" || result=$?
-if [[ -d artifacts ]]; then
-  mkdir -p "$source_root/artifacts"
-  rsync -a --include='*/' --include='*.json' --include='*.wasm' --include='*.log' --exclude='*' artifacts/ "$source_root/artifacts/"
-fi
-# Only public evidence produced by the testnet command is copied back.
-for evidence in deploy/testnet.json deploy/testnet-proof.json; do
-  if [[ -f "$evidence" ]]; then
-    mkdir -p "$source_root/deploy"
-    cp "$evidence" "$source_root/$evidence"
-  fi
-done
+node scripts/evidence.mjs publish "$1" "$snapshot" "$source_root" "$result"
 exit "$result"

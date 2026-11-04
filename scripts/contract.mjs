@@ -4,11 +4,13 @@ import { createHash } from 'node:crypto';
 import { homedir } from 'node:os';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { startCheck } from './evidence.mjs';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const operation = process.argv[2];
 if (!['build', 'test', 'unit'].includes(operation)) throw new Error('Use build, test, or unit.');
 const started = Date.now();
 mkdirSync(resolve(root, 'artifacts'), { recursive: true });
+const finishCheck = startCheck(root, 'contract-verification.json', 'npm run ' + (operation === 'test' ? 'test:contract' : operation === 'build' ? 'build:contract' : 'test:contract:unit'));
 let transcript = '';
 function command(program, args, env = {}) {
   const result = spawnSync(program, args, { cwd: root, env: { ...process.env, ...env }, encoding: 'utf8', windowsHide: true, maxBuffer: 20_000_000 });
@@ -17,6 +19,7 @@ function command(program, args, env = {}) {
   transcript += (result.stdout ?? '') + (result.stderr ?? '');
   if (result.error || result.status !== 0) {
     writeFileSync(resolve(root, 'artifacts/contract-output.log'), transcript);
+    finishCheck(false, { stage: args[0] ?? program, exitCode: result.status ?? 1, error: result.error?.message ?? 'Contract command failed; see contract-output.log.' });
     if (result.error) throw result.error;
     process.exit(result.status ?? 1);
   }
@@ -45,8 +48,8 @@ writeFileSync(resolve(root, 'artifacts/contract-output.log'), transcript);
 const binary = resolve(root, 'artifacts/policy_vault.wasm');
 const evidence = {
   generatedAt: new Date().toISOString(), command: 'npm run ' + (operation === 'test' ? 'test:contract' : operation === 'build' ? 'build:contract' : 'test:contract:unit'),
-  success: true, elapsedMs: Date.now() - started, environment: 'local NEAR sandbox; virtual balances only',
+  success: true, elapsedMs: Date.now() - started, environment: operation === 'test' ? 'local NEAR sandbox; virtual balances only' : operation === 'unit' ? 'host unit tests; no sandbox execution' : 'WASM build; no execution',
   testResults: [...transcript.matchAll(/test result: ok[.] ([0-9]+) passed/g)].map(m => Number(m[1])),
-  ...(existsSync(binary) ? { wasmBytes: readFileSync(binary).length, wasmSha256: createHash('sha256').update(readFileSync(binary)).digest('hex') } : {}),
+  ...(operation !== 'unit' && existsSync(binary) ? { wasmBytes: readFileSync(binary).length, wasmSha256: createHash('sha256').update(readFileSync(binary)).digest('hex') } : {}),
 };
-writeFileSync(resolve(root, 'artifacts/contract-verification.json'), JSON.stringify(evidence, null, 2));
+finishCheck(true, evidence);

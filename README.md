@@ -6,7 +6,7 @@ Neslos is an agent treasury for people who want automated research and payments 
 
 Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. Target: **$55,000 grand prize** and Security, Privacy, DeFi and Swarms tracks ($15,000 per track). This project has not been submitted or awarded a prize.
 
-**Verified:** 91 application tests, 3 browser tests, 12 contract unit tests and 1 NEAR sandbox suite. [GitHub CI passed on 3 November](https://github.com/Agozie180/Neslos/actions/runs/41693429252). The public testnet proof also completed all 12 steps. [Evidence and limits](docs/PROOF.md).
+**Verification repeated on 4 November in Ubuntu WSL:** 165 application tests, 3 browser tests, 12 contract unit tests and 1 NEAR sandbox suite passed. The dedicated Linux TEE image also builds and rejects fake hardware evidence in container tests. [GitHub CI runs](https://github.com/Agozie180/Neslos/actions/workflows/verify.yml) record results for each pushed revision. The public testnet proof completed all 12 steps. [Evidence and limits](docs/PROOF.md).
 
 | Start here | What you can inspect |
 | --- | --- |
@@ -15,6 +15,7 @@ Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. Ta
 | [Verification evidence](docs/PROOF.md) | Commands, measured results and the compiled contract checksum |
 | [Architecture](docs/ARCHITECTURE.md) · [Privacy](docs/PRIVACY.md) | Enforcement, trust boundaries and public information |
 | [Contract](contracts/policy-vault/README.md) · [Deployment](docs/DEPLOYMENT.md) | Vault interface and provisioning the attested runtime |
+| [TEE runbook and free access](docs/TEE-RUNBOOK.md) | Owner CLI, private research/audit, dstack deployment and verified credit options |
 | [Hackathon research](docs/RESEARCH.md) | Official rules, source links, track fit and deadline |
 
 The public testnet vault is [vault.neslos.testnet](https://testnet.nearblocks.io/address/vault.neslos.testnet). [Deployment](deploy/testnet.json) and [proof receipts](deploy/testnet-proof.json) verify a public test-token demonstration. Public hosting, demo video and hardware evidence remain pending; the private path requires provisioning and credentials.
@@ -132,7 +133,7 @@ The wrapper builds both contracts and starts a local NEAR sandbox. It exercises 
 - The browser application is a **rehearsal**. It is not connected to a funded contract or live TEE. Its sessions are isolated, memory-only and expire after two hours.
 - Sensitive production computation is designed for an attested runtime. Public NEAR deposits, amounts, policy fields, output minima and timing remain visible. A public lending position stays public.
 - The 1Click provider sees routing fields. Neslos does not independently attest that HTTPS endpoint. Provider settlement status is an observation, not an independent destination-chain proof.
-- The private runtime prepares payments and allocation-reserve funding without submitting them. A separate owner CLI submits a fixed public testnet demonstration with durable transaction recovery. Neither flow manages a lending position or unattended schedules.
+- The private runtime prepares payments and allocation-reserve funding. The private owner CLI verifies the returned call, prints a reviewable plan, and can submit that exact plan with durable transaction recovery. It also operates private research/audit and owner policy/pause/recovery. The public testnet demonstration remains a separate fixture-token proof. Neither flow manages a lending position or unattended schedules.
 - Spending limits cover the fixed USDC token and UTC calendar days. NEAR gas/storage, inference and TEE hosting have separate budgets. Unknown/late-refund outcomes remain charged.
 - Real TEE deployment, live encrypted inference and funded Intents settlement are unverified. Docker build/startup passed on 2 November; application and contract GitHub CI passed on 3 November. [STATUS](docs/STATUS.md) records the tested revision and remaining work.
 - This is an AI-assisted hackathon implementation, not an independently audited custody product. [Security notes](SECURITY.md) include the known transitive dependency advisory. No yield or prize result is guaranteed.

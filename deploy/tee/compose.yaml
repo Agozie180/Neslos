@@ -1,0 +1,43 @@
+# Render with a real registry digest before deployment. Keep secrets in Phala Encrypted Secrets.
+services:
+  neslos:
+    image: ${NESLOS_TEE_IMAGE:?Set a published linux/amd64 image with @sha256 digest}
+    platform: linux/amd64
+    restart: unless-stopped
+    read_only: true
+    user: '1000:1000'
+    group_add:
+      - '${NESLOS_DSTACK_GID:-0}'
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    stop_grace_period: 140s
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    ports:
+      - '8443:8443'
+    volumes:
+      - /var/run/dstack.sock:/var/run/dstack.sock:ro
+      - neslos-journal:/data
+    environment:
+      - NESLOS_RUNTIME_MODE=${NESLOS_RUNTIME_MODE:-attestation-only}
+      - NESLOS_NETWORK=${NESLOS_NETWORK:-testnet}
+      - NESLOS_VAULT_ACCOUNT=${NESLOS_VAULT_ACCOUNT:-}
+      - NESLOS_TEE_POLICY_JSON=${NESLOS_TEE_POLICY_JSON:-}
+      - NESLOS_INFERENCE_POLICY_JSON=${NESLOS_INFERENCE_POLICY_JSON:-}
+      - NESLOS_OWNER_TOKEN=${NESLOS_OWNER_TOKEN:-}
+      - NEARAI_API_KEY=${NEARAI_API_KEY:-}
+      - ONECLICK_JWT=${ONECLICK_JWT:-}
+      - NESLOS_DSTACK_SOCKET=/var/run/dstack.sock
+    healthcheck:
+      test: ['CMD', 'node', '-e', 'fetch("http://127.0.0.1:8443/health").then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))']
+      interval: 30s
+      timeout: 5s
+      start_period: 90s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: '5m'
+        max-file: '2'
+volumes:
+  neslos-journal:

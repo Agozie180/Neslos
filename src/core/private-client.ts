@@ -5,14 +5,20 @@ import { fetchJson } from './research.js';
 import { z } from 'zod';
 import { hashHex } from './wire.js';
 
-export async function privateCommand(endpoint: string, pinned: TeePolicy, ownerToken: string, command: unknown) {
+export async function attestEndpoint(endpoint: string, pinned: TeePolicy, expectedExecutor?: string) {
   const url = new URL(endpoint);
   if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) throw new Error('A plain HTTPS enclave endpoint is required.');
-  hashHex.parse(ownerToken);
   const base = endpoint.replace(/\/$/, ''), nonce = freshChallenge(), started = Date.now();
   const evidence = await fetchJson(base + '/attestation/' + nonce, {}, 700_000);
   const identity = await verifyTeeEvidence(evidence, pinned, nonce);
   if (Date.now() - started > 60_000) throw new Error('Attestation challenge expired.');
+  if (expectedExecutor && identity.executorPublicKey !== hashHex.parse(expectedExecutor)) throw new Error('ATTESTED_EXECUTOR_CHANGED');
+  return { base, nonce, evidence, identity };
+}
+
+export async function privateCommand(endpoint: string, pinned: TeePolicy, ownerToken: string, command: unknown, expectedExecutor?: string) {
+  hashHex.parse(ownerToken);
+  const { base, nonce, identity } = await attestEndpoint(endpoint, pinned, expectedExecutor);
   const replyKeys = await channelSuite.GenerateKeyPair();
   const replyKey = Buffer.from(await channelSuite.SerializePublicKey(replyKeys.publicKey)).toString('hex');
   const envelope = await encryptChannel(identity.transportPublicKey, { ownerToken, command, replyKey, expiresAt: Date.now() + 60_000 }, { domain: 'neslos:request:v1', nonce });

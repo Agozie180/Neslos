@@ -18,9 +18,15 @@ const knownTokens: Record<string, { symbol: string; stablecoin: boolean; bridged
   'lst.rhealab.near': { symbol: 'rNEAR', stablecoin: false, bridged: false },
 };
 
+export class HttpResponseError extends Error {
+  constructor(readonly status: number, readonly retryAfterMs?: number) { super(`Provider returned HTTP ${status}.`); }
+}
 export async function fetchJson(url: string, options: RequestInit = {}, maxBytes = 2_000_000): Promise<unknown> {
   const response = await fetch(url, { ...options, signal: options.signal ?? AbortSignal.timeout(12_000), redirect: 'error', headers: { accept: 'application/json', ...options.headers } });
-  if (!response.ok) throw new Error(`Provider returned HTTP ${response.status}.`);
+  if (!response.ok) {
+    const retry = response.headers.get('retry-after');
+    throw new HttpResponseError(response.status, retry && /^[0-9]+$/.test(retry) ? Number(retry) * 1000 : undefined);
+  }
   if (!response.body) throw new Error('Empty provider response.');
   const reader = response.body.getReader();
   let size = 0;
@@ -112,13 +118,14 @@ export class ResearchService {
   }
 }
 
-export function rankMarkets(markets: Market[], policy: Policy): RankedMarket[] {
+export function rankMarkets(markets: Market[], policy: Policy, outputAssets?: readonly string[]): RankedMarket[] {
   return markets.map(m => {
     const exclusions: string[] = [];
     if (!policy.allowedVenues.includes(m.venue)) exclusions.push('Venue is outside the policy.');
     if (policy.stablecoinsOnly && !m.stablecoin) exclusions.push('Policy allows stablecoins only.');
     if (!policy.allowBridgedAssets && m.bridged) exclusions.push('Policy excludes bridged assets.');
     if (!m.tokenId || m.id.startsWith('llama:')) exclusions.push('Research-only adapter.');
+    if (outputAssets && !outputAssets.includes('nep141:' + m.tokenId)) exclusions.push('Output asset is outside the on-chain policy.');
     if (m.liquidityUsd <= 0 || m.liquidityUsd < policy.minimumLiquidityUsd) exclusions.push('Insufficient verified exit liquidity.');
     // A transparent ranking heuristic, not a statistical risk model or predicted return.
     const score = m.baseApy + m.rewardApy * 0.25 - (m.bridged ? 3 : 0) - (m.utilization > 0.9 ? 2 : 0);
