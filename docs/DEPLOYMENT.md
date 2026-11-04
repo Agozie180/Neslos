@@ -2,6 +2,8 @@
 
 The local rehearsal is ready to run. The live path is intentionally a different process: it must prove its hardware identity before it can handle private jobs. Do not expose the rehearsal API as a funded owner wallet.
 
+For the implemented private owner CLI, dedicated TEE image, bootstrap, audit access and transaction workflow, use the [TEE runbook](TEE-RUNBOOK.md). It also records current free-credit options. The sections below retain contract/testnet setup and the underlying configuration model.
+
 ## Local application
 
 Use Node 24.22.2 (minimum 24.22.1), npm, and the checked-in lockfile.
@@ -64,10 +66,13 @@ On this Windows workspace, run through Ubuntu WSL:
 ```powershell
 wsl.exe -d Ubuntu -- bash /mnt/c/Users/USER/Neslos/scripts/ubuntu.sh verify
 wsl.exe -d Ubuntu -- bash /mnt/c/Users/USER/Neslos/scripts/ubuntu.sh test:browser
+wsl.exe -d Ubuntu -- bash /mnt/c/Users/USER/Neslos/scripts/ubuntu.sh test:contract
 wsl.exe -d Ubuntu -- bash /mnt/c/Users/USER/Neslos/scripts/ubuntu.sh testnet -- status
 ```
 
-The wrapper syncs source into `$HOME/.cache/neslos-ubuntu`, uses Linux dependencies/builds, and copies public evidence back. It excludes `.env` and `.private`. Its default owner credential is the existing Windows `.private/near/testnet/neslos.testnet.json`; generated executor keys and transaction journals stay in the Linux workspace's `.private/testnet`. Retain that directory across resumes. Install Playwright's Chromium in Ubuntu before browser checks; the Windows download cannot be used there. Docker is not needed for this workflow.
+The wrapper syncs source into `$HOME/.cache/neslos-ubuntu`, uses Linux dependencies/builds, and selects rustup's Cargo even in a non-login shell. It locks that workspace with `flock`; run tasks sequentially. It copies back only changed evidence belonging to the current task and records the task, source identity, exit code and copied paths in `artifacts/wsl-run.json`. A failed or unrelated command cannot restore unchanged cached success reports.
+
+The sync excludes `.env` and `.private`. Its default owner credential is the existing Windows `.private/near/testnet/neslos.testnet.json`; generated executor keys and transaction journals stay in the Linux workspace's `.private/testnet`. Retain that directory across resumes. Install Playwright's Chromium in Ubuntu before browser checks; the Windows download cannot be used there. Docker is not needed for this workflow.
 
 ## Owner-controlled on-chain policy
 
@@ -102,9 +107,13 @@ The implementation is in src/tee/runtime.ts, src/tee/index.ts and src/core/priva
 8. The owner verifies a fresh GET /attestation/<64-hex-challenge> response, then pins that exact executor key in the vault. A self-reported readiness endpoint is not attestation.
 9. Call privateCommand() from the owner-controlled client. It verifies hardware first, then HPKE-encrypts the job and authentication secret, and verifies/decrypts the reply.
 
-The complete runtime uses a separate private process and **does not submit transactions automatically**. It prepares a signed, policy-bound authorization and a reviewable NEAR FunctionCall. The owner or an explicitly authorized relayer submits that call. The contract is the final spending authority.
+The private runtime uses a separate process and **does not submit transactions automatically**. It prepares a signed, policy-bound authorization and a reviewable NEAR FunctionCall. `npm run private -- plan` reconstructs and checks that call; `submit` requires the exact plan hash and uses durable transaction recovery. Owner policy, executor pinning, pause and withdrawal use the same workflow. The contract is the final spending authority. See the runbook for the complete commands and testnet-only private research.
 
 After dispatch, the observe command checks the finalized vault record and the matching provider quote/status. It prepares an attested observer-signed settlement record; unknown results never resend funds. This is a trusted provider-status observation, not an independent cross-chain proof of delivery.
+
+Keep the same command ID and identical payload when recovering an interrupted request: the runtime returns its persisted result. Give each **new settlement poll a fresh UUID**, including after a pending result. Reusing an observation ID intentionally returns the original observation. `KNOWN_DEPOSIT_TX` is pending and does not prepare an Unknown settlement call.
+
+Authorizations are released only after the encrypted journal is persisted; Linux also syncs its directory after the atomic rename. If persistence fails, the process refuses subsequent private commands with `JOURNAL_UNAVAILABLE`. Restore writable durable storage, retain the existing journal, and restart to recover from disk. Do not delete the journal to bypass recovery. The existing 32 MB journal and 1,000 completed-command bounds still require a designed archive/checkpoint procedure before unattended use. Authenticated requests that expire while queued are rejected before execution starts.
 
 The testnet fixture vault is deployed. A provisioned TEE, independently pinned hardware executor, verified inference, and funded mainnet integration remain unverified; no example measurement is accepted as a real one. The testnet CLI does not connect the rehearsal browser to the private runtime.
 

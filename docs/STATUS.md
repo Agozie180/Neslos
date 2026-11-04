@@ -1,6 +1,12 @@
 # Neslos implementation status
 
-## Progress — 3 November 2026
+Latest work: [Private owner workflow and TEE deployment runbook](TEE-RUNBOOK.md). The CLI now verifies the executor before encrypting commands, preserves request IDs across lost replies, exports/checks the private audit, verifies plaintext receipt openings, and plans/submits exact NEAR calls with durable transaction recovery. It supports executor pinning, policy updates, pause and owner withdrawal. A private research command can run with a testnet vault without creating a quote or payment. The browser remains a rehearsal.
+
+A dedicated Linux/amd64 TEE image and dstack Compose template are implemented, including an attestation-only bootstrap, non-root process, persistent journal and immutable image bundle generator. Verification repeated on **4 November 2026** passed **165 application tests across 17 files**, strict TypeScript, production builds, **3 browser tests**, and **12 contract unit tests plus 1 sandbox suite** in Ubuntu WSL. The TEE image build and restricted-container smoke check also passed: bootstrap rejects private calls, and the real verifier refuses the fake quote. Contract sources are unchanged. [GitHub CI runs](https://github.com/Agozie180/Neslos/actions/workflows/verify.yml) record results for each pushed revision.
+
+The [foundation fixes](FOUNDATION-FIXES-2026-11-03.md) remain in place. Genuine remote hardware execution, independently approved measurements, live encrypted inference and funded private settlement are still unverified. Next: obtain a CPU TDX instance/credits and NEAR AI credentials, follow the runbook, and capture actual evidence. Research-driven strategy decisions, lending positions, browser integration and unattended operation remain unfinished parts of the original brief. The runbook distinguishes NEAR AI's $10 builder credit, Phala's conditional promotion, and OutLayer's separate WASI trial; no free hosting entitlement or live instance has been assumed.
+
+## Earlier progress — 3 November 2026
 
 The interrupted testnet deployment and proof are complete. The [vault](https://testnet.nearblocks.io/address/vault.neslos.testnet) is paused. [Deployment evidence](../deploy/testnet.json) and [12 proof receipts](../deploy/testnet-proof.json) record the downloaded code hashes, expected rejections, failed-transfer refund, retained allowance, settlement and owner recovery. This is a public fixture-token demonstration with a local executor, not a TEE or Intents demonstration.
 

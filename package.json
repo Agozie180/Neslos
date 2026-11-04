@@ -18,6 +18,8 @@
     "quote:dry": "node scripts/run.mjs quote",
     "tee": "node scripts/run.mjs tee",
     "testnet": "node scripts/run.mjs testnet",
+    "private": "node scripts/run.mjs private",
+    "tee:bundle": "node scripts/tee-bundle.mjs",
     "build:contract": "node scripts/contract.mjs build",
     "test:contract": "node scripts/contract.mjs test",
     "test:contract:unit": "node scripts/contract.mjs unit",

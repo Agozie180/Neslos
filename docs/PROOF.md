@@ -1,19 +1,20 @@
 # Verification record
 
-Updated **3 November 2026**. Application and browser checks ran in Ubuntu WSL; local contract checks passed on 2 November. GitHub CI independently passed all application and contract checks on 3 November. Public testnet evidence is listed separately below. None of these results establishes hardware attestation or funded Intents settlement.
+Updated **4 November 2026** after reviewing the [private owner/TEE work](TEE-RUNBOOK.md) and [foundation fixes](FOUNDATION-FIXES-2026-11-03.md). Application, browser and contract checks passed again in Ubuntu WSL; the TEE image build and container smoke check also passed. [GitHub CI runs](https://github.com/Agozie180/Neslos/actions/workflows/verify.yml) record results for each pushed revision. Public testnet evidence is listed separately. None of these results establishes genuine remote hardware execution or funded Intents settlement.
 
 | Check | Result | Reproduce |
 | --- | --- | --- |
-| Application, policy, API, owner recovery and cryptographic tests | **91 passed**, 0 failed across 8 files | `npm run verify` |
+| Application, policy, API, private runtime, SDK, owner recovery and cryptographic tests | **165 passed**, 0 failed across 17 files | `npm run verify` |
 | Strict TypeScript, frontend and API/TEE compilation | **Passed** | `npm run verify` |
 | Contract unit tests | **12 passed**, 0 failed | `npm run test:contract:unit` |
 | Deployed local NEAR sandbox suite | **1 passed**, 0 failed; multiple real local transactions and receipts | `npm run test:contract` |
 | Chromium desktop/mobile and source-selection tests | **3 passed**, 0 failed | `npm run test:browser` |
-| Clean GitHub runner: application and contract jobs | **Both passed** at source commit `8d2db211d09b145d3cb70197a5ca30b7ed8c1bc7` | [Run 41693429252](https://github.com/Agozie180/Neslos/actions/runs/41693429252) |
+| Dedicated TEE image | Linux/amd64 build passed; restricted UID-1000 container serves bootstrap evidence, refuses private commands in bootstrap and rejects a fake quote in private mode | [Build and smoke commands](TEE-RUNBOOK.md#build-and-verify-locally) |
+| Earlier main revision on a clean GitHub runner: application and contract jobs | **Both passed** at source commit `4739ce41fd2673b702411dad38a4cc5ae699c37d`; this predates the private owner/TEE changes | [Run 41702140067](https://github.com/Agozie180/Neslos/actions/runs/41702140067) |
 
 Runtime: Node 24.22.2; Rust 1.93.0; cargo-near 0.22.0; near-sdk 5.29.0. The contract build and sandbox ran in WSL Ubuntu. Package versions and transitive resolutions are in the checked-in lockfiles.
 
-Tests generate fresh reports and timestamps in `artifacts/`. Those generated reports are ignored by Git so a source checkout is not mistaken for a new verification run. The public testnet evidence in `deploy/` is retained with transaction hashes and the block at which final state was verified.
+Tests generate fresh reports and timestamps in `artifacts/`. Application/contract verification starts by invalidating the old success report and records a run ID, base revision and source-content digest. The WSL wrapper serializes workspace use and copies only changed outputs for the task it ran. Generated JSON reports are ignored by Git so a source checkout is not mistaken for a new verification run. The public testnet evidence in `deploy/` is retained with transaction hashes and the block at which final state was verified.
 
 ## Contract artifact
 
@@ -30,7 +31,7 @@ The sandbox deploys that compiled artifact and a minimal **test fixture token**.
 SANDBOX_EVIDENCE: recipient=150000000; failed_dispatch_restored=true; nonce=2; usage=150000000; paused=true; owner_recovered=50000000; real_funds=false
 ```
 
-The test asserts balances and contract state after each operation. The terminal line alone is not the proof; the [test source](../contracts/policy-vault/tests/sandbox.rs), compiled artifact and reproducible execution are the evidence. The latest retained full contract check completed in 79.10 seconds on 2 November. This is a single-run measurement, not a performance benchmark.
+The test asserts balances and contract state after each operation. The terminal line alone is not the proof; the [test source](../contracts/policy-vault/tests/sandbox.rs), compiled artifact and reproducible execution are the evidence. The corrected non-login WSL wrapper completed the full contract check in 66.884 seconds on 4 November. This is a single-run measurement, not a performance benchmark. The vault source and WASM hash are unchanged by the foundation fixes.
 
 ## Public testnet proof
 
@@ -63,6 +64,12 @@ This uses a local executor key and public routing. It does not claim TEE executi
 | Private routing | Unsigned quote refusal; official SDK hash-coverage checks for recipient type, recipient and output minimum |
 | Attestation boundary | Binding fixture tests for nonce, keys, all pinned measurements and debug mode; malformed quotes rejected by the real verifier |
 | Encrypted channel | RFC 9180 HPKE round trip; wrong key, context and altered ciphertext rejection |
+| Private runtime | Allowed output-asset selection, policy/nonce changes, queued expiry, signed prepare/observe results, durable restart/idempotency and stopping after journal I/O failure; external services are fixtures |
+| Published SDK boundaries | NEAR RPC encoding/decoding against fixture responses, 1Click Ed25519 verification with a test signer, dstack Unix socket protocol, and rejection of a fake quote by the real DCAP verifier |
+| Verification tooling | Failed subprocesses replace old success; unrelated tasks and unchanged cached artifacts cannot overwrite newer evidence |
+| Private owner workflow | Actual HPKE client/runtime exchange against fixture hardware/services; lost reply recovery, checkpoint-bound multi-page audit export, signed receipt opening, and bounded rate-limit retry |
+| Private transaction workflow | Exact signed-call reconstruction; substituted receiver/amount rejected; plan hash/mainnet opt-in; changed policy rejection; saved transaction reconciliation after timeout |
+| Private research | Testnet research produces no quote or authorization; fixture NEAR AI orchestration requires encrypted requests, provider-TEE signatures and known market references |
 | Audit | AES-GCM, Ed25519 and hash-chain checks; tamper/reorder/truncation rejection against retained evidence; journal restore |
 | Browser/API | Cross-session isolation, CSRF/origin checks, blocked/allowed flow, preserved allowance, browser verification, mobile layout and a late live response unable to overwrite selected reference data |
 
@@ -77,6 +84,6 @@ The attestation binding fixture is **not a genuine Intel quote**. Passing those 
 
 ## Evidence still required for live claims
 
-The testnet owner vault and fixture-token proof are deployed. There is still no provisioned TDX instance, independently approved live measurement set, verified live NEAR AI response, funded Intents deposit or mainnet settlement receipt. The TEE process prepares calls; it does not submit them. Docker build/startup passed on 2 November; GitHub CI status is tracked in [STATUS](STATUS.md).
+The testnet owner vault and fixture-token proof are deployed. There is still no provisioned Neslos TDX instance, independently approved live measurement set, verified live NEAR AI response, funded Intents deposit or mainnet settlement receipt. The TEE process prepares calls; the private owner CLI can submit an explicitly reviewed plan. Both the earlier rehearsal Docker build and the new TEE image build passed. Its negative hardware test must report `genuineHardwareVerified:false`. GitHub CI status is tracked in [STATUS](STATUS.md).
 
 The next validation stage is to provision the reviewed private runtime, verify its identity independently, pin that key in an owner-controlled vault, obtain an authenticated signed quote, and explicitly authorize a bounded funded demonstration. Keep public-chain and provider visibility disclosures in that demonstration. See [deployment](DEPLOYMENT.md) and [privacy](PRIVACY.md).
