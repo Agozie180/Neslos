@@ -6,7 +6,7 @@ Neslos is an agent treasury for people who want automated research and payments 
 
 Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. Target: **$55,000 grand prize** and Security, Privacy, DeFi and Swarms tracks ($15,000 per track). This project has not been submitted or awarded a prize.
 
-**Verification repeated on 4 November in Ubuntu WSL:** 165 application tests, 3 browser tests, 12 contract unit tests and 1 NEAR sandbox suite passed. The dedicated Linux TEE image also builds and rejects fake hardware evidence in container tests. [GitHub CI runs](https://github.com/Agozie180/Neslos/actions/workflows/verify.yml) record results for each pushed revision. The public testnet proof completed all 12 steps. [Evidence and limits](docs/PROOF.md).
+**Verification repeated on 4 November in Ubuntu WSL:** 193 application tests, 5 browser tests, 12 contract unit tests and 1 NEAR sandbox suite passed. The dedicated Linux TEE image also builds and rejects fake hardware evidence in container tests. [GitHub CI runs](https://github.com/Agozie180/Neslos/actions/workflows/verify.yml) record results for each pushed revision. The public testnet proof completed all 12 steps. [Evidence and limits](docs/PROOF.md).
 
 | Start here | What you can inspect |
 | --- | --- |
@@ -15,6 +15,7 @@ Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. Ta
 | [Verification evidence](docs/PROOF.md) | Commands, measured results and the compiled contract checksum |
 | [Architecture](docs/ARCHITECTURE.md) · [Privacy](docs/PRIVACY.md) | Enforcement, trust boundaries and public information |
 | [Contract](contracts/policy-vault/README.md) · [Deployment](docs/DEPLOYMENT.md) | Vault interface and provisioning the attested runtime |
+| [Local owner workspace](docs/OWNER-WORKSPACE.md) | Private browser controls, credit caps, funding, schedules and journal recovery |
 | [TEE runbook and free access](docs/TEE-RUNBOOK.md) | Owner CLI, private research/audit, dstack deployment and verified credit options |
 | [Hackathon research](docs/RESEARCH.md) | Official rules, source links, track fit and deadline |
 
@@ -105,7 +106,7 @@ The on-chain vault can check private commitment membership, but opening those co
 | NEAR policy vault | Rust/near-sdk WASM executed in a local sandbox and deployed on public testnet; downloaded code hashes, finalized receipts, spending limits and test-token balances verified. |
 | Confidential Intents / 1Click | Official token discovery and quote-signature verifier. Requires signed `CONFIDENTIAL_INTENTS` routing. The live confidential quote probe returned **HTTP 401 without a JWT**; no successful live quote is claimed. |
 | Intel TDX / dstack | DCAP verification, pinned MRTD/RTMR measurements, debug rejection, fresh nonce and signing/transport-key binding. Real hardware has not been provisioned here. |
-| NEAR AI | E2EE, pinned gateway/model deployment, strict TCB checks, GPU evidence and explicit provider response verification. Implemented and compiled; a live inference call is pending credentials. |
+| NEAR AI | E2EE, pinned gateway/model deployment, strict TCB checks, GPU evidence and explicit provider response verification. Encrypted structured reviews affect strategy, with durable credit limits and no duplicate paid retry. The API key passed validation; genuine live TEE inference remains unverified. |
 | External paid agents | Not implemented. The Agents track is not claimed without a real paid agent job. |
 
 “Best yield” means the leading eligible opportunity among queried markets. Ranking uses base APY plus 25% of reward APY, with explicit bridge/utilization penalties; it is a transparent heuristic, not a return prediction. Rates and available liquidity can change.
@@ -130,12 +131,12 @@ The wrapper builds both contracts and starts a local NEAR sandbox. It exercises 
 
 ## Limitations and disclosures
 
-- The browser application is a **rehearsal**. It is not connected to a funded contract or live TEE. Its sessions are isolated, memory-only and expire after two hours.
+- The default browser application is a **rehearsal** with isolated, memory-only sessions. The separate local **owner workspace** (`npm run owner`) reads finalized chain state and operates an independently configured private runtime. Its live cloud integration remains unverified; browser tests use labelled fixtures.
 - Sensitive production computation is designed for an attested runtime. Public NEAR deposits, amounts, policy fields, output minima and timing remain visible. A public lending position stays public.
 - The 1Click provider sees routing fields. Neslos does not independently attest that HTTPS endpoint. Provider settlement status is an observation, not an independent destination-chain proof.
-- The private runtime prepares payments and allocation-reserve funding. The private owner CLI verifies the returned call, prints a reviewable plan, and can submit that exact plan with durable transaction recovery. It also operates private research/audit and owner policy/pause/recovery. The public testnet demonstration remains a separate fixture-token proof. Neither flow manages a lending position or unattended schedules.
+- The private runtime prepares payments and allocation-reserve funding. The private owner CLI verifies the returned call, prints a reviewable plan, and can submit that exact plan with durable transaction recovery. It also operates private research/audit and owner policy/pause/recovery. The public testnet demonstration remains a separate fixture-token proof. The owner dashboard also supports token registration/funding plans and finite research/settlement-observation schedules. Schedules never submit transactions. Neither flow opens a lending position.
 - Spending limits cover the fixed USDC token and UTC calendar days. NEAR gas/storage, inference and TEE hosting have separate budgets. Unknown/late-refund outcomes remain charged.
-- Real TEE deployment, live encrypted inference and funded Intents settlement are unverified. Docker build/startup passed on 2 November; application and contract GitHub CI passed on 3 November. [STATUS](docs/STATUS.md) records the tested revision and remaining work.
+- Real TEE deployment, live encrypted inference and funded Intents settlement are unverified. Local application/browser checks and the TEE container build pass; GitHub CI records pushed revisions separately. [STATUS](docs/STATUS.md) records the tested revision and remaining work.
 - This is an AI-assisted hackathon implementation, not an independently audited custody product. [Security notes](SECURITY.md) include the known transitive dependency advisory. No yield or prize result is guaranteed.
 
 Built from the official NEAR contract scaffold and the libraries pinned in the npm and Cargo lockfiles. The bundled Inter font retains its OFL license. See [research](docs/RESEARCH.md) for source provenance and [MIT license](LICENSE) for project code.

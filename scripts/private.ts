@@ -11,6 +11,8 @@ import type { AuditExport } from '../src/core/types.js';
 import { connectOwner, json, transactionOutcome, writePrivateJson } from '../src/owner/account.js';
 import { downloadPrivateAudit, openPrivateReceipt, ownerRuntimeSchema, runPrivateJob, verifyPrivateAudit, type PrivateJob } from '../src/owner/private.js';
 import { executeTransactionPlan, makeTransactionPlan, planHash, plannedCall, transactionPlanSchema } from '../src/owner/transactions.js';
+import { ownerOpeningsSchema } from '../src/owner/workspace.js';
+import { commitment } from '../src/core/crypto.js';
 
 const { values: v, positionals } = parseArgs({ allowPositionals: true, options: {
   config: { type: 'string', default: '.private/tee/runtime.json' }, 'token-file': { type: 'string', default: '.private/tee/owner-token.json' },
@@ -27,6 +29,12 @@ const save = async (value: unknown, exclusive = false) => { const path = require
 async function main() {
   switch (positionals[0]) {
     case 'new-token': await save({ token: randomBytes(32).toString('hex') }, true); break;
+    case 'openings': {
+      const contacts = z.object({ venues: z.array(z.string()).min(1), counterparties: z.array(z.object({ name: z.string(), recipient: z.string() }).strict()).max(32) }).strict().parse(await readJson(required('request')));
+      const openings = ownerOpeningsSchema.parse({ venues: contacts.venues.map(name => ({ name, salt: randomBytes(32).toString('hex') })), counterparties: contacts.counterparties.map(c => ({ ...c, salt: randomBytes(32).toString('hex') })) });
+      await save(openings, true);
+      console.log(json({ venue_commitments: openings.venues.map(v => commitment('venue', v.name, v.salt)), counterparty_commitments: openings.counterparties.map(c => commitment('counterparty', c.recipient, c.salt)), note: 'Private openings saved. Review these commitments in an owner policy plan before use.' })); break;
+    }
     case 'evidence': {
       const endpoint = new URL(required('endpoint'));
       if (endpoint.protocol !== 'https:' || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) throw new Error('Plain HTTPS endpoint required.');
@@ -76,7 +84,7 @@ async function main() {
       console.log(json({ transactionHash: record.hash, ...transactionOutcome(record.outcome), explorer: `https://${plan.config.network === 'testnet' ? 'testnet.' : ''}nearblocks.io/txns/${record.hash}` })); break;
     }
     default:
-      console.log('Usage: npm run private -- <new-token|evidence|init|attest|state|execute|audit-export|audit-open|verify-audit|plan|submit> [options]\nSee docs/TEE-RUNBOOK.md for the complete command sequence. Secrets are read from private files, never command-line values.');
+      console.log('Usage: npm run private -- <new-token|openings|evidence|init|attest|state|execute|audit-export|audit-open|verify-audit|plan|submit> [options]\nSee docs/TEE-RUNBOOK.md for the complete command sequence. Secrets are read from private files, never command-line values.');
       if (positionals[0]) process.exitCode = 1;
   }
 }

@@ -28,7 +28,7 @@ if ! flock -n 9; then
   echo 'Another Neslos WSL task is using this workspace. Wait for it to finish.' >&2
   exit 1
 fi
-rsync -a --exclude=node_modules --exclude=.git --exclude=.tools --exclude=.private \
+rsync -a --exclude=node_modules --exclude=.git --exclude=.tools --exclude=.private --exclude=.local \
   --exclude='.env*' --exclude=dist --exclude=target --exclude=artifacts --exclude=test-results \
   "$source_root/" "$work_root/"
 mkdir -p "$work_root/.tools"

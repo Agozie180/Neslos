@@ -34,6 +34,7 @@ switch (process.argv[2]) {
   case 'tee': run(['--import', 'tsx', 'src/tee/index.ts', ...extra]); break;
   case 'testnet': run(['--import', 'tsx', 'scripts/testnet.ts', ...extra]); break;
   case 'private': run(['--import', 'tsx', 'scripts/private.ts', ...extra]); break;
+  case 'owner': run(['--import', 'tsx', 'scripts/owner.ts', ...extra]); break;
   case 'start': run(['dist/server/server/index.js', ...extra]); break;
   default: throw new Error('Unknown Neslos task.');
 }

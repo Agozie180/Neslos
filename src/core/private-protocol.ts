@@ -15,7 +15,8 @@ export const prepareSchema = z.object({
 }).strict();
 export const researchCommandSchema = z.object({ type: z.literal('research'), ...researchFields }).strict();
 export const observeSchema = z.object({ type: z.literal('observe'), id: z.string().uuid(), authorizationHash: hashHex }).strict();
-export const auditExportSchema = z.object({ type: z.literal('audit-export'), id: z.string().uuid(), offset: z.number().int().min(0).max(32_000_000).default(0), checkpoint: hashHex.optional() }).strict();
+export const auditExportSchema = z.object({ type: z.literal('audit-export'), id: z.string().uuid(), offset: z.number().int().min(0).max(128_001_000).default(0), checkpoint: hashHex.optional() }).strict();
 export const auditOpenSchema = z.object({ type: z.literal('audit-open'), id: z.string().uuid(), entryId: z.string().uuid(), entryHash: hashHex }).strict();
-export const commandSchema = z.discriminatedUnion('type', [prepareSchema, researchCommandSchema, observeSchema, auditExportSchema, auditOpenSchema]);
+export const runtimeStatusSchema = z.object({ type: z.literal('status'), id: z.string().uuid() }).strict();
+export const commandSchema = z.discriminatedUnion('type', [prepareSchema, researchCommandSchema, observeSchema, auditExportSchema, auditOpenSchema, runtimeStatusSchema]);
 export type PrivateCommand = z.infer<typeof commandSchema>;

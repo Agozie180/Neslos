@@ -1,5 +1,21 @@
 # Neslos implementation status
 
+## Current build — 4 November 2026
+
+The [local owner workspace](OWNER-WORKSPACE.md) now connects the browser to the private owner client: finalized vault state, hardware verification, private research/payment preparation, saved-job recovery, exact transaction review, token storage/funding, governance and private audit verification. Credentials stay in local private files. The default public application remains a rehearsal.
+
+Research assessments now affect strategy: lending, liquidity and risk reviewers must all approve an eligible opportunity. Models can veto or narrow choices, never expand the owner's deterministic allowlist. Paid inference defaults to disabled and requires a durable lifetime/daily/call allowance. Reservations precede paid calls, persist across restart, and bind to exact job IDs; failed or interrupted jobs cannot silently pay again. Diagnostics expose bounded error categories, not upstream messages or credentials.
+
+Finite research and settlement-observation schedules preserve request IDs, skip missed intervals and pause on error. They never submit transactions. Immutable encrypted journal segments migrate legacy history without losing checkpoints, payment recovery or credit usage, with explicit 128 MB/10,000-command operational bounds. Missing or altered history fails closed.
+
+Verification: **193 application tests across 21 files**, strict TypeScript/production builds, and **5 desktop/mobile Chromium tests** passed in Ubuntu WSL. The dedicated Linux TEE image builds; its restricted-container smoke checks passed and rejected fake hardware evidence. The unchanged Rust contract passed all 12 unit tests and the full local sandbox suite again; the separate public testnet proof is retained in `deploy/`.
+
+Cloud spending for this implementation is **$0**: no paid inference or CVM provisioning. The supplied NEAR AI key passed the no-charge validity check. The supplied Phala Cloud key returned **401 Invalid API key**, including after checking the exact file value and supported API-version header. No authenticated browser session is available. Genuine hardware deployment, independently approved model measurements, live encrypted inference and funded confidential settlement remain unverified. The owner's authorization is capped at $3 combined; private task records allocate no more than $0.25 to inference and $2.75 to hosting.
+
+Actual lending deposits/positions, paid external-agent jobs, public hosting/video and hackathon submission remain separate unfinished scope. No yield-bearing position, paid external job or cloud proof is claimed by this build.
+
+## Earlier owner CLI build — 4 November 2026
+
 Latest work: [Private owner workflow and TEE deployment runbook](TEE-RUNBOOK.md). The CLI now verifies the executor before encrypting commands, preserves request IDs across lost replies, exports/checks the private audit, verifies plaintext receipt openings, and plans/submits exact NEAR calls with durable transaction recovery. It supports executor pinning, policy updates, pause and owner withdrawal. A private research command can run with a testnet vault without creating a quote or payment. The browser remains a rehearsal.
 
 A dedicated Linux/amd64 TEE image and dstack Compose template are implemented, including an attestation-only bootstrap, non-root process, persistent journal and immutable image bundle generator. Verification repeated on **4 November 2026** passed **165 application tests across 17 files**, strict TypeScript, production builds, **3 browser tests**, and **12 contract unit tests plus 1 sandbox suite** in Ubuntu WSL. The TEE image build and restricted-container smoke check also passed: bootstrap rejects private calls, and the real verifier refuses the fake quote. Contract sources are unchanged. [GitHub CI runs](https://github.com/Agozie180/Neslos/actions/workflows/verify.yml) record results for each pushed revision.

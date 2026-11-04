@@ -47,7 +47,7 @@ export async function runPrivateJob(config: OwnerRuntime, ownerToken: string, in
   return completed;
 }
 
-const pageSchema = z.object({ checkpoint: hashHex, offset: z.number().int().min(0), totalBytes: z.number().int().min(1).max(32_000_000), chunk: z.string().regex(/^[A-Za-z0-9+/]*={0,2}$/).max(180_000), nextOffset: z.number().int().positive().nullable() }).strict();
+const pageSchema = z.object({ checkpoint: hashHex, offset: z.number().int().min(0), totalBytes: z.number().int().min(1).max(128_001_000), chunk: z.string().regex(/^[A-Za-z0-9+/]*={0,2}$/).max(180_000), nextOffset: z.number().int().positive().nullable() }).strict();
 export function verifyPrivateAudit(bundle: AuditExport, config: OwnerRuntime, retainedCheckpoint?: string) {
   if (bundle.scope !== 'attested-executor' || bundle.entries.some(e => e.mode !== 'attested')) throw new Error('AUDIT_SCOPE');
   const result = verifyAudit(bundle, config.executorPublicKey, retainedCheckpoint);
@@ -57,7 +57,7 @@ export function verifyPrivateAudit(bundle: AuditExport, config: OwnerRuntime, re
 export async function downloadPrivateAudit(config: OwnerRuntime, token: string, retainedCheckpoint?: string): Promise<AuditExport> {
   let offset = 0, checkpoint: string | undefined, total: number | undefined;
   const chunks: Buffer[] = [];
-  for (let page = 0; page < 251; page++) {
+  for (let page = 0; page < 1001; page++) {
     const command: PrivateCommand = { type: 'audit-export', id: randomUUID(), offset, ...(checkpoint ? { checkpoint } : {}) };
     let raw: unknown;
     for (let attempt = 0; ; attempt++) {

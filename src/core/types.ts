@@ -67,6 +67,7 @@ export interface AgentReport {
   sourceUrls: string[];
   completedAt: string;
   inference: 'deterministic' | 'verified-near-ai';
+  assessments?: import('./strategy.js').MarketAssessment[];
 }
 
 export interface Proposal {
@@ -146,6 +147,7 @@ export interface MissionRun {
   reports: AgentReport[];
   research?: ResearchResult;
   ranking?: RankedMarket[];
+  strategy?: import('./strategy.js').StrategyDecision;
   proposal?: Proposal;
   decision?: GuardianDecision;
   receiptId?: string;

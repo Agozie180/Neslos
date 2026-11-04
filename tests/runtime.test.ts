@@ -3,19 +3,24 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-const mocks = vi.hoisted(() => ({ identity: vi.fn(), verify: vi.fn(), vault: vi.fn(), record: vi.fn(), research: vi.fn(), reports: vi.fn(), quote: vi.fn(), status: vi.fn() }));
+const mocks = vi.hoisted(() => ({ identity: vi.fn(), verify: vi.fn(), vault: vi.fn(), record: vi.fn(), research: vi.fn(), reports: vi.fn(), quote: vi.fn(), status: vi.fn(), reserve: undefined as undefined | ((reservation: import('../src/core/inference-budget.js').InferenceReservation) => Promise<void>) }));
 vi.mock('../src/core/attestation.js', async original => ({ ...await original<typeof import('../src/core/attestation.js')>(), createTeeIdentity: mocks.identity, verifyTeeEvidence: mocks.verify }));
 vi.mock('../src/core/near.js', () => ({ readVault: mocks.vault, viewNear: mocks.record }));
 vi.mock('../src/core/research.js', async original => ({ ...await original<typeof import('../src/core/research.js')>(), ResearchService: class { discover = mocks.research; } }));
-vi.mock('../src/core/inference.js', async original => ({ ...await original<typeof import('../src/core/inference.js')>(), PrivateResearchers: class { research = mocks.reports; } }));
+vi.mock('../src/core/inference.js', async original => ({ ...await original<typeof import('../src/core/inference.js')>(), PrivateResearchers: class {
+  constructor(_policy: unknown, _key: string, reserve: typeof mocks.reserve) { mocks.reserve = reserve; }
+  research = mocks.reports;
+} }));
 vi.mock('../src/core/intents.js', async original => ({ ...await original<typeof import('../src/core/intents.js')>(), IntentsClient: class { quote = mocks.quote; status = mocks.status; } }));
 import { PrivateRuntime, type prepareSchema } from '../src/tee/runtime.js';
+import { AuditJournal } from '../src/tee/journal.js';
 import { channelSuite, decryptChannel, encryptChannel } from '../src/core/channel.js';
 import { canonical, commitment, keyFromSeed, sha256, verifyHash } from '../src/core/crypto.js';
 import { NATIVE_USDC } from '../src/core/research.js';
 import { quoteFixture } from './fixtures/quote.js';
 import { authorizationBytes, settlementBytes } from '../src/core/wire.js';
 import { verifyAudit } from '../src/core/audit.js';
+import { DISABLED_INFERENCE_BUDGET, type InferenceBudgetPolicy } from '../src/core/inference-budget.js';
 import { privateCommand } from '../src/core/private-client.js';
 import { downloadPrivateAudit, openPrivateReceipt, runPrivateJob, type OwnerRuntime } from '../src/owner/private.js';
 import type { TeeIdentity, TeePolicy } from '../src/core/attestation.js';
@@ -41,8 +46,8 @@ function evidence() {
     [NATIVE_USDC, 'USDC', 10], ['usdt.tether-token.near', 'USDT', 5],
   ].map(([tokenId, symbol, rate]) => ({ id: 'rhea:' + tokenId, tokenId, symbol, protocol: 'Rhea Finance', venue: 'rhea-lending', chain: 'NEAR', baseApy: rate, rewardApy: 0, totalApy: rate, tvlUsd: 2000000, liquidityUsd: 1000000, utilization: 0.5, stablecoin: true, bridged: false, sourceMode: 'live', sourceUrl: 'https://synthetic.invalid', fetchedAt: new Date().toISOString(), upstreamObservedAt: null, risks: [] })) };
 }
-function create(journalPath = join(directory, 'audit.json')) {
-  return PrivateRuntime.create({ network: 'mainnet', vault: 'vault.near', teePolicy, inferencePolicy: { modelId: 'fixture', gateway: { osImageHash: 'aa'.repeat(32), composeHash: 'bb'.repeat(32) }, model: { osImageHash: 'cc'.repeat(32), composeHash: 'dd'.repeat(32) } }, ownerToken: token, nearAiKey: 'fixture', journalPath });
+function create(journalPath = join(directory, 'audit.json'), budget: InferenceBudgetPolicy = DISABLED_INFERENCE_BUDGET) {
+  return PrivateRuntime.create({ network: 'mainnet', vault: 'vault.near', teePolicy, inferencePolicy: { modelId: 'fixture', gateway: { osImageHash: 'aa'.repeat(32), composeHash: 'bb'.repeat(32) }, model: { osImageHash: 'cc'.repeat(32), composeHash: 'dd'.repeat(32) }, budget }, ownerToken: token, nearAiKey: 'fixture', journalPath });
 }
 async function send(runtime: PrivateRuntime, request: unknown, ownerToken = token) {
   const nonce = randomBytes(32).toString('hex'), keys = await channelSuite.GenerateKeyPair();
@@ -58,12 +63,42 @@ beforeEach(async () => {
   const signingSeed = randomBytes(32), pair = keyFromSeed(signingSeed), channelKeys = await channelSuite.GenerateKeyPair();
   identity = { signingSeed, signingKey: pair.privateKey, executorPublicKey: pair.publicKey, auditKey: randomBytes(32), channelKeys, transportPublicKey: Buffer.from(await channelSuite.SerializePublicKey(channelKeys.publicKey)).toString('hex'), attest: async nonce => ({ format: 'neslos-tdx-evidence-v1', nonce, executorPublicKey: pair.publicKey, transportPublicKey: identity.transportPublicKey, quote: '00'.repeat(400), eventLog: '[]' }) };
   mocks.identity.mockResolvedValue(identity); mocks.verify.mockResolvedValue({ verified: true, executorPublicKey: identity.executorPublicKey, transportPublicKey: identity.transportPublicKey });
-  mocks.vault.mockImplementation(async () => state()); mocks.research.mockImplementation(async () => evidence()); mocks.reports.mockResolvedValue([]);
+  mocks.vault.mockImplementation(async () => state()); mocks.research.mockImplementation(async () => evidence());
+  mocks.reports.mockImplementation(async () => ['lending', 'liquidity', 'risk'].map(agent => ({ agent, title: agent, summary: 'Fixture review', findings: ['Fixture evidence'], marketIds: evidence().markets.map(m => m.id), sourceUrls: [], completedAt: new Date().toISOString(), inference: 'verified-near-ai', assessments: evidence().markets.map(m => ({ marketId: m.id, decision: 'approve', reason: 'Fixture review passed.' })) })));
   mocks.quote.mockImplementation(async () => { const response = quoteFixture(); return { response, hash: sha256(canonical(response)), signatureVerified: true, privacyBinding: 'signed-confidential-recipient', requestedSlippageBps: 49, enforcedSlippageBps: 50, fetchedAt: new Date().toISOString() }; });
   mocks.status.mockResolvedValue({ outcome: 'pending', raw: { status: 'KNOWN_DEPOSIT_TX' } });
 });
 afterEach(async () => { vi.unstubAllGlobals(); vi.restoreAllMocks(); await rm(directory, { recursive: true, force: true }); });
 describe('encrypted private runtime', () => {
+  const budget: InferenceBudgetPolicy = { ...DISABLED_INFERENCE_BUDGET, totalLimitNanoUsd: '1000', dailyLimitNanoUsd: '1000', maxCalls: 3, inputNanoUsdPerToken: '1', outputNanoUsdPerToken: '1' };
+  const reservation = () => ({ id: randomUUID(), modelId: 'fixture', createdAt: new Date().toISOString(), calls: 3, inputTokensBound: 100, outputTokensBound: 200, reservedNanoUsd: '300', requestHash: 'ab'.repeat(32) });
+  it('retains paid failures and credit usage across restart without another paid attempt', async () => {
+    mocks.reports.mockImplementation(async () => { await mocks.reserve!(reservation()); throw new Error('PRIVATE_RESEARCH_FAILED'); });
+    const request = command();
+    expect((await send(await create(undefined, budget), request)).error).toContain('PRIVATE_RESEARCH_FAILED');
+    const restarted = await create(undefined, budget);
+    expect((await send(restarted, request)).error).toContain('PRIVATE_RESEARCH_FAILED');
+    expect(mocks.reports).toHaveBeenCalledTimes(1);
+    expect((await send(restarted, { type: 'status', id: randomUUID() })).value.inference).toMatchObject({ calls: 3, totalNanoUsd: '300' });
+    expect((await send(restarted, command())).error).toContain('INFERENCE_BUDGET_EXHAUSTED');
+    expect((await send(restarted, { type: 'status', id: randomUUID() })).value.inference.totalNanoUsd).toBe('300');
+  });
+  it('binds an interrupted paid attempt to its exact command before sending inference', async () => {
+    mocks.reports.mockImplementation(async () => {
+      await mocks.reserve!(reservation());
+      // Simulate losing durable writes after the reservation, before any outcome.
+      const { mkdir } = await import('node:fs/promises'); await mkdir(join(directory, 'audit.json.pending'));
+      throw new Error('transport interrupted');
+    });
+    const request = command();
+    expect((await send(await create(undefined, budget), request)).ok).toBe(false);
+    await rm(join(directory, 'audit.json.pending'), { recursive: true });
+    const restarted = await create(undefined, budget);
+    expect((await send(restarted, request)).error).toContain('INFERENCE_OUTCOME_UNKNOWN');
+    expect((await send(restarted, { ...request, prompt: 'A different mission' })).error).toContain('IDEMPOTENCY_CONFLICT');
+    expect(mocks.reports).toHaveBeenCalledTimes(1);
+    expect((await send(restarted, { type: 'status', id: randomUUID() })).value.inference.totalNanoUsd).toBe('300');
+  });
   it('selects an allowed lower-ranked asset and emits an exact verifiable authorization', async () => {
     const runtime = await create(), result = await send(runtime, command());
     expect(result.ok, result.error).toBe(true);
@@ -74,7 +109,8 @@ describe('encrypted private runtime', () => {
     expect(signed.authorization.amount).toBe('150000000');
     const raw = await readFile(join(directory, 'audit.json'), 'utf8');
     expect(raw).not.toContain('recipient.near');
-    expect(verifyAudit(JSON.parse(raw), identity.executorPublicKey).valid).toBe(true);
+    const bundle = await new AuditJournal(join(directory, 'audit.json'), identity.executorPublicKey).load();
+    expect(verifyAudit(bundle!, identity.executorPublicKey).valid).toBe(true);
   });
   it('rejects allocation when no market has an allowed output asset', async () => {
     const current = state(); current.config.policy.output_assets = ['nep141:other.near']; mocks.vault.mockResolvedValue(current);
@@ -124,7 +160,8 @@ describe('encrypted private runtime', () => {
     let release!: () => void, entered!: () => void;
     const barrier = new Promise<void>(resolve => { release = resolve; });
     const researching = new Promise<void>(resolve => { entered = resolve; });
-    mocks.reports.mockImplementationOnce(async () => { entered(); await barrier; return []; });
+    const originalReports = mocks.reports.getMockImplementation()!;
+    mocks.reports.mockImplementationOnce(async () => { entered(); await barrier; return originalReports(); });
     const runtime = await create(), first = send(runtime, command());
     await researching;
     // Observe queue insertion only; commands still enter through authenticated HPKE.
@@ -163,7 +200,7 @@ describe('encrypted private runtime', () => {
     await rm(join(directory, 'audit.json.pending'), { recursive: true });
     expect((await send(runtime, command())).error).toContain('JOURNAL_UNAVAILABLE');
     expect(mocks.quote).toHaveBeenCalledTimes(1);
-    expect((await send(await create(), command())).ok).toBe(true);
+    await expect(create()).rejects.toThrow('JOURNAL_MANIFEST_MISSING');
   });
 });
 
@@ -251,7 +288,7 @@ describe('owner client through the encrypted runtime protocol (external services
   });
   it('refuses an opening for a different receipt hash', async () => {
     const runtime = await create(); await send(runtime, researchRequest());
-    const bundle = JSON.parse(await readFile(join(directory, 'audit.json'), 'utf8'));
-    expect((await send(runtime, { type: 'audit-open', id: randomUUID(), entryId: bundle.entries[0].id, entryHash: 'ff'.repeat(32) })).error).toContain('AUDIT_ENTRY_BINDING');
+    const bundle = (await new AuditJournal(join(directory, 'audit.json'), identity.executorPublicKey).load())!;
+    expect((await send(runtime, { type: 'audit-open', id: randomUUID(), entryId: bundle.entries[0]!.id, entryHash: 'ff'.repeat(32) })).error).toContain('AUDIT_ENTRY_BINDING');
   });
 });

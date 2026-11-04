@@ -2,8 +2,8 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-const mocks = vi.hoisted(() => ({ state: vi.fn(), attest: vi.fn() }));
-vi.mock('../src/core/near.js', async original => ({ ...await original<typeof import('../src/core/near.js')>(), readVault: mocks.state }));
+const mocks = vi.hoisted(() => ({ state: vi.fn(), attest: vi.fn(), view: vi.fn() }));
+vi.mock('../src/core/near.js', async original => ({ ...await original<typeof import('../src/core/near.js')>(), readVault: mocks.state, viewNear: mocks.view }));
 vi.mock('../src/core/private-client.js', () => ({ attestEndpoint: mocks.attest }));
 import { keyFromSeed, canonical, sha256 } from '../src/core/crypto.js';
 import { signAuthorization, type Authorization } from '../src/core/wire.js';
@@ -31,6 +31,26 @@ function preparedJob(): PrivateJob {
   return { format: 'neslos-private-job-v1', configHash: sha256(canonical(config)), command: { type: 'observe', id: '00000000-0000-4000-8000-000000000000', authorizationHash: signed.hash }, state: 'complete', result: { signed, transaction } };
 }
 describe('reviewed private transaction workflow', () => {
+  it('binds funding and storage registration to the configured token and approved accounts', async () => {
+    mocks.state.mockResolvedValue({ config: { owner_id: 'owner.near', token_id: 'usdc.near', policy_version: '1' } });
+    mocks.view.mockResolvedValue({ value: { min: '1250000000000000000000' } });
+    const storage = await makeTransactionPlan(config, { kind: 'register-token', account: 'vault' });
+    expect(plannedCall(storage)).toMatchObject({ receiverId: 'usdc.near', actions: [{ params: { methodName: 'storage_deposit', args: { account_id: 'vault.near', registration_only: true }, deposit: '1250000000000000000000' } }] });
+    const funding = await makeTransactionPlan(config, { kind: 'fund', amount: '1000000' });
+    expect(plannedCall(funding)).toMatchObject({ receiverId: 'usdc.near', actions: [{ params: { methodName: 'ft_transfer', args: { receiver_id: 'vault.near', amount: '1000000' }, deposit: '1' } }] });
+    if (funding.operation.kind === 'fund') funding.operation.tokenId = 'attacker.near';
+    const f = ownerFixture(); await expect(executeTransactionPlan(f.owner, funding, planHash(funding), directory, true)).rejects.toThrow('TOKEN_BINDING');
+    expect(f.create).not.toHaveBeenCalled();
+    await expect(makeTransactionPlan(config, { kind: 'register-token', account: 'attacker' })).rejects.toThrow();
+    mocks.view.mockResolvedValue({ value: { min: '2000000000000000000000000' } });
+    await expect(makeTransactionPlan(config, { kind: 'register-token' })).rejects.toThrow();
+  });
+  it('refuses merging policy edits with a newer snapshot and distinguishes new owner intents', async () => {
+    await expect(makeTransactionPlan(config, { kind: 'pause', paused: true }, undefined, '0')).rejects.toThrow('PLAN_STATE_CHANGED');
+    const first = await makeTransactionPlan(config, { kind: 'withdraw', amount: '1000000' });
+    const second = await makeTransactionPlan(config, { kind: 'withdraw', amount: '1000000' });
+    expect(plannedCall(first)).toEqual(plannedCall(second)); expect(planHash(first)).not.toBe(planHash(second));
+  });
   it('reconstructs an exact signed call instead of executing an arbitrary returned action', async () => {
     const job = preparedJob(), plan = await makeTransactionPlan(config, undefined, job);
     expect(plannedCall(plan)).toEqual((job.result as any).transaction);

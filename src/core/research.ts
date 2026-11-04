@@ -138,9 +138,13 @@ export async function researchAgents(research: ResearchResult, policy: Policy): 
   const eligible = ranked.filter(m => m.eligible);
   const sources = [...new Set(research.markets.map(m => m.sourceUrl))];
   const completedAt = new Date().toISOString();
-  return Promise.all([
+  const reports = await Promise.all([
     Promise.resolve({ agent: 'lending' as const, title: 'Yield discovery', summary: `${research.markets.length} NEAR markets examined; ${eligible.length} match your policy.`, findings: [eligible[0] ? `${eligible[0].protocol} ${eligible[0].symbol} leads eligible observed opportunities at ${eligible[0].totalApy.toFixed(2)}% reported APY.` : 'No verified market satisfies the current policy.', 'Base yield is separated from token incentives.', 'A reserve allocation does not open a lending position.'], marketIds: ranked.slice(0, 6).map(m => m.id), sourceUrls: sources, completedAt, inference: 'deterministic' as const }),
     Promise.resolve({ agent: 'liquidity' as const, title: 'Exit-liquidity review', summary: `A $${policy.minimumLiquidityUsd.toLocaleString('en-US')} exit-liquidity floor is applied.`, findings: [eligible[0] ? `Leading pool reports $${Math.round(eligible[0].liquidityUsd).toLocaleString('en-US')} available liquidity.` : 'No eligible verified exit liquidity.', 'TVL alone is not treated as available withdrawal liquidity.', 'Provider data is fetched now; upstream observation time is not supplied.'], marketIds: eligible.map(m => m.id), sourceUrls: sources, completedAt, inference: 'deterministic' as const }),
     Promise.resolve({ agent: 'risk' as const, title: 'Independent risk review', summary: `${ranked.filter(m => !m.eligible).length} opportunities excluded by explicit rules.`, findings: [policy.allowBridgedAssets ? 'Bridge exposure is permitted by the owner.' : 'Bridged-asset exposure is excluded.', 'Stablecoin depeg, contract and oracle risks still apply.', 'Private settlement does not make a public DeFi position confidential.'], marketIds: ranked.filter(m => !m.eligible).map(m => m.id), sourceUrls: sources, completedAt, inference: 'deterministic' as const }),
   ]);
+  return reports.map(report => ({ ...report, assessments: ranked.slice(0, 6).map(m => ({ marketId: m.id,
+    decision: (!m.eligible || (report.agent === 'liquidity' && m.utilization > 0.9)) ? 'reject' as const : 'approve' as const,
+    reason: !m.eligible ? m.exclusions.join(' ') : report.agent === 'liquidity' && m.utilization > 0.9 ? 'Reported utilization exceeds 90%; the liquidity researcher refuses this withdrawal risk.' : 'Supplied evidence meets this researcher\'s deterministic review.',
+  })) }));
 }
