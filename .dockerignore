@@ -4,6 +4,7 @@ node_modules
 dist
 **/target
 .private
+.local
 .env
 .env.*
 artifacts

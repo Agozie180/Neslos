@@ -4,17 +4,19 @@ Updated **4 November 2026** after reviewing the [private owner/TEE work](TEE-RUN
 
 | Check | Result | Reproduce |
 | --- | --- | --- |
-| Application, policy, API, private runtime, SDK, owner recovery and cryptographic tests | **165 passed**, 0 failed across 17 files | `npm run verify` |
+| Application, policy, API, private runtime, SDK, owner recovery and cryptographic tests | **193 passed**, 0 failed across 21 files | `npm run verify` |
 | Strict TypeScript, frontend and API/TEE compilation | **Passed** | `npm run verify` |
 | Contract unit tests | **12 passed**, 0 failed | `npm run test:contract:unit` |
 | Deployed local NEAR sandbox suite | **1 passed**, 0 failed; multiple real local transactions and receipts | `npm run test:contract` |
-| Chromium desktop/mobile and source-selection tests | **3 passed**, 0 failed | `npm run test:browser` |
+| Chromium desktop/mobile and source-selection tests | **5 passed**, 0 failed | `npm run test:browser` |
 | Dedicated TEE image | Linux/amd64 build passed; restricted UID-1000 container serves bootstrap evidence, refuses private commands in bootstrap and rejects a fake quote in private mode | [Build and smoke commands](TEE-RUNBOOK.md#build-and-verify-locally) |
 | Earlier main revision on a clean GitHub runner: application and contract jobs | **Both passed** at source commit `4739ce41fd2673b702411dad38a4cc5ae699c37d`; this predates the private owner/TEE changes | [Run 41702140067](https://github.com/Agozie180/Neslos/actions/runs/41702140067) |
 
 Runtime: Node 24.22.2; Rust 1.93.0; cargo-near 0.22.0; near-sdk 5.29.0. The contract build and sandbox ran in WSL Ubuntu. Package versions and transitive resolutions are in the checked-in lockfiles.
 
 Tests generate fresh reports and timestamps in `artifacts/`. Application/contract verification starts by invalidating the old success report and records a run ID, base revision and source-content digest. The WSL wrapper serializes workspace use and copies only changed outputs for the task it ran. Generated JSON reports are ignored by Git so a source checkout is not mistaken for a new verification run. The public testnet evidence in `deploy/` is retained with transaction hashes and the block at which final state was verified.
+
+The 4 November owner-workspace build adds structured strategy vetoes, durable inference reservations, interrupted-paid-job protection, bounded scheduling, journal migration/segments and exact funding/storage plans. New owner browser tests use an explicit synthetic API transport; they do not establish live cloud execution. The container smoke check still reports `genuineHardwareVerified:false`. See [operation and recovery](OWNER-WORKSPACE.md).
 
 ## Contract artifact
 
@@ -51,7 +53,7 @@ The owner-controlled [vault.neslos.testnet](https://testnet.nearblocks.io/addres
 
 Final state at the recorded block: paused, policy version 5, nonce 2, daily usage 150 and remaining allowance 350. The proof recovered from an RPC interruption by reconciling the original transaction hashes before continuing. Local tests cover transport retries, saved-transaction conflicts, unresolved outcomes, concurrent submission, and invalid proof checkpoints.
 
-This uses a local executor key and public routing. It does not claim TEE execution, private recipients, real USDC, or a 1Click settlement. The browser remains a separate rehearsal. [Owner CLI and recovery instructions](DEPLOYMENT.md#owner-testnet-cli).
+This uses a local executor key and public routing. It does not claim TEE execution, private recipients, real USDC, or a 1Click settlement. The default browser remains a separate rehearsal; the local owner workspace supports real chain reads and reviewed private operations when configured. [Owner CLI and recovery instructions](DEPLOYMENT.md#owner-testnet-cli).
 
 ## What the tests establish
 

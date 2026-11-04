@@ -56,7 +56,9 @@ P1: compiled Rust vault and local chain tests; real dry confidential quotes; TDX
 
 P2: owner-reviewed testnet deployment, independently pinned TEE identity and explicitly authorized funded mainnet settlement.
 
-P3: scheduling, paid external agent jobs, additional budget assets and public lending-position management.
+Finite research and settlement-observation schedules are implemented in the local owner server. They retain request IDs, pause on failure, share the runtime inference allowance and never submit transactions. [Owner architecture and operation](OWNER-WORKSPACE.md).
+
+P3 remaining: paid external agent jobs, additional budget assets and public lending-position management.
 
 Non-goals: custom cryptography, token/bridge/lending protocol development, arbitrary agent contract calls, hidden public DeFi positions, guaranteed returns or guaranteed awards.
 

@@ -1,6 +1,6 @@
 # Running Neslos in a TEE
 
-The private owner CLI, research/prepare/observe commands, audit export/open, reviewed transaction submission and dstack container package are implemented. Genuine remote execution still needs a provisioned Intel TDX instance, independently approved measurements, and NEAR AI credentials. A local Docker build and test socket cannot supply those.
+The private owner CLI and [local owner browser](OWNER-WORKSPACE.md), research/prepare/observe commands, audit export/open, reviewed transaction submission and dstack container package are implemented. The owner guide covers credit caps, finite schedules, storage/funding and segmented journal recovery. Genuine remote execution still needs a provisioned Intel TDX instance, independently approved measurements, and NEAR AI credentials. A local Docker build and test socket cannot supply those.
 
 The first remote demonstration can use **private research plus a testnet vault**. It makes no Intents deposit and needs no GPU of your own: Neslos runs on a CPU TEE and sends encrypted research requests to NEAR AI's attested model service. Research data still describes NEAR mainnet yields. A testnet research result is not a private payment or a lending deposit.
 
@@ -71,7 +71,7 @@ These shell examples run from the Linux execution checkout (`~/.cache/neslos-ubu
 
 ## Enable private research
 
-Obtain the NEAR AI key and independently approve the gateway/model deployment measurements, using the [official verification guide](https://docs.near.ai/cloud/verification) and [JavaScript SDK guide](https://docs.near.ai/cloud/inference-sdk/javascript). The inference policy has `modelId`, `gateway:{osImageHash,composeHash}` and `model:{osImageHash,composeHash}`; each hash is a real 32-byte hex measurement. An advertised model name alone is not sufficient.
+Obtain the NEAR AI key and independently approve the gateway/model deployment measurements, using the [official verification guide](https://docs.near.ai/cloud/verification) and [JavaScript SDK guide](https://docs.near.ai/cloud/inference-sdk/javascript). The inference policy has `modelId`, `gateway:{osImageHash,composeHash}` and `model:{osImageHash,composeHash}`; each hash is a real 32-byte hex measurement. An advertised model name alone is not sufficient. Paid inference defaults to disabled; add an explicit `budget` using the [credit policy guide](OWNER-WORKSPACE.md#inference-allowance).
 
 Use Phala's **Encrypted Secrets** for the full set of runtime values from [secrets.example.env](../deploy/tee/secrets.example.env): mode `private`, network/vault, TEE policy JSON, inference policy JSON, the locally generated owner token, and NEAR AI key. `ONECLICK_JWT` is only needed for the current confidential-quote path; read-only research never requests a quote. No owner NEAR private key goes into the TEE. Keep Phala public logs disabled; Neslos does not log prompt/recipient/secret data. Secret updates replace the full set and restart the CVM, per [Phala's docs](https://docs.phala.com/phala-cloud/cvm/set-secure-environment-variables).
 
@@ -116,12 +116,12 @@ The owner reconstructs the allowed FunctionCall, checks the executor signature a
 
 For observation use `{"type":"observe","authorizationHash":"ACTUAL_HASH"}`. Use a **new job file** for each new poll; reuse the existing file to recover the same interrupted poll. Pending responses intentionally remain the saved result of that poll. A successful or refunded provider observation prepares a settlement call; run `plan --job` and review/submit it separately. Unknown results never resend funds. Audit export/open works for these receipts too.
 
-Governance requests also support `{"kind":"pause","paused":true}` and `{"kind":"withdraw","amount":"CANONICAL_UNITS"}`. Owner recovery sends to the contract's owner, not an arbitrary recipient. Funding/token-storage setup remains a separate owner wallet operation documented in [DEPLOYMENT](DEPLOYMENT.md).
+Governance requests also support `{"kind":"pause","paused":true}` and `{"kind":"withdraw","amount":"CANONICAL_UNITS"}`. Owner recovery sends to the contract's owner, not an arbitrary recipient. The owner dashboard and CLI also prepare fixed-token funding and storage-registration plans; see [owner setup](OWNER-WORKSPACE.md).
 
 ## Limits that remain
 
 - No genuine remote instance, live inference, signed confidential quote or funded settlement is claimed until its actual evidence is captured. Docker and fixture checks do not replace that.
-- Model reports still accompany deterministic rankings; they do not yet decide or veto the chosen strategy. Actual lending deposits, withdrawals, position accounting, scheduling and paid external-agent coordination remain unfinished.
-- The browser is still the separate rehearsal. The live owner workflow is this CLI.
-- Journal limits remain 32 MB and 1,000 completed commands. Audit downloads do not consume that command quota. An archive/checkpoint/rotation procedure and rollback protection beyond owner-retained checkpoints are still needed before unattended operation. After journal I/O failure, restore storage and restart before reading or writing private state; health reports not ready.
+- All three model reviewers must explicitly approve an eligible market; their assessments can veto or change the deterministic selection. Actual lending deposits, withdrawals, position accounting and paid external-agent coordination remain future scope.
+- The default browser remains a rehearsal. The separate localhost owner browser uses this same private client and exact transaction workflow. Its cloud-backed operation requires the approved runtime.
+- Immutable encrypted journal segments retain all history through bounded rotation (128 MB; 10,000 completed/failed commands). Keep the manifest and segments together. Finite research/observation schedules are supported. Rollback protection still depends on independently retained checkpoints; after storage failure the runtime fails closed. See the [backup procedure](OWNER-WORKSPACE.md#journal-backup-and-recovery).
 - NEAR public policy, deposits, amounts and timing remain visible. The 1Click provider sees routing fields, and provider status is not an independent destination-chain proof. The private quote endpoint previously required credentials here despite the general 1Click unauthenticated flow.

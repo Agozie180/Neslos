@@ -4,6 +4,7 @@ import { minimumOutput, units } from './amounts.js';
 import { canonical, sha256 } from './crypto.js';
 import { PolicyLedger } from './ledger.js';
 import { rankMarkets, researchAgents, ResearchService } from './research.js';
+import { selectStrategy } from './strategy.js';
 import type { MissionRequest, MissionRun, Proposal, RunStatus } from './types.js';
 
 const delay = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
@@ -37,11 +38,12 @@ export class Orchestrator {
     run.research = research;
     run.reports = await researchAgents(research, this.ledger.policy);
     run.ranking = rankMarkets(research.markets, this.ledger.policy);
+    run.strategy = selectStrategy(run.ranking, run.reports);
     run.steps[1]!.detail = `${research.markets.length} markets examined by three independent researchers.`;
     this.audit.append('research.completed', run.id, { reports: run.reports, sourceMode: research.sourceMode, sourceUrl: research.sourceUrl, fetchedAt: research.fetchedAt });
     await delay(this.pace);
     const policy = this.ledger.policy;
-    const best = run.ranking.find(m => m.eligible);
+    const best = run.ranking.find(m => m.id === run.strategy?.selectedMarketId);
     if (request.kind !== 'private-payment' && !best) throw new Error('No eligible yield opportunity. Adjust the policy or wait for better evidence.');
     const quotedAt = Date.now();
     const proposal: Proposal = {
@@ -60,7 +62,7 @@ export class Orchestrator {
     run.proposal = proposal;
     run.reports.push({ agent: 'strategist', title: 'Proposed use of funds', summary: proposal.purpose, findings: ['The model cannot alter the budget or sign a transfer.', 'This proposal uses a rehearsal quote. It is not a market execution quote.'], marketIds: best ? [best.id] : [], sourceUrls: [research.sourceUrl], completedAt: new Date().toISOString(), inference: 'deterministic' });
     this.transition(run, 'proposed', 2, proposal.purpose);
-    this.audit.append('proposal.created', run.id, proposal);
+    this.audit.append('proposal.created', run.id, { proposal, strategy: run.strategy });
     await delay(this.pace);
     this.transition(run, 'checking', 3, 'Checking the current policy and shared allowance atomically.');
     await delay(this.pace);
