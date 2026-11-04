@@ -4,6 +4,8 @@ The private owner CLI and [local owner browser](OWNER-WORKSPACE.md), research/pr
 
 The first remote demonstration can use **private research plus a testnet vault**. It makes no Intents deposit and needs no GPU of your own: Neslos runs on a CPU TEE and sends encrypted research requests to NEAR AI's attested model service. Research data still describes NEAR mainnet yields. A testnet research result is not a private payment or a lending deposit.
 
+For Phala authentication, distinguish `PHALA_AI_API_KEY` (Private AI) from `PHALA_CLOUD_API_KEY` or official `phala login` (CVM management). `npm run cloud:status` checks each scope without paid calls. The [4 November credential audit](PHALA-AUTH-AUDIT.md) resolved the local scope mismatch and authenticated both products; it also records the verified balance, post-paid billing mode and CPU/storage prices.
+
 ## Free access options, checked 3 November 2026
 
 | Option | Current official offer | Fit for Neslos |
