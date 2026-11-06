@@ -1,6 +1,10 @@
 # Verification record
 
-Updated **6 November 2026**: the [current vault commerce report](VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) records the deployed upgrade, preserved state and real testnet payment/limit/replay receipts. The expanded contract suite passed 25 unit tests and two sandbox suites. [Inference preflight](INFERENCE-LIVE-REVIEW-2026-11-06.md) verified provider hardware but did not establish full approval or a paid response. [TDX hosting](TDX-DEPLOYMENT-STATUS.md) and funded confidential settlement remain incomplete. [GitHub CI](https://github.com/Agozie180/Neslos/actions/workflows/verify.yml) covers the exact pushed revisions.
+Updated **6 November 2026**: the [current vault commerce report](VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) records the deployed upgrade, preserved state and real testnet payment/limit/replay receipts. The expanded contract suite passed 25 unit tests and two sandbox suites. [Inference review](INFERENCE-LIVE-REVIEW-2026-11-06.md) verified provider hardware and independently reproduced both VMs' MRTD/RTMR0–2, including all 26 RTMR0 event digests combined. Current model runtime/history approval, [Neslos TDX hosting](TDX-DEPLOYMENT-STATUS.md) and funded confidential settlement remain incomplete. No paid inference response was requested. [Current status](STATUS.md) and [GitHub CI](https://github.com/Agozie180/Neslos/actions/workflows/verify.yml) distinguish remaining work from exact checked revisions.
+
+## Confidential-readiness audit verification
+
+The final Windows application run passed **382 tests with four platform skips**, strict TypeScript and both production builds. A fresh read-only inference inspection preserved exact response bytes and raw VM configuration, verified their saved hashes, and matched every captured boot register to the independent calculation. Gateway provenance passed; current model provenance correctly stopped on ambiguous deployment mutations. No paid completion was called. Linux CI additionally exercises the platform-specific checks, browser tests, contract suites and restricted-container smoke test.
 
 ## Earlier foundation-audit snapshot
 
@@ -76,6 +80,7 @@ This uses a local executor key and public routing. It does not claim TEE executi
 | Private owner workflow | Actual HPKE client/runtime exchange against fixture hardware/services; lost reply recovery, checkpoint-bound multi-page audit export, signed receipt opening, and bounded rate-limit retry |
 | Private transaction workflow | Exact signed-call reconstruction; substituted receiver/amount rejected; plan hash/mainnet opt-in; changed policy rejection; saved transaction reconciliation after timeout |
 | Private research | Testnet research produces no quote or authorization; fixture NEAR AI orchestration requires encrypted requests, provider-TEE signatures and known market references |
+| Confidential setup and recovery | Missing partner credentials stop preparation before network calls, paid research, credit reservation or authorization signing; session refresh validates identity/expiry, locks and atomically saves only access-token fields; tests use synthetic tokens |
 | Audit | AES-GCM, Ed25519 and hash-chain checks; tamper/reorder/truncation rejection against retained evidence; journal restore |
 | Browser/API | Cross-session isolation, CSRF/origin checks, blocked/allowed flow, preserved allowance, browser verification, mobile layout and a late live response unable to overwrite selected reference data |
 
@@ -84,12 +89,14 @@ The attestation binding fixture is **not a genuine Intel quote**. Passing those 
 ## Live integration observations
 
 - The Rhea feed was queried successfully. The retained 1 November response contains 18 raw markets; 10 pass the supported-token normalizer. Rhea does not provide an upstream observation timestamp.
-- The 1Click confidential dry quote probe returned **HTTP 401 without `ONECLICK_JWT`**. A verified live quote has not been obtained here.
+- The 1Click confidential dry quote probe returned **HTTP 401 without `ONECLICK_JWT`**. No-spend ownership authentication, session refresh and private-balance reads succeeded. The free partner key remains missing; a verified live quote and viable recovery route have not been established. [Authentication](CONFIDENTIAL-AUTH.md).
 - Official 1Click SDK 0.1.26 excludes `confidentiality` from its signed subset. Neslos requires the signed `CONFIDENTIAL_INTENTS` recipient type. [Regression tests](../tests/intents.test.ts) reproduce that distinction.
+- Independent provider boot reconstruction now matches both VMs and every RTMR0 event. The original/current model reports share a signer, so a signer filter does not uniquely bind a deployment. Current runtime/history approval remains a separate unresolved question. [Detailed review](INFERENCE-LIVE-REVIEW-2026-11-06.md).
+- Phala's submitted inline bundle exceeded the documented size limit; local guards now reject that condition. The provider's terms-of-use denial remains unresolved, and its cause was not established by the size finding. No Neslos CVM launched. [Request audit](TDX-DEPLOYMENT-STATUS.md#request-compatibility-audit-addendum).
 - The live npm production audit reports three low-severity package entries stemming from one transitive `elliptic` advisory. See [security notes](../SECURITY.md).
 
 ## Evidence still required for live claims
 
-The testnet owner vault and fixture-token proof are deployed. There is still no provisioned Neslos TDX instance, independently approved live measurement set, verified live NEAR AI response, funded Intents deposit or mainnet settlement receipt. The TEE process prepares calls; the private owner CLI can submit an explicitly reviewed plan. Both the earlier rehearsal Docker build and the new TEE image build passed. Its negative hardware test must report `genuineHardwareVerified:false`. GitHub CI status is tracked in [STATUS](STATUS.md).
+The testnet owner vault and fixture-token proof are deployed, and provider boot measurements are independently reproduced. There is still no approved current model runtime/deployment history, provisioned Neslos TDX instance, verified live NEAR AI response, funded Intents deposit or mainnet settlement receipt. The TEE process prepares calls; the private owner CLI can submit an explicitly reviewed plan. Both the earlier rehearsal Docker build and the new TEE image build passed. Its negative hardware test must report `genuineHardwareVerified:false`. GitHub CI status is tracked in [STATUS](STATUS.md).
 
-The next validation stage is to provision the reviewed private runtime, verify its identity independently, pin that key in an owner-controlled vault, obtain an authenticated signed quote, and explicitly authorize a bounded funded demonstration. Keep public-chain and provider visibility disclosures in that demonstration. See [deployment](DEPLOYMENT.md) and [privacy](PRIVACY.md).
+A future integrated private claim needs approved provider runtime evidence, a verified Neslos TDX deployment, its key pinned in an owner-controlled vault, a verified quote/recovery path and separately authorized settlement evidence. These are not mandatory hackathon integrations: [testnet-only entries are eligible](CONFIDENTIAL-TESTNET-RESEARCH-2026-11-06.md). The roughly 2.4 NEAR optional mainnet vault code-storage estimate is not a settlement fee. The current zero-mainnet-spend evidence must remain clearly separated from any future production demonstration. See [deployment](DEPLOYMENT.md) and [privacy](PRIVACY.md).

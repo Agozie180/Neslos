@@ -13,6 +13,17 @@ import YAML from 'yaml';
 interface BundleFile { path: string; content: string }
 interface Service { command: string[]; environment?: Record<string, string>; read_only: boolean; user: string; volumes: string[]; cap_drop: string[] }
 
+it('enforces the official combined UTF-8 compose and pre-launch size boundary without disclosing content', async () => {
+  const modulePath = '../scripts/phala-compose.mjs';
+  const { assertPhalaComposePayloadSize, PHALA_MAX_COMPOSE_PAYLOAD_BYTES } = await import(modulePath);
+  expect(PHALA_MAX_COMPOSE_PAYLOAD_BYTES).toBe(204800);
+  expect(assertPhalaComposePayloadSize('a'.repeat(204800))).toBe(204800);
+  expect(assertPhalaComposePayloadSize('a'.repeat(204799), 'b')).toBe(204800);
+  expect(() => assertPhalaComposePayloadSize('a'.repeat(204800), 'b')).toThrow('PHALA_COMPOSE_PAYLOAD_TOO_LARGE');
+  expect(() => assertPhalaComposePayloadSize('é'.repeat(102401))).toThrow('204802 UTF-8 bytes');
+  try { assertPhalaComposePayloadSize('a'.repeat(204800), 'fixture-sensitive-script'); } catch (error) { expect(String(error)).not.toContain('fixture-sensitive-script'); }
+});
+
 it('authenticates inline bootstrap, application and lock bytes before launch', async () => {
   const repository = fileURLToPath(new URL('..', import.meta.url));
   const directory = await mkdtemp(path.join(tmpdir(), 'neslos-inline-bundle-test-'));
@@ -110,6 +121,15 @@ it('authenticates inline bootstrap, application and lock bytes before launch', a
     expect(() => verify(disk => { disk.set('package-lock.json', Buffer.from('{}')); })).toThrow(/APP_INTEGRITY/);
     expect(() => verify(disk => { disk.delete('package-lock.json'); })).toThrow(/ENOENT/);
     expect(() => verify((_disk, symlinks) => { symlinks.add('dist/server/tee/index.js'); })).toThrow(/APP_INTEGRITY/);
+
+    // An oversized bundle must stop locally before writing a deployable artifact.
+    await writeFile(path.join(directory, 'dist/server/oversized.js'), `export const fixture = '${crypto.randomBytes(350000).toString('base64')}';`);
+    const oversizedOut = path.join(directory, 'oversized-bundle');
+    const oversized = spawnSync(process.execPath, [path.join(repository, 'scripts/tee-inline-bundle.mjs'), '--out', oversizedOut], { cwd: directory, encoding: 'utf8', windowsHide: true });
+    expect(oversized.status).not.toBe(0);
+    expect(oversized.stderr).toContain('PHALA_COMPOSE_PAYLOAD_TOO_LARGE');
+    await expect(readFile(path.join(oversizedOut, 'compose.yaml'))).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(readFile(path.join(oversizedOut, 'deployment.json'))).rejects.toMatchObject({ code: 'ENOENT' });
   } finally {
     assert.ok(path.basename(directory).startsWith('neslos-inline-bundle-test-'));
     await rm(directory, { recursive: true, force: true });

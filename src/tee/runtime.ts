@@ -188,6 +188,7 @@ export class PrivateRuntime {
   }
   private async prepare(command: z.infer<typeof prepareSchema>) {
     if (this.options.network !== 'mainnet') throw new Error('INTENTS_NETWORK: 1Click has no testnet. Use the local sandbox for unfunded contract verification.');
+    this.intents.assertConfidentialQuoteConfigured();
     const state = await readVault(this.options.vault, this.options.network);
     if (state.config.executor_public_key !== this.identity.executorPublicKey) throw new Error('EXECUTOR_NOT_PINNED: the owner has not approved this attested key on chain.');
     if (state.config.token_id !== NATIVE_USDC) throw new Error('INPUT_ASSET: this adapter only spends native NEAR USDC.');

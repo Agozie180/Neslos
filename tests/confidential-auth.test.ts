@@ -1,11 +1,11 @@
-import { mkdtemp, readFile } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, stat, unlink, writeFile } from 'node:fs/promises';
 import { createPublicKey, verify } from 'node:crypto';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { KeyPair, baseDecode } from 'near-api-js';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { canonical, sha256 } from '../src/core/crypto.js';
-import { assertConfidentialAuthPayload, authenticateConfidentialOwner, classifyConfidentialAuthFailure, ConfidentialAuthHttpError, confidentialImplicitId, fetchConfidentialNonceSalt, makeConfidentialAuthPayload, readConfidentialOwnerBalances } from '../src/owner/confidential-auth.js';
+import { assertConfidentialAuthPayload, authenticateConfidentialOwner, classifyConfidentialAuthFailure, ConfidentialAuthHttpError, confidentialImplicitId, fetchConfidentialNonceSalt, makeConfidentialAuthPayload, readConfidentialOwnerBalances, refreshConfidentialOwnerSession } from '../src/owner/confidential-auth.js';
 
 const sessionFile = async () => join(await mkdtemp(join(tmpdir(), 'neslos-confidential-auth-')), 'session.json');
 const authResponse = (status = 200) => new Response(JSON.stringify({ accessToken: 'fixture-sensitive-access-token', refreshToken: 'fixture-sensitive-refresh-token', expiresIn: 600, refreshExpiresIn: 3600 }), { status });
@@ -13,6 +13,7 @@ const SALT = '252812b3';
 const networkResponse = (chain = 'mainnet') => new Response(JSON.stringify({ jsonrpc: '2.0', id: 'confidential-auth-network', result: { chain_id: chain } }));
 const saltResponse = (salt = SALT) => new Response(JSON.stringify({ jsonrpc: '2.0', id: 'confidential-auth-salt', result: { block_height: 223308866, block_hash: 'GtQuxjyU3RatJAojr3d6hWg72GpTUtQZA1TwXKpxkXvV', result: Array.from(Buffer.from(JSON.stringify(salt))) } }));
 const readyFetch = () => vi.fn<typeof fetch>().mockResolvedValueOnce(networkResponse()).mockResolvedValueOnce(saltResponse());
+afterEach(() => vi.restoreAllMocks());
 describe('no-spend confidential recipient authentication', () => {
   it('verifies the published SDK raw_ed25519 vector over payload bytes, independently of our signer', () => {
     // Official vector: https://github.com/defuse-protocol/sdk-monorepo/blob/main/packages/intents-sdk/src/intents/intent-hash.test.ts
@@ -119,5 +120,117 @@ describe('no-spend confidential recipient authentication', () => {
     }
     await expect(fetchConfidentialNonceSalt(vi.fn<typeof fetch>().mockResolvedValueOnce(networkResponse()).mockRejectedValueOnce(new Error('fixture-sensitive')))).rejects.toThrow('CONFIDENTIAL_AUTH_SALT_UNAVAILABLE');
     expect(sign).not.toHaveBeenCalled(); expect(wrongNetwork).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('no-spend confidential session refresh', () => {
+  async function fixture() {
+    const key = KeyPair.fromRandom('ed25519'), publicKey = key.getPublicKey().toString(), recipient = confidentialImplicitId(publicKey), file = await sessionFile(), now = Date.now();
+    const session = {
+      format: 'neslos-confidential-user-session-v1', recipient, publicKey, authPayloadHash: 'ab'.repeat(32),
+      receivedAt: new Date(now - 600000).toISOString(), accessExpiresAt: new Date(now - 1000).toISOString(), refreshExpiresAt: new Date(now + 3600000).toISOString(),
+      accessToken: 'fixture-sensitive-old-access', refreshToken: 'fixture-sensitive-original-refresh',
+    };
+    await writeFile(file, JSON.stringify(session, null, 2) + '\n', { mode: 0o600 });
+    return { file, recipient, session };
+  }
+  const success = (status = 200) => Response.json({ accessToken: 'fixture-sensitive-new-access', expiresIn: 600 }, { status });
+  it.each([200, 201])('refreshes an expired access token on HTTP %i while preserving the original binding and refresh lifetime', async status => {
+    const { file, recipient, session } = await fixture(), now = Date.now();
+    vi.spyOn(Date, 'now').mockReturnValue(now);
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(success(status));
+    const result = await refreshConfidentialOwnerSession(file, recipient, fetchImpl);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    const [url, request] = fetchImpl.mock.calls[0]!;
+    expect(url).toBe('https://1click.chaindefuser.com/v0/auth/refresh');
+    expect(request).toMatchObject({ method: 'POST', redirect: 'error', headers: { 'content-type': 'application/json', accept: 'application/json' } });
+    expect(JSON.parse(String(request?.body))).toEqual({ refreshToken: session.refreshToken });
+    expect(Object.keys(request?.headers ?? {})).toEqual(['content-type', 'accept']);
+    const saved = JSON.parse(await readFile(file, 'utf8'));
+    expect(saved).toEqual({ ...session, accessToken: 'fixture-sensitive-new-access', accessExpiresAt: new Date(now + 600000).toISOString() });
+    expect(result).toEqual({ recipient, publicKey: session.publicKey, refreshed: true, noSpendIntent: true, accessExpiresAt: saved.accessExpiresAt, refreshExpiresAt: session.refreshExpiresAt, sessionFile: file });
+    expect(JSON.stringify(result)).not.toContain('fixture-sensitive');
+    expect(await readdir(dirname(file))).toEqual(['session.json']);
+    if (process.platform !== 'win32') expect((await stat(file)).mode & 0o777).toBe(0o600);
+    const balanceFetch = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ balances: [] }));
+    await readConfidentialOwnerBalances(file, recipient, balanceFetch);
+    expect(balanceFetch.mock.calls[0]![1]?.headers).toMatchObject({ authorization: 'Bearer fixture-sensitive-new-access' });
+  });
+  it.each(['missing', 'malformed', 'recipient', 'public-key', 'expected-recipient', 'expired-refresh', 'malformed-refresh'])('rejects %s session before any request', async failure => {
+    const { file, recipient, session } = await fixture(), fetchImpl = vi.fn<typeof fetch>();
+    let expected = recipient;
+    if (failure === 'missing') await unlink(file);
+    else if (failure === 'malformed') await writeFile(file, 'fixture-sensitive-invalid-json');
+    else if (failure === 'expected-recipient') expected = 'fixture-sensitive-not-an-identity';
+    else {
+      if (failure === 'recipient') session.recipient = 'ff'.repeat(32);
+      if (failure === 'public-key') session.publicKey = 'ed25519:fixture-sensitive-invalid-key';
+      if (failure === 'expired-refresh') session.refreshExpiresAt = new Date(Date.now() - 1).toISOString();
+      if (failure === 'malformed-refresh') session.refreshToken = 'fixture-sensitive\nrefresh';
+      await writeFile(file, JSON.stringify(session));
+    }
+    const error = await refreshConfidentialOwnerSession(file, expected, fetchImpl).catch(error => error);
+    expect(error).toBeInstanceOf(Error); expect(String(error)).toMatch(/CONFIDENTIAL_(REFRESH_SESSION_INVALID|AUTH_IDENTITY|REFRESH_EXPIRED)/);
+    expect(String(error) + JSON.stringify(error)).not.toContain('fixture-sensitive');
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect((await readdir(dirname(file))).some(name => name.endsWith('.lock'))).toBe(false);
+  });
+  it.each([202, 302, 401, 403, 500])('redacts HTTP %i failure, makes no retry, and preserves the saved session', async status => {
+    const { file, recipient } = await fixture(), before = await readFile(file, 'utf8');
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(new Response('fixture-sensitive-server-error', { status }));
+    await expect(refreshConfidentialOwnerSession(file, recipient, fetchImpl)).rejects.toThrow(new RegExp('^CONFIDENTIAL_REFRESH_HTTP_' + status + '$'));
+    expect(fetchImpl).toHaveBeenCalledTimes(1); expect(await readFile(file, 'utf8')).toBe(before);
+    expect(await readdir(dirname(file))).toEqual(['session.json']);
+  });
+  it.each([
+    'not-json', {}, { accessToken: '', expiresIn: 600 }, { accessToken: 'fixture-sensitive\naccess', expiresIn: 600 },
+    { accessToken: 'fixture-sensitive-access', expiresIn: 0 }, { accessToken: 'fixture-sensitive-access', expiresIn: 1.5 },
+    { accessToken: 'fixture-sensitive-access', expiresIn: 604801 }, { accessToken: 'x'.repeat(131073), expiresIn: 600 },
+    { accessToken: 'fixture-sensitive-access', expiresIn: 600, refreshToken: 'replacement-refresh' },
+    { accessToken: 'fixture-sensitive-access', expiresIn: 600, recipient: 'replacement-identity' },
+  ])('rejects malformed or rebinding responses without rewriting the session: %#', async body => {
+    const { file, recipient } = await fixture(), before = await readFile(file, 'utf8');
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(new Response(typeof body === 'string' ? body : JSON.stringify(body)));
+    await expect(refreshConfidentialOwnerSession(file, recipient, fetchImpl)).rejects.toThrow(/^CONFIDENTIAL_REFRESH_INVALID_RESPONSE$/);
+    expect(fetchImpl).toHaveBeenCalledTimes(1); expect(await readFile(file, 'utf8')).toBe(before);
+  });
+  it('redacts a transport failure without retry or session replacement', async () => {
+    const { file, recipient } = await fixture(), before = await readFile(file, 'utf8');
+    const fetchImpl = vi.fn<typeof fetch>().mockRejectedValue(new Error('fixture-sensitive-refresh-and-provider-detail'));
+    await expect(refreshConfidentialOwnerSession(file, recipient, fetchImpl)).rejects.toThrow(/^CONFIDENTIAL_REFRESH_UNAVAILABLE$/);
+    expect(fetchImpl).toHaveBeenCalledTimes(1); expect(await readFile(file, 'utf8')).toBe(before);
+  });
+  it('blocks a concurrent refresh before it can send the refresh token', async () => {
+    const { file, recipient } = await fixture();
+    let entered!: () => void, release!: () => void;
+    const requested = new Promise<void>(resolve => { entered = resolve; }), held = new Promise<void>(resolve => { release = resolve; });
+    const firstFetch = vi.fn<typeof fetch>().mockImplementation(async () => { entered(); await held; return success(); });
+    const first = refreshConfidentialOwnerSession(file, recipient, firstFetch);
+    await requested;
+    const secondFetch = vi.fn<typeof fetch>();
+    try { await expect(refreshConfidentialOwnerSession(file, recipient, secondFetch)).rejects.toThrow(/^CONFIDENTIAL_REFRESH_BUSY$/); }
+    finally { release(); }
+    await expect(first).resolves.toMatchObject({ refreshed: true });
+    expect(firstFetch).toHaveBeenCalledTimes(1); expect(secondFetch).not.toHaveBeenCalled();
+    expect(await readdir(dirname(file))).toEqual(['session.json']);
+  });
+  it('does not remove an existing interrupted-process lock or send a request', async () => {
+    const { file, recipient } = await fixture(), fetchImpl = vi.fn<typeof fetch>();
+    await writeFile(file + '.refresh.lock', 'fixture-lock', { mode: 0o600 });
+    await expect(refreshConfidentialOwnerSession(file, recipient, fetchImpl)).rejects.toThrow(/^CONFIDENTIAL_REFRESH_BUSY$/);
+    expect(fetchImpl).not.toHaveBeenCalled(); expect(await readFile(file + '.refresh.lock', 'utf8')).toBe('fixture-lock');
+  });
+  it('preserves a session replaced while the refresh request was in flight', async () => {
+    const { file, recipient, session } = await fixture(), replacement = JSON.stringify({ ...session, accessToken: 'fixture-sensitive-other-writer' });
+    const fetchImpl = vi.fn<typeof fetch>().mockImplementation(async () => { await writeFile(file, replacement); return success(); });
+    await expect(refreshConfidentialOwnerSession(file, recipient, fetchImpl)).rejects.toThrow(/^CONFIDENTIAL_REFRESH_SESSION_CHANGED$/);
+    expect(fetchImpl).toHaveBeenCalledTimes(1); expect(await readFile(file, 'utf8')).toBe(replacement);
+    expect(await readdir(dirname(file))).toEqual(['session.json']);
+  });
+  it('does not extend access lifetime by the duration of the refresh request', async () => {
+    const { file, recipient } = await fixture(), started = Date.now();
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(started);
+    const fetchImpl = vi.fn<typeof fetch>().mockImplementation(async () => { clock.mockReturnValue(started + 5000); return success(); });
+    expect((await refreshConfidentialOwnerSession(file, recipient, fetchImpl)).accessExpiresAt).toBe(new Date(started + 600000).toISOString());
   });
 });

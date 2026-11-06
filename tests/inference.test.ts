@@ -107,9 +107,16 @@ describe('NEAR AI researcher orchestration with fixture SDK responses', () => {
     const options = mocks.options.mock.calls[0]![0];
     const model = { runtimeMeasurements: policy.model, composeManager: composeManagerFixture };
     await expect(options.modelVerification.verifiers.deployment(model)).resolves.toBeUndefined();
-    expect(mocks.modelBuild).toHaveBeenCalledWith(model);
+    expect(mocks.modelBuild).toHaveBeenCalledWith(model, policy.modelDeployment);
     const changed = structuredClone(model); changed.composeManager.actions[0]!.commit = 'f'.repeat(40);
     await expect(options.modelVerification.verifiers.deployment(changed)).rejects.toThrow('INFERENCE_MODEL_DEPLOYMENT');
+    const later = structuredClone(model);
+    const attempted = later.composeManager.actions[0]!;
+    if (!attempted.services) throw new Error('Expected fixture compose_up');
+    later.composeManager.actions.push({ ...attempted, services: ['another-model'] });
+    mocks.modelBuild.mockClear();
+    await expect(options.modelVerification.verifiers.deployment(later)).rejects.toThrow('PROVENANCE_COMPOSE_AMBIGUOUS_MUTATION');
+    expect(mocks.modelBuild).not.toHaveBeenCalled();
     mocks.gatewayBuild.mockRejectedValue(new Error('invalid build signature'));
     await expect(options.gatewayVerification.verifiers.deployment({ runtimeMeasurements: policy.gateway })).rejects.toThrow('invalid build signature');
     mocks.modelBuild.mockRejectedValue(new Error('invalid proxy build'));

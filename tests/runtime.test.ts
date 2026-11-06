@@ -11,7 +11,10 @@ vi.mock('../src/core/inference.js', async original => ({ ...await original<typeo
   constructor(_policy: unknown, _key: string, reserve: typeof mocks.reserve) { mocks.reserve = reserve; }
   research = mocks.reports;
 } }));
-vi.mock('../src/core/intents.js', async original => ({ ...await original<typeof import('../src/core/intents.js')>(), IntentsClient: class { quote = mocks.quote; status = mocks.status; } }));
+vi.mock('../src/core/intents.js', async original => {
+  const actual = await original<typeof import('../src/core/intents.js')>();
+  return { ...actual, IntentsClient: class extends actual.IntentsClient { quote = mocks.quote; status = mocks.status; } };
+});
 import { PrivateRuntime, type prepareSchema } from '../src/tee/runtime.js';
 import { AuditJournal } from '../src/tee/journal.js';
 import { channelSuite, decryptChannel, encryptChannel } from '../src/core/channel.js';
@@ -20,6 +23,7 @@ import { NATIVE_USDC } from '../src/core/research.js';
 import { quoteFixture } from './fixtures/quote.js';
 import { inferenceBootFixture, modelDeploymentFixture } from './fixtures/inference.js';
 import { authorizationBytes, settlementBytes } from '../src/core/wire.js';
+import * as wire from '../src/core/wire.js';
 import { verifyAudit } from '../src/core/audit.js';
 import { DISABLED_INFERENCE_BUDGET, type InferenceBudgetPolicy } from '../src/core/inference-budget.js';
 import { privateCommand } from '../src/core/private-client.js';
@@ -60,6 +64,7 @@ async function send(runtime: PrivateRuntime, request: unknown, ownerToken = toke
 }
 beforeEach(async () => {
   vi.resetAllMocks();
+  vi.stubEnv('ONECLICK_JWT', 'fixture-partner-token');
   directory = await mkdtemp(join(tmpdir(), 'neslos-runtime-'));
   const signingSeed = randomBytes(32), pair = keyFromSeed(signingSeed), channelKeys = await channelSuite.GenerateKeyPair();
   identity = { signingSeed, signingKey: pair.privateKey, executorPublicKey: pair.publicKey, auditKey: randomBytes(32), channelKeys, transportPublicKey: Buffer.from(await channelSuite.SerializePublicKey(channelKeys.publicKey)).toString('hex'), attest: async nonce => ({ format: 'neslos-tdx-evidence-v1', nonce, executorPublicKey: pair.publicKey, transportPublicKey: identity.transportPublicKey, quote: '00'.repeat(400), eventLog: '[]' }) };
@@ -69,10 +74,40 @@ beforeEach(async () => {
   mocks.quote.mockImplementation(async () => { const response = quoteFixture(); return { response, hash: sha256(canonical(response)), signatureVerified: true, privacyBinding: 'signed-confidential-recipient', requestedSlippageBps: 49, enforcedSlippageBps: 50, fetchedAt: new Date().toISOString() }; });
   mocks.status.mockResolvedValue({ outcome: 'pending', raw: { status: 'KNOWN_DEPOSIT_TX' } });
 });
-afterEach(async () => { vi.unstubAllGlobals(); vi.restoreAllMocks(); await rm(directory, { recursive: true, force: true }); });
+afterEach(async () => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.restoreAllMocks(); await rm(directory, { recursive: true, force: true }); });
 describe('encrypted private runtime', () => {
   const budget: InferenceBudgetPolicy = { ...DISABLED_INFERENCE_BUDGET, totalLimitNanoUsd: '1000', dailyLimitNanoUsd: '1000', maxCalls: 3, inputNanoUsdPerToken: '1', outputNanoUsdPerToken: '1' };
   const reservation = () => ({ id: randomUUID(), modelId: 'fixture', createdAt: new Date().toISOString(), calls: 3, inputTokensBound: 100, outputTokensBound: 200, reservedNanoUsd: '300', requestHash: 'ab'.repeat(32) });
+  it('rejects unconfigured confidential preparation before network, research, credit reservation or authorization signing', async () => {
+    vi.stubEnv('ONECLICK_JWT', '');
+    const fetcher = vi.fn(); vi.stubGlobal('fetch', fetcher);
+    const sign = vi.spyOn(wire, 'signAuthorization');
+    const report = mocks.reports.getMockImplementation()!;
+    mocks.reports.mockImplementation(async () => { await mocks.reserve!(reservation()); return report(); });
+    const runtime = await create(undefined, budget), reserve = vi.fn(mocks.reserve!);
+    mocks.reserve = reserve;
+    const result = await send(runtime, command());
+    expect(result.ok).toBe(false); expect(result.value).toBeUndefined();
+    expect(result.error).toContain('ONECLICK_PARTNER_AUTH_REQUIRED');
+    expect(mocks.vault).not.toHaveBeenCalled(); expect(fetcher).not.toHaveBeenCalled();
+    expect(mocks.research).not.toHaveBeenCalled(); expect(mocks.reports).not.toHaveBeenCalled();
+    expect(reserve).not.toHaveBeenCalled(); expect(mocks.quote).not.toHaveBeenCalled(); expect(sign).not.toHaveBeenCalled();
+    expect((await send(runtime, { type: 'status', id: randomUUID() })).value.inference).toMatchObject({ calls: 0, totalNanoUsd: '0' });
+    const bundle = (await new AuditJournal(join(directory, 'audit.json'), identity.executorPublicKey).load())!;
+    expect(bundle.entries.map(entry => entry.type)).not.toContain('inference.reserved');
+    expect(bundle.entries.map(entry => entry.type)).not.toContain('authorization.prepared');
+  });
+  it('allows separately requested research without confidential quote credentials', async () => {
+    vi.stubEnv('ONECLICK_JWT', '');
+    const report = mocks.reports.getMockImplementation()!;
+    mocks.reports.mockImplementation(async () => { await mocks.reserve!(reservation()); return report(); });
+    const runtime = await create(undefined, budget);
+    const { amount: _amount, kind: _kind, counterparty: _counterparty, ...request } = command();
+    const result = await send(runtime, { ...request, type: 'research' });
+    expect(result.ok, result.error).toBe(true); expect(result.value.signed).toBeUndefined();
+    expect(mocks.reports).toHaveBeenCalledTimes(1); expect(mocks.quote).not.toHaveBeenCalled();
+    expect((await send(runtime, { type: 'status', id: randomUUID() })).value.inference).toMatchObject({ calls: 3, totalNanoUsd: '300' });
+  });
   it('keeps its approved credit ceiling when the caller mutates the original options', async () => {
     const suppliedBudget = { ...budget, totalLimitNanoUsd: '300', dailyLimitNanoUsd: '300' };
     const report = mocks.reports.getMockImplementation()!;
@@ -204,6 +239,18 @@ describe('encrypted private runtime', () => {
     const args = settled.value.transaction.actions[0].params.args;
     expect(verifyHash(sha256(settlementBytes(args.settlement)), args.signature, identity.executorPublicKey)).toBe(true);
   });
+  it('restores and observes an existing authorization after quote credentials are removed', async () => {
+    const prepared = await send(await create(), command());
+    expect(prepared.ok, prepared.error).toBe(true);
+    const signed = prepared.value.signed;
+    vi.stubEnv('ONECLICK_JWT', '');
+    const restarted = await create();
+    mocks.record.mockResolvedValue({ blockHash: 'fixture-final-block', value: { authorization_hash: signed.hash, quote_hash: signed.authorization.quote_hash, status: 'Dispatched' } });
+    expect((await send(restarted, { type: 'status', id: randomUUID() })).ok).toBe(true);
+    const observation = await send(restarted, { type: 'observe', id: randomUUID(), authorizationHash: signed.hash });
+    expect(observation.ok, observation.error).toBe(true); expect(observation.value.status).toBe('pending-settlement');
+    expect(mocks.status).toHaveBeenCalledTimes(1); expect(mocks.quote).toHaveBeenCalledTimes(1);
+  });
   it('never returns an authorization when the journal cannot be persisted', async () => {
     const runtime = await create();
     // Make the pending file a directory so the actual atomic writer fails before rename.
@@ -238,7 +285,10 @@ describe('owner client through the encrypted runtime protocol (external services
     return { fetcher, loseNextReply: () => { dropReply = true; } };
   }
   it('executes read-only private research on testnet without quotes or authorizations', async () => {
+    vi.stubEnv('ONECLICK_JWT', '');
     const runtime = await PrivateRuntime.create({ network: 'testnet', vault: 'vault.testnet', teePolicy, inferencePolicy: { modelId: 'fixture', gateway: { osImageHash: 'aa'.repeat(32), composeHash: 'bb'.repeat(32), boot: inferenceBootFixture }, model: { osImageHash: 'cc'.repeat(32), composeHash: 'dd'.repeat(32), boot: inferenceBootFixture }, modelDeployment: modelDeploymentFixture }, ownerToken: token, nearAiKey: 'fixture', journalPath: join(directory, 'audit.json') });
+    expect((await send(runtime, command())).error).toContain('INTENTS_NETWORK');
+    expect(mocks.vault).not.toHaveBeenCalled(); expect(mocks.reports).not.toHaveBeenCalled();
     const request = researchRequest(), reply = await send(runtime, request);
     expect(reply.ok, reply.error).toBe(true); expect(reply.value.network).toBe('testnet');
     expect(reply.value.transaction).toBeUndefined(); expect(reply.value.signed).toBeUndefined();

@@ -25,6 +25,8 @@ new IntentsClient({ kind: 'partner-jwt', token: partnerJwt });
 
 With no argument it uses `ONECLICK_JWT`, which must contain the **partner** JWT. Quotes and status requests send this as `X-API-Key`. Public token discovery sends no credentials. The constructor rejects a `user-session` credential and ambiguous raw strings; the token is held in a JavaScript private field so serializing the client does not expose it. The client does not load the owner's session file.
 
+Obtain the free integration key through the [official partner portal](https://partners.near-intents.org/home). Confidential preparation now checks that it is configured before reading the vault, running research, reserving inference credit or signing an authorization. This checks configuration presence only; a successful no-spend quote must establish actual provider access and route viability. Research-only operations and observation of existing settlements remain available without preparing a new quote.
+
 ## Empty ownership proof
 
 `src/owner/confidential-auth.ts` accepts the owner's existing Ed25519 signer and its expected implicit Intents identity. It checks the mainnet RPC network, reads `intents.near::current_salt` at finalized state, then validates the fixed audience, identity, deadline, timestamped versioned nonce and exactly empty `intents` array before signing. The salt must be read live: the documented `e110f317` constant differed from finalized mainnet state on 6 November 2026.
@@ -35,9 +37,11 @@ The owner completed this empty-intent authentication and an authenticated privat
 
 ## Session refresh and fund recovery
 
-Refresh returns `{ accessToken, expiresIn }`. The refresh token does **not** rotate; retain its original expiration. Keep both tokens private and never send them to an arbitrary API host. The current helper has no refresh, deposit or spending method; a caller implementing refresh must preserve the account binding and private storage.
+Refresh returns `{ accessToken, expiresIn }`. The refresh token does **not** rotate; retain its original expiration. `refreshConfidentialOwnerSession(sessionFile, expectedRecipient)` in `src/owner/confidential-auth.ts` now performs this no-spend operation without a signer. It locks the saved session, validates the recipient/public-key binding and refresh expiry before one request to the fixed 1Click host, accepts HTTP 200 or 201, and atomically saves only `accessToken` and `accessExpiresAt`. The original refresh token, refresh expiration and authentication metadata remain unchanged. It returns identity/expiry metadata, never either token, and does not retry. An interrupted-process `.refresh.lock` blocks another attempt; establish that no refresher is active before recovering that lock. The helper has no deposit or spending method.
 
 Withdrawing an embedded confidential balance requires a viable quote with `depositType: CONFIDENTIAL_INTENTS`, generation of a spending intent, owner validation/signing of that exact intent, and submission through the partner-authenticated API. There is no public NEAR RPC path for spending the private balance. A working User-Session does not replace that recovery path. Establish route availability, minimum amounts, fees, refund destination and any required NEP-141 storage registration before depositing.
+
+The saved owner session was successfully refreshed on 6 November 2026 and then used for a private-balance read. That live check used zero signatures and zero transactions. No funded withdrawal or settlement was performed.
 
 ## Official sources
 

@@ -6,7 +6,7 @@ Neslos is an agent treasury for people who want automated research and payments 
 
 Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. Target: **$55,000 grand prize** and Security, Privacy, DeFi and Swarms tracks ($15,000 per track). This project has not been submitted or awarded a prize.
 
-**Updated on 6 November:** the existing testnet vault was upgraded with its state preserved. A real vault payment, daily-limit rejection and replay rejection are [recorded on testnet](docs/VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md). The [foundation fixes](docs/AUDIT-2026-11-06.md) and owner-commerce limits are now deployed. Genuine provider attestation passed [inference preflight](docs/INFERENCE-LIVE-REVIEW-2026-11-06.md), but full inference approval and [Neslos TDX hosting](docs/TDX-DEPLOYMENT-STATUS.md) remain incomplete. [Evidence and limits](docs/PROOF.md).
+**Updated on 6 November:** the existing testnet vault was upgraded with its state preserved. A real vault payment, daily-limit rejection and replay rejection are [recorded on testnet](docs/VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md). Independent calculations now reproduce [both provider VMs' complete boot measurements](docs/INFERENCE-LIVE-REVIEW-2026-11-06.md), including all 26 RTMR0 event digests combined. Current model deployment approval, [Neslos TDX hosting](docs/TDX-DEPLOYMENT-STATUS.md) and confidential settlement remain incomplete. [Current status](docs/STATUS.md) · [Evidence and limits](docs/PROOF.md).
 
 | Start here | What you can inspect |
 | --- | --- |
@@ -20,6 +20,8 @@ Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. Ta
 | [Hackathon research](docs/RESEARCH.md) | Official rules, source links, track fit and deadline |
 
 The public testnet vault is [vault.neslos.testnet](https://testnet.nearblocks.io/address/vault.neslos.testnet). Its [upgrade](deploy/testnet-upgrade-20261106.json) and [commerce proof](deploy/testnet-commerce-proof-20261106.json) use public fixture tokens. The [original deployment](deploy/testnet.json) and [earlier proof](deploy/testnet-proof.json) remain historical evidence. Public hosting, demo video and hardware evidence for the Neslos executor remain pending.
+
+**Testnet-only projects qualify in every hackathon track.** Hosted Confidential Intents is mainnet-only; its integration is optional. The roughly 2.4 NEAR estimate concerns code-storage stake for an optional mainnet Neslos vault, before state and gas costs, not eligibility or a confidential settlement fee. [Supported testing paths and budget limits](docs/CONFIDENTIAL-TESTNET-RESEARCH-2026-11-06.md).
 
 ## What we built
 
@@ -104,9 +106,9 @@ The on-chain vault can check private commitment membership, but opening those co
 | Rhea Finance | Live `/list_token_data` queries; 18 raw markets in the captured response, 10 supported by the normalizer. Explicitly dated fallback; no fabricated upstream observation timestamp. |
 | DeFiLlama | Additional NEAR protocol discovery. These rows are research-only until liquidity and execution are verified. |
 | NEAR policy vault | Rust/near-sdk WASM executed in a local sandbox and deployed on public testnet; downloaded code hashes, finalized receipts, spending limits and test-token balances verified. |
-| Confidential Intents / 1Click | Signed `CONFIDENTIAL_INTENTS` routing and strict quote checks. No-spend wallet authentication and private-balance reads succeeded; a separate partner key is still required for quotes and recovery. No funded settlement is claimed. [Authentication](docs/CONFIDENTIAL-AUTH.md). |
-| Intel TDX / dstack | DCAP checks, pinned registers, debug rejection and fresh nonce/key binding. Phala rejected provisioning; no Neslos CVM is running. [Provider response](docs/TDX-DEPLOYMENT-STATUS.md). |
-| NEAR AI | Live gateway/model TDX and GPU evidence passed preflight. Boot/Compose/history gates are implemented; independently reproducing RTMR0 remains unresolved, so paid inference is disabled. [Review](docs/INFERENCE-LIVE-REVIEW-2026-11-06.md). |
+| Confidential Intents / 1Click | No-spend ownership authentication, session refresh and private-balance reads succeeded. The free partner key is missing; quote and recovery-route viability remain unverified. Preparation fails before paid research when that key is absent. No funded settlement. [Authentication](docs/CONFIDENTIAL-AUTH.md). |
+| Intel TDX / dstack | DCAP checks, pinned registers, debug rejection and fresh nonce/key binding. Oversized-bundle guards are fixed; Phala's terms-of-use denial still requires provider review. No Neslos CVM is running. [Provider response](docs/TDX-DEPLOYMENT-STATUS.md). |
+| NEAR AI | Genuine gateway/model/GPU evidence and independent MRTD/RTMR0–2 reconstruction passed. Current model runtime/history approval remains unresolved; a shared signer filters reports but does not uniquely identify a deployment. No paid inference call. [Review](docs/INFERENCE-LIVE-REVIEW-2026-11-06.md). |
 | Owner commerce | Public payments and fixed Rhea supply/withdrawal use the vault's shared on-chain limits. Testnet payment and rejection receipts are verified; no funded Rhea position is claimed. [Scope](docs/COMMERCE.md). |
 | External paid agents | The marketplace's wallet-delegate rail would bypass the vault. New payment is disabled; historical recovery remains available. No paid job is claimed. |
 
@@ -137,7 +139,7 @@ The wrapper builds both contracts and starts a local NEAR sandbox. It exercises 
 - The 1Click provider sees routing fields. Neslos does not independently attest that HTTPS endpoint. Provider settlement status is an observation, not an independent destination-chain proof.
 - The private runtime prepares payments and allocation-reserve funding. The private owner CLI verifies the returned call, prints a reviewable plan, and can submit that exact plan with durable transaction recovery. It also operates private research/audit and owner policy/pause/recovery. The public testnet demonstration remains a separate fixture-token proof. The owner dashboard also supports token registration/funding plans and finite research/settlement-observation schedules. Schedules never submit transactions. Neither flow opens a lending position.
 - Spending limits cover the fixed USDC token and UTC calendar days. NEAR gas/storage, inference and TEE hosting have separate budgets. Unknown/late-refund outcomes remain charged.
-- Real TEE deployment, live encrypted inference and funded Intents settlement are unverified. Local application/browser checks and the TEE container build pass; GitHub CI records pushed revisions separately. [STATUS](docs/STATUS.md) records the tested revision and remaining work.
+- Neslos TDX deployment, live encrypted inference and funded Intents settlement are unverified. Provider boot reconstruction does not establish current model deployment approval or execution of Neslos inside TDX. Local application/browser checks and the TEE container build pass; GitHub CI records pushed revisions separately. [STATUS](docs/STATUS.md) records the tested revision and remaining work.
 - This is an AI-assisted hackathon implementation, not an independently audited custody product. [Security notes](SECURITY.md) include the known transitive dependency advisory. No yield or prize result is guaranteed.
 
 Built from the official NEAR contract scaffold and the libraries pinned in the npm and Cargo lockfiles. The bundled Inter font retains its OFL license. See [research](docs/RESEARCH.md) for source provenance and [MIT license](LICENSE) for project code.

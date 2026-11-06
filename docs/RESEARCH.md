@@ -1,6 +1,6 @@
 # Hackathon research
 
-Research refreshed: 6 November 2026. Read the [live brief](https://nearhackathon.com/HACKATHON.md) again before submission; the latest full copy is in [sources](sources/HACKATHON-2026-11-06.md). The [current audit](AUDIT-2026-11-06.md) records fresh official track/RPC research and observed integration state.
+Research refreshed: 6 November 2026. Read the [live brief](https://nearhackathon.com/HACKATHON.md) again before submission; the latest full copy is in [sources](sources/HACKATHON-2026-11-06.md). [Current status](STATUS.md), [inference review](INFERENCE-LIVE-REVIEW-2026-11-06.md) and [testnet/Confidential Intents research](CONFIDENTIAL-TESTNET-RESEARCH-2026-11-06.md) include the latest findings beyond the [foundation audit](AUDIT-2026-11-06.md).
 
 ## Verified event facts
 
@@ -9,12 +9,14 @@ Research refreshed: 6 November 2026. Read the [live brief](https://nearhackathon
 - $250,000 total: $55,000 overall grand prize and $10,000 / $3,000 / $2,000 in each of thirteen tracks. USD amounts paid in NEAR.
 - No registration is required to start. Public repo + human-published public X demo are required before the one final submission per project.
 - Work since the 19 October announcement qualifies; older baselines and reused libraries must be disclosed. AI-assisted work is allowed.
-- Testnet-only work is eligible. **NEAR Intents has no testnet.** Mainnet quotes with dry: true require no funded transactions.
+- Testnet-only work is eligible in every track, and no named integration is mandatory. **Hosted NEAR Intents / Confidential Intents has no supported testnet.** Mainnet `dry: true` quotes require no funded transaction; an independently deployed verifier is a separate environment, not the hosted confidential service.
 - A local-only demo is eligible with reproducible instructions and a video. Hosted demos should survive through judging, ideally 25 November.
 - Humans decide awards. Claude Code and Codex screen reproducibility and feature claims.
 - Submission requires the human's actual team/contact/payout information, chosen tracks, links, consent and approval of the exact final payload. No placeholders or invented account.
 
 The site publishes **no weighted rubric**. Its FAQ says: "Claude Code & Codex screen every project first: they check that it runs and does what the README says. The human judges above make the decisions. Previous NEAR hackathons evaluated technical implementation, design, impact, originality and sustainability — a good guide to prepare by." We do not invent weights.
+
+The roughly **2.4 NEAR** estimate concerns code-storage stake for an optional mainnet Neslos vault, before state and gas costs. It is neither an eligibility requirement nor a Confidential Intents settlement fee. Existing-wallet production integration can avoid deploying that vault but still requires real supported assets and fees; it would not prove Neslos vault enforcement. [Sources and no-mainnet-spend alternatives](CONFIDENTIAL-TESTNET-RESEARCH-2026-11-06.md).
 
 All track IDs: defi, thesis, privacy, business, swarms, security, agents, realworld, games, nfts, memecoins, social, open.
 
@@ -40,10 +42,11 @@ All track IDs: defi, thesis, privacy, business, swarms, security, agents, realwo
 | [Lending API docs](https://github.com/rhea-finance/burrow-sdk-python) | Production host https://lendingsdk.rhea.finance; /list_token_data supplies APY, base/reward components, TVL and liquidity. |
 | [Live Rhea feed](https://lendingsdk.rhea.finance/list_token_data) | Successfully returned 18 markets during research. Fetch time does not establish upstream observation time. |
 | [Confidential swaps](https://docs.near-intents.org/integration/distribution-channels/1click-api/quickstart/confidential-swaps.md) | Standard quote confidentiality is basic or advanced. Embedded private balances need signed intents. Entry/exit transactions remain public. |
+| [Hosted service versus independent verifier research](CONFIDENTIAL-TESTNET-RESEARCH-2026-11-06.md) | Official docs explicitly exclude a hosted testnet; source contracts support independent testing. Testnet RPC options and generic deployer instances do not establish a FAR testnet. |
 | [1Click integration](https://docs.near-intents.org/integration/distribution-channels/1click-api/quickstart/making-a-request.md) | Discover asset IDs from /v0/tokens. Bind refund address and privacy, validate minima, monitor all terminal statuses. NEAR deposits use ft_transfer. |
 | [NEAR AI SDK](https://docs.near.ai/cloud/inference-sdk/javascript.md) | E2EE is opt-in; verifyResponse is explicit; both gateway and model need strict TCB policies. Published 0.2.1 requires Node >=24.22.1. |
 | [NEAR AI verification](https://docs.near.ai/cloud/verification/index.md) | Merely fetching a report is not verifying nonce, hardware chain, measurements, signer and exact response bytes. |
-| [OutLayer](https://github.com/out-layer/outlayer) and [custody skill](https://skills.outlayer.ai/agent-custody/SKILL.md) | TDX custody/compute, separate mainnet/testnet API hosts. Intents remains mainnet-only. Its wallet policy is not automatically a Neslos on-chain cap. |
+| [OutLayer](https://github.com/out-layer/outlayer) and [custody skill](https://skills.outlayer.ai/agent-custody/SKILL.md) | TDX custody/compute, separate mainnet/testnet API hosts. Hosted Intents remains mainnet-only. Its wallet policy is not automatically a Neslos on-chain cap. |
 | [dstack SDK](https://github.com/Dstack-TEE/dstack/tree/master/sdk/js) | Main branch documented v1 while npm latest was 0.5.8. Use the pinned published interface and quote-backed measurements. |
 | [DCAP verifier](https://github.com/Phala-Network/dcap-qvl/tree/master/dcap-qvl-js) | JavaScript can verify Intel signatures, TCB, report data and TDX measurements. Simulator evidence must fail. |
 
@@ -53,11 +56,13 @@ Q-006 in the event brief quotes 0.2% without a 1Click JWT, while the current API
 
 The Rhea response captured on 1 November contains 18 raw markets; 10 match the supported-token normalizer. It is retained in `fixtures/rhea-2026-11-01.json`. Reference mode labels the capture date and is never accepted to authorize funded private activity.
 
-The live confidential 1Click dry quote probe returned **HTTP 401 without an API JWT**. Token discovery works independently; the confidential quote still needs `ONECLICK_JWT`. No successful live quote or funded settlement is claimed.
+The live confidential 1Click dry quote probe returned **HTTP 401 without an API JWT**. Ownership authentication, no-spend session refresh and private-balance reads succeeded, but the free partner key for `ONECLICK_JWT` is still missing. Quote and recovery-route viability remain unverified. Preparation now stops before paid research when the partner credential is absent. No successful live quote or funded settlement is claimed. [Authentication and recovery](CONFIDENTIAL-AUTH.md).
 
 Reading and testing official SDK 0.1.26 showed that its signature excludes `confidentiality`, while covering `recipientType`, `recipient` and output minima. The adapter therefore requires signed `CONFIDENTIAL_INTENTS` routing and validates the request echo. [Privacy analysis](PRIVACY.md) describes the remaining provider trust.
 
-The compiled policy vault has now passed local NEAR sandbox execution. Hardware deployment and live inference remain unverified. [Verification record](PROOF.md) separates measured implementation results from those remaining steps; [security notes](../SECURITY.md) record the transitive `elliptic` advisory.
+The policy vault has passed local sandbox execution and its [upgrade and commerce proof are deployed on testnet](VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md). The [inference review](INFERENCE-LIVE-REVIEW-2026-11-06.md) independently reproduced MRTD/RTMR0–2 for both provider VMs, including all 26 RTMR0 event digests combined. Raw provider VM configuration resolved the earlier SDK-normalization gap. Current model runtime/history approval remains unresolved; the original and current reports share a signer, so selecting it does not uniquely identify a deployment. No paid inference was called.
+
+The [Phala request audit](TDX-DEPLOYMENT-STATUS.md#request-compatibility-audit-addendum) confirmed an oversized inline payload and added local size guards. That client fix does not establish the cause or removal of the provider's terms-of-use denial. Provider review remains necessary; no Neslos TDX instance launched. [Verification record](PROOF.md) separates these results from remaining live claims; [security notes](../SECURITY.md) record the transitive `elliptic` advisory.
 
 ## Product conclusions
 
@@ -65,4 +70,4 @@ The compiled policy vault has now passed local NEAR sandbox execution. Hardware 
 
 Neslos must demonstrate its negative case as clearly as its successful case: an untrusted proposal that cannot spend. A funded reserve is not a DeFi position. A local signed receipt is not a chain transaction. A downloaded quote is not verified hardware.
 
-Testnet deployment, a provisioned TEE, configured NEAR AI credentials, funded settlement, publication, an X demo and final submission remain distinct steps requiring real evidence and the owner's authorization where applicable.
+The deployed testnet proof, provider boot reconstruction, current runtime approval, Neslos TDX hosting, paid inference, confidential settlement and final publication are distinct claims. The first two have evidence; the remaining live private steps are unfinished. A testnet-only submission can accurately present completed work without purchasing a mainnet vault or claiming the missing integrations.

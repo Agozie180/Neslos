@@ -11,6 +11,7 @@ import { gzipSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
 import YAML from 'yaml';
 import { sourceIdentity } from './evidence.mjs';
+import { assertPhalaComposePayloadSize } from './phala-compose.mjs';
 const { values } = parseArgs({ options: { out: { type: 'string' } }, strict: true });
 if (!values.out) throw new Error('Use --out NEW_DIRECTORY after npm run build.');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -45,8 +46,9 @@ const compose = YAML.stringify({services:{
     healthcheck:{test:['CMD','node','-e','fetch("http://127.0.0.1:8443/health").then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))'],interval:'30s',timeout:'5s',start_period:'120s',retries:3}
   }
 },volumes:{'neslos-app':{},'neslos-journal':{}}},{lineWidth:0});
+const composePayloadBytes = assertPhalaComposePayloadSize(compose);
 const directory = resolve(values.out); await mkdir(directory,{recursive:true,mode:0o700});
-const manifest={format:'neslos-tee-inline-deployment-v1',generatedAt:new Date().toISOString(),image,bundleSha256:hash,composeSha256:sha(compose),compressedBytes:bytes.length,fileCount:files.length,files:files.map(f=>({path:f.path,sha256:sha(Buffer.from(f.content,'base64'))})),source:sourceIdentity(),status:'prepared-not-deployed'};
+const manifest={format:'neslos-tee-inline-deployment-v1',generatedAt:new Date().toISOString(),image,bundleSha256:hash,composeSha256:sha(compose),composePayloadBytes,compressedBytes:bytes.length,fileCount:files.length,files:files.map(f=>({path:f.path,sha256:sha(Buffer.from(f.content,'base64'))})),source:sourceIdentity(),status:'prepared-not-deployed'};
 await writeFile(resolve(directory,'compose.yaml'),compose,{flag:'wx',mode:0o600});
 await writeFile(resolve(directory,'deployment.json'),JSON.stringify(manifest,null,2)+'\n',{flag:'wx',mode:0o600});
 console.log(JSON.stringify({directory,image,bundleSha256:hash,composeSha256:manifest.composeSha256,compressedBytes:bytes.length,fileCount:files.length},null,2));

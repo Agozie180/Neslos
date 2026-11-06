@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { QuoteResponse } from '@defuse-protocol/one-click-sdk-typescript';
 import { quoteFixture, quotePublicKey, signFixture } from './fixtures/quote.js';
 const mocks = vi.hoisted(() => ({ fetchJson: vi.fn() }));
@@ -11,8 +11,22 @@ vi.mock('@defuse-protocol/one-click-sdk-typescript', async original => {
 import { IntentsClient, validateQuote, type OneClickPartnerAuth } from '../src/core/intents.js';
 import { NATIVE_USDC } from '../src/core/research.js';
 
-beforeEach(() => vi.resetAllMocks());
+beforeEach(() => { vi.resetAllMocks(); vi.stubEnv('ONECLICK_JWT', ''); });
+afterEach(() => vi.unstubAllEnvs());
 describe('signed quote validation with the official SDK and a test signer', () => {
+  it.each([true, false])('rejects missing confidential credentials before token discovery (dry=%s)', async dry => {
+    const client = new IntentsClient();
+    expect(() => client.assertConfidentialQuoteConfigured()).toThrow(/ONECLICK_JWT.*free partner API key/);
+    await expect(client.quote({ amount: '150000000', maxSlippageBps: 50, recipient: 'recipient.near', refundTo: 'vault.near', dry })).rejects.toThrow('ONECLICK_PARTNER_AUTH_REQUIRED');
+    expect(mocks.fetchJson).not.toHaveBeenCalled();
+  });
+  it('accepts a configured partner credential without a network probe or exposing it', () => {
+    vi.stubEnv('ONECLICK_JWT', 'fixture-environment-partner-token');
+    const client = new IntentsClient();
+    expect(() => client.assertConfidentialQuoteConfigured()).not.toThrow();
+    expect(mocks.fetchJson).not.toHaveBeenCalled();
+    expect(JSON.stringify(client)).not.toContain('fixture-environment-partner-token');
+  });
   it.each([true, false])('accepts a valid signed quote (dry=%s)', dry => {
     const response = quoteFixture(dry);
     expect(validateQuote(response, response.quoteRequest, 50).signatureVerified).toBe(true);
@@ -55,6 +69,13 @@ describe('signed quote validation with the official SDK and a test signer', () =
   });
 });
 describe('provider settlement observations', () => {
+  it('keeps an existing quote observable without quote credentials', async () => {
+    const client = new IntentsClient(), response = quoteFixture();
+    expect(() => client.assertConfidentialQuoteConfigured()).toThrow('ONECLICK_PARTNER_AUTH_REQUIRED');
+    mocks.fetchJson.mockResolvedValue({ status: 'SUCCESS', quoteResponse: response });
+    expect((await client.status(validateQuote(response, response.quoteRequest, 50))).outcome).toBe('success');
+    expect(mocks.fetchJson).toHaveBeenCalledWith(expect.stringContaining('/status?'), { headers: {} });
+  });
   it('uses only partner authentication for status', async () => {
     const response = quoteFixture(); mocks.fetchJson.mockResolvedValue({ status: 'SUCCESS', quoteResponse: response });
     await new IntentsClient({ kind: 'partner-jwt', token: 'fixture-partner-token' }).status(validateQuote(response, response.quoteRequest, 50));
