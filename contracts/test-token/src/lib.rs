@@ -22,8 +22,10 @@ impl TestToken {
         let previous = self.balances.get(&sender).copied().expect("SENDER_NOT_REGISTERED");
         let received = self.balances.get(&receiver_id).copied().expect("RECEIVER_NOT_REGISTERED");
         assert!(previous >= amount.0, "INSUFFICIENT_BALANCE");
-        self.balances.insert(sender, previous - amount.0);
-        self.balances.insert(receiver_id, received.checked_add(amount.0).expect("OVERFLOW"));
-        let _ = memo;
+        self.balances.insert(sender.clone(), previous - amount.0);
+        self.balances.insert(receiver_id.clone(), received.checked_add(amount.0).expect("OVERFLOW"));
+        let mut data = near_sdk::serde_json::json!({"old_owner_id":sender,"new_owner_id":receiver_id,"amount":amount});
+        if let Some(memo) = memo { data["memo"] = near_sdk::serde_json::Value::String(memo); }
+        env::log_str(&format!("EVENT_JSON:{}", near_sdk::serde_json::json!({"standard":"nep141","version":"1.0.0","event":"ft_transfer","data":[data]})));
     }
 }

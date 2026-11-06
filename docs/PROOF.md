@@ -1,6 +1,10 @@
 # Verification record
 
-Updated **6 November 2026** after the [foundation audit](AUDIT-2026-11-06.md). Application, browser and contract checks passed again in Ubuntu WSL. Public testnet evidence remains a historical proof of the older deployed WASM. The previously tested TEE container is packaging evidence; genuine remote hardware and funded Intents settlement remain unverified. [GitHub CI](https://github.com/Agozie180/Neslos/actions/workflows/verify.yml) covers pushed revisions, not this working tree.
+Updated **6 November 2026**: the [current vault commerce report](VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) records the deployed upgrade, preserved state and real testnet payment/limit/replay receipts. The expanded contract suite passed 25 unit tests and two sandbox suites. [Inference preflight](INFERENCE-LIVE-REVIEW-2026-11-06.md) verified provider hardware but did not establish full approval or a paid response. [TDX hosting](TDX-DEPLOYMENT-STATUS.md) and funded confidential settlement remain incomplete. [GitHub CI](https://github.com/Agozie180/Neslos/actions/workflows/verify.yml) covers the exact pushed revisions.
+
+## Earlier foundation-audit snapshot
+
+The following counts, artifact and initial testnet snapshot are retained from the earlier [foundation audit](AUDIT-2026-11-06.md). They are historical; the current deployed artifact and later checks are linked above.
 
 | Check | Result | Reproduce |
 | --- | --- | --- |
@@ -37,7 +41,7 @@ The test asserts balances and state after each operation. The terminal line alon
 
 ## Public testnet proof
 
-The owner-controlled [vault.neslos.testnet](https://testnet.nearblocks.io/address/vault.neslos.testnet) uses [token.neslos.testnet](https://testnet.nearblocks.io/address/token.neslos.testnet), a minimal fixture token. [Deployment evidence](../deploy/testnet.json) records the original transactions and code. A fresh 6 November download still has SHA-256 `196460a40676c7901143a9adf63ce61f63e25bf862e0acb4d9d51ff491e32b73`; it differs from the updated local artifact. The resume fix needs deployment. The historical allowed transaction timed out when re-queried on 6 November, so its earlier proof is not described as freshly reverified.
+The owner-controlled [vault.neslos.testnet](https://testnet.nearblocks.io/address/vault.neslos.testnet) uses [token.neslos.testnet](https://testnet.nearblocks.io/address/token.neslos.testnet), a minimal fixture token. [Deployment evidence](../deploy/testnet.json) records the original transactions and code. At the earlier foundation-audit snapshot, the downloaded vault SHA-256 was `196460a40676c7901143a9adf63ce61f63e25bf862e0acb4d9d51ff491e32b73`. The later [state-preserving upgrade](../deploy/testnet-upgrade-20261106.json) supersedes that code and includes the resume fix. Earlier timeout observations are historical; the new proof has its own finalized receipt checks.
 
 [Proof evidence](../deploy/testnet-proof.json), finalized on 3 November at `2026-11-03T17:32:18.128Z`, contains 12 transaction links. Four expected rejections are recorded as failed chain transactions; that is the successful result of those negative tests.
 

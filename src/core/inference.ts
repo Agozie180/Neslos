@@ -1,12 +1,13 @@
-import { InferenceClient, type MeasuredDeployment } from '@nearai/inference-sdk/node';
+import { InferenceClient, verifyDeploymentImageProvenance, type MeasuredDeployment } from '@nearai/inference-sdk/node';
 import { z } from 'zod';
 import type { AgentReport, Policy, ResearchResult } from './types.js';
 import { fetchJson, rankMarkets } from './research.js';
 import { assessmentSchema } from './strategy.js';
 import { DISABLED_INFERENCE_BUDGET, estimateInference, inferenceBudgetSchema, type InferenceReservation } from './inference-budget.js';
+import { GATEWAY_IMAGE_POLICIES, checkModelDeploymentReference, createBootPinnedTdxQuoteVerifier, inferenceBootPolicySchema, modelDeploymentPolicySchema, verifyModelBuildProvenance } from './inference-provenance.js';
 
-const pin = z.object({ osImageHash: z.string().regex(/^[a-f0-9]{64}$/), composeHash: z.string().regex(/^[a-f0-9]{64}$/) }).strict();
-export const inferencePolicySchema = z.object({ gateway: pin, model: pin, modelId: z.string().min(1).max(100), budget: inferenceBudgetSchema.default(DISABLED_INFERENCE_BUDGET) }).strict();
+const pin = z.object({ osImageHash: z.string().regex(/^[a-f0-9]{64}$/), composeHash: z.string().regex(/^[a-f0-9]{64}$/), boot: inferenceBootPolicySchema }).strict();
+export const inferencePolicySchema = z.object({ gateway: pin, model: pin, modelId: z.string().min(1).max(100), modelDeployment: modelDeploymentPolicySchema, budget: inferenceBudgetSchema.default(DISABLED_INFERENCE_BUDGET) }).strict();
 export type InferencePolicy = z.input<typeof inferencePolicySchema>;
 const responseSchema = z.object({ summary: z.string().min(1).max(1000), findings: z.array(z.string().max(600)).min(1).max(6), marketIds: z.array(z.string().max(160)).max(12), assessments: z.array(assessmentSchema).max(12) }).strict();
 
@@ -24,19 +25,31 @@ function failureCode(error: unknown): string {
   return code && ['INFERENCE_MEASUREMENT', 'MODEL_TEE_REQUIRED', 'INVENTED_EVIDENCE'].includes(code) ? code : 'VERIFICATION_OR_TRANSPORT_FAILED';
 }
 
+/** Also usable by the public-input provider probe; this does not attest the caller. */
+export function createVerifiedInferenceClient(input: InferencePolicy, apiKey: string): InferenceClient {
+    const policy = inferencePolicySchema.parse(input);
+    if (!apiKey) throw new Error('NEARAI_API_KEY is required.');
+    return new InferenceClient({
+      apiKey, e2ee: true, attestationCacheTimeToLiveMs: 0,
+      gatewayVerification: { includeSpkiFingerprint: true, policy: { acceptedTcbStatuses: ['UpToDate'] }, verifiers: {
+        tdxQuote: createBootPinnedTdxQuoteVerifier(policy.gateway.boot),
+        deployment: async d => { checkDeployment(d, policy.gateway); await verifyDeploymentImageProvenance({ appCompose: d.appCompose, imagePolicies: GATEWAY_IMAGE_POLICIES }); },
+      } },
+      modelVerification: { policy: { acceptedTcbStatuses: ['UpToDate'], gpuEvidence: 'required' }, verifiers: {
+        tdxQuote: createBootPinnedTdxQuoteVerifier(policy.model.boot),
+        deployment: async d => { checkDeployment(d, policy.model); checkModelDeploymentReference(d, policy.modelDeployment); await verifyModelBuildProvenance(d); },
+      } },
+      deploymentPolicy: ({ model, deployment }) => { if (model !== policy.modelId) throw new Error('Unapproved inference model.'); checkDeployment(deployment, policy.model); checkModelDeploymentReference(deployment, policy.modelDeployment); },
+    });
+}
+
 /** Construct only inside the independently verified TEE runtime. No gateway-only or plaintext fallback. */
 export class PrivateResearchers {
   private client: InferenceClient;
   private policy: z.output<typeof inferencePolicySchema>;
   constructor(policy: InferencePolicy, apiKey: string, private reserve: (reservation: InferenceReservation) => Promise<void> = async () => { throw new Error('DURABLE_INFERENCE_BUDGET_REQUIRED'); }) {
     this.policy = inferencePolicySchema.parse(policy);
-    if (!apiKey) throw new Error('NEARAI_API_KEY is required inside the TEE.');
-    this.client = new InferenceClient({
-      apiKey, e2ee: true, attestationCacheTimeToLiveMs: 0,
-      gatewayVerification: { includeSpkiFingerprint: true, policy: { acceptedTcbStatuses: ['UpToDate'] }, verifiers: { deployment: d => checkDeployment(d, this.policy.gateway) } },
-      modelVerification: { policy: { acceptedTcbStatuses: ['UpToDate'], gpuEvidence: 'required' } },
-      deploymentPolicy: ({ model, deployment }) => { if (model !== this.policy.modelId) throw new Error('Unapproved inference model.'); checkDeployment(deployment, this.policy.model); },
-    });
+    this.client = createVerifiedInferenceClient(this.policy, apiKey);
   }
   async research(evidence: ResearchResult, policy: Policy, prompt: string, outputAssets?: readonly string[]): Promise<AgentReport[]> {
     if (evidence.sourceMode !== 'live') throw new Error('LIVE_EVIDENCE_REQUIRED: captured data cannot authorize funded activity.');

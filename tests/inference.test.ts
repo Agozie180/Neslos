@@ -1,15 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-const mocks = vi.hoisted(() => ({ create: vi.fn(), verify: vi.fn(), options: vi.fn(), reserve: vi.fn() }));
-vi.mock('@nearai/inference-sdk/node', () => ({ InferenceClient: class {
+const mocks = vi.hoisted(() => ({ create: vi.fn(), verify: vi.fn(), options: vi.fn(), reserve: vi.fn(), gatewayBuild: vi.fn(), modelBuild: vi.fn() }));
+vi.mock('@nearai/inference-sdk/node', async original => ({ ...await original<typeof import('@nearai/inference-sdk/node')>(), verifyDeploymentImageProvenance: mocks.gatewayBuild, InferenceClient: class {
   constructor(options: unknown) { mocks.options(options); }
   chat = { completions: { create: mocks.create } }; verifyResponse = mocks.verify;
 } }));
+vi.mock('../src/core/inference-provenance.js', async original => ({ ...await original<typeof import('../src/core/inference-provenance.js')>(), verifyModelBuildProvenance: mocks.modelBuild }));
 import { PrivateResearchers } from '../src/core/inference.js';
+import { composeManagerFixture, inferenceBootFixture, modelDeploymentFixture } from './fixtures/inference.js';
 import { checkInferenceBudget, DISABLED_INFERENCE_BUDGET, inferenceUsage, type InferenceReservation } from '../src/core/inference-budget.js';
 import { DEFAULT_POLICY } from '../src/core/policy.js';
 import type { ResearchResult } from '../src/core/types.js';
 
-const policy = { modelId: 'test-model', gateway: { osImageHash: 'aa'.repeat(32), composeHash: 'bb'.repeat(32) }, model: { osImageHash: 'cc'.repeat(32), composeHash: 'dd'.repeat(32) }, budget: { totalLimitNanoUsd: '100000000', dailyLimitNanoUsd: '20000000', maxCalls: 6, inputNanoUsdPerToken: '80', outputNanoUsdPerToken: '500' } };
+const policy = { modelId: 'test-model', gateway: { osImageHash: 'aa'.repeat(32), composeHash: 'bb'.repeat(32), boot: inferenceBootFixture }, model: { osImageHash: 'cc'.repeat(32), composeHash: 'dd'.repeat(32), boot: inferenceBootFixture }, modelDeployment: modelDeploymentFixture, budget: { totalLimitNanoUsd: '100000000', dailyLimitNanoUsd: '20000000', maxCalls: 6, inputNanoUsdPerToken: '80', outputNanoUsdPerToken: '500' } };
 const evidence: ResearchResult = { sourceMode: 'live', fetchedAt: new Date().toISOString(), upstreamObservedAt: null, sourceUrl: 'https://fixture.invalid', notices: [], markets: [{ id: 'rhea:token.near', tokenId: 'token.near', protocol: 'Rhea', venue: 'rhea-lending', symbol: 'USDC', chain: 'NEAR', totalApy: 4, baseApy: 4, rewardApy: 0, tvlUsd: 2000000, liquidityUsd: 1000000, utilization: 0.5, stablecoin: true, bridged: false, sourceUrl: 'https://fixture.invalid', sourceMode: 'live', fetchedAt: new Date().toISOString(), upstreamObservedAt: null, risks: [] }] };
 beforeEach(() => {
   vi.resetAllMocks(); mocks.reserve.mockResolvedValue(undefined);
@@ -24,7 +26,9 @@ describe('NEAR AI researcher orchestration with fixture SDK responses', () => {
     const options = mocks.options.mock.calls[0]![0];
     expect(options).toMatchObject({ e2ee: true, attestationCacheTimeToLiveMs: 0, gatewayVerification: { includeSpkiFingerprint: true }, modelVerification: { policy: { gpuEvidence: 'required', acceptedTcbStatuses: ['UpToDate'] } } });
     expect(() => options.deploymentPolicy({ model: 'wrong', deployment: {} })).toThrow('Unapproved');
-    expect(() => options.gatewayVerification.verifiers.deployment({ runtimeMeasurements: policy.model })).toThrow('INFERENCE_MEASUREMENT');
+    await expect(options.gatewayVerification.verifiers.deployment({ runtimeMeasurements: policy.model })).rejects.toThrow('INFERENCE_MEASUREMENT');
+    expect(options.gatewayVerification.verifiers.tdxQuote).toBeTypeOf('function');
+    expect(options.modelVerification.verifiers.tdxQuote).toBeTypeOf('function');
     const reports = await researchers.research(evidence, DEFAULT_POLICY, 'Research supplied opportunities');
     expect(reports.map(r => r.agent)).toEqual(['lending', 'liquidity', 'risk']); expect(mocks.verify).toHaveBeenCalledTimes(3);
   });
@@ -80,16 +84,35 @@ describe('NEAR AI researcher orchestration with fixture SDK responses', () => {
       ...DISABLED_INFERENCE_BUDGET, ...policy.budget, dailyLimitNanoUsd: reserved.reservedNanoUsd,
     })).toThrow('INFERENCE_BUDGET_EXHAUSTED');
   });
-  it('keeps independently approved deployment pins when the caller mutates its input policy', () => {
+  it('keeps independently approved deployment pins when the caller mutates its input policy', async () => {
     const supplied = structuredClone(policy);
     new PrivateResearchers(supplied, 'fixture', mocks.reserve);
     const options = mocks.options.mock.calls[0]![0];
     supplied.gateway.osImageHash = 'ee'.repeat(32);
     supplied.model.composeHash = 'ff'.repeat(32);
     supplied.modelId = 'replacement-model';
-    expect(() => options.gatewayVerification.verifiers.deployment({ runtimeMeasurements: policy.gateway })).not.toThrow();
-    expect(() => options.deploymentPolicy({ model: policy.modelId, deployment: { runtimeMeasurements: policy.model } })).not.toThrow();
-    expect(() => options.gatewayVerification.verifiers.deployment({ runtimeMeasurements: supplied.gateway })).toThrow('INFERENCE_MEASUREMENT');
+    await expect(options.gatewayVerification.verifiers.deployment({ runtimeMeasurements: policy.gateway })).resolves.toBeUndefined();
+    expect(() => options.deploymentPolicy({ model: policy.modelId, deployment: { runtimeMeasurements: policy.model, composeManager: composeManagerFixture } })).not.toThrow();
+    await expect(options.gatewayVerification.verifiers.deployment({ runtimeMeasurements: supplied.gateway })).rejects.toThrow('INFERENCE_MEASUREMENT');
     expect(() => options.deploymentPolicy({ model: supplied.modelId, deployment: { runtimeMeasurements: supplied.model } })).toThrow('Unapproved');
+  });
+  it('rejects policies missing boot approval before configuring a client', () => {
+    const supplied = structuredClone(policy) as any;
+    delete supplied.gateway.boot;
+    expect(() => new PrivateResearchers(supplied, 'fixture', mocks.reserve)).toThrow();
+    expect(mocks.options).not.toHaveBeenCalled();
+  });
+  it('requires reviewed dynamic deployment and both image-build verifiers', async () => {
+    new PrivateResearchers(policy, 'fixture', mocks.reserve);
+    const options = mocks.options.mock.calls[0]![0];
+    const model = { runtimeMeasurements: policy.model, composeManager: composeManagerFixture };
+    await expect(options.modelVerification.verifiers.deployment(model)).resolves.toBeUndefined();
+    expect(mocks.modelBuild).toHaveBeenCalledWith(model);
+    const changed = structuredClone(model); changed.composeManager.actions[0]!.commit = 'f'.repeat(40);
+    await expect(options.modelVerification.verifiers.deployment(changed)).rejects.toThrow('INFERENCE_MODEL_DEPLOYMENT');
+    mocks.gatewayBuild.mockRejectedValue(new Error('invalid build signature'));
+    await expect(options.gatewayVerification.verifiers.deployment({ runtimeMeasurements: policy.gateway })).rejects.toThrow('invalid build signature');
+    mocks.modelBuild.mockRejectedValue(new Error('invalid proxy build'));
+    await expect(options.modelVerification.verifiers.deployment(model)).rejects.toThrow('invalid proxy build');
   });
 });

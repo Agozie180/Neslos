@@ -42,6 +42,7 @@ function cargo(args, near = false) {
 if (operation !== 'unit') {
   cargo(['build', 'non-reproducible-wasm', '--locked', '--manifest-path', 'contracts/policy-vault/Cargo.toml', '--out-dir', 'artifacts'], true);
   if (operation === 'test') cargo(['build', 'non-reproducible-wasm', '--locked', '--manifest-path', 'contracts/test-token/Cargo.toml', '--out-dir', 'artifacts'], true);
+  if (operation === 'test') cargo(['build', 'non-reproducible-wasm', '--locked', '--manifest-path', 'contracts/policy-vault/tests/fixtures/commerce/Cargo.toml', '--out-dir', 'artifacts'], true);
 }
 if (operation !== 'build') cargo(['test', '--locked', '--manifest-path', 'contracts/policy-vault/Cargo.toml', ...(operation === 'unit' ? ['--lib'] : []), '--', '--nocapture']);
 writeFileSync(resolve(root, 'artifacts/contract-output.log'), transcript);

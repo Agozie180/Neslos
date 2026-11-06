@@ -18,6 +18,7 @@ import { channelSuite, decryptChannel, encryptChannel } from '../src/core/channe
 import { canonical, commitment, keyFromSeed, sha256, verifyHash } from '../src/core/crypto.js';
 import { NATIVE_USDC } from '../src/core/research.js';
 import { quoteFixture } from './fixtures/quote.js';
+import { inferenceBootFixture, modelDeploymentFixture } from './fixtures/inference.js';
 import { authorizationBytes, settlementBytes } from '../src/core/wire.js';
 import { verifyAudit } from '../src/core/audit.js';
 import { DISABLED_INFERENCE_BUDGET, type InferenceBudgetPolicy } from '../src/core/inference-budget.js';
@@ -47,7 +48,7 @@ function evidence() {
   ].map(([tokenId, symbol, rate]) => ({ id: 'rhea:' + tokenId, tokenId, symbol, protocol: 'Rhea Finance', venue: 'rhea-lending', chain: 'NEAR', baseApy: rate, rewardApy: 0, totalApy: rate, tvlUsd: 2000000, liquidityUsd: 1000000, utilization: 0.5, stablecoin: true, bridged: false, sourceMode: 'live', sourceUrl: 'https://synthetic.invalid', fetchedAt: new Date().toISOString(), upstreamObservedAt: null, risks: [] })) };
 }
 function create(journalPath = join(directory, 'audit.json'), budget: InferenceBudgetPolicy = DISABLED_INFERENCE_BUDGET) {
-  return PrivateRuntime.create({ network: 'mainnet', vault: 'vault.near', teePolicy, inferencePolicy: { modelId: 'fixture', gateway: { osImageHash: 'aa'.repeat(32), composeHash: 'bb'.repeat(32) }, model: { osImageHash: 'cc'.repeat(32), composeHash: 'dd'.repeat(32) }, budget }, ownerToken: token, nearAiKey: 'fixture', journalPath });
+  return PrivateRuntime.create({ network: 'mainnet', vault: 'vault.near', teePolicy, inferencePolicy: { modelId: 'fixture', gateway: { osImageHash: 'aa'.repeat(32), composeHash: 'bb'.repeat(32), boot: inferenceBootFixture }, model: { osImageHash: 'cc'.repeat(32), composeHash: 'dd'.repeat(32), boot: inferenceBootFixture }, modelDeployment: modelDeploymentFixture, budget }, ownerToken: token, nearAiKey: 'fixture', journalPath });
 }
 async function send(runtime: PrivateRuntime, request: unknown, ownerToken = token) {
   const nonce = randomBytes(32).toString('hex'), keys = await channelSuite.GenerateKeyPair();
@@ -237,7 +238,7 @@ describe('owner client through the encrypted runtime protocol (external services
     return { fetcher, loseNextReply: () => { dropReply = true; } };
   }
   it('executes read-only private research on testnet without quotes or authorizations', async () => {
-    const runtime = await PrivateRuntime.create({ network: 'testnet', vault: 'vault.testnet', teePolicy, inferencePolicy: { modelId: 'fixture', gateway: { osImageHash: 'aa'.repeat(32), composeHash: 'bb'.repeat(32) }, model: { osImageHash: 'cc'.repeat(32), composeHash: 'dd'.repeat(32) } }, ownerToken: token, nearAiKey: 'fixture', journalPath: join(directory, 'audit.json') });
+    const runtime = await PrivateRuntime.create({ network: 'testnet', vault: 'vault.testnet', teePolicy, inferencePolicy: { modelId: 'fixture', gateway: { osImageHash: 'aa'.repeat(32), composeHash: 'bb'.repeat(32), boot: inferenceBootFixture }, model: { osImageHash: 'cc'.repeat(32), composeHash: 'dd'.repeat(32), boot: inferenceBootFixture }, modelDeployment: modelDeploymentFixture }, ownerToken: token, nearAiKey: 'fixture', journalPath: join(directory, 'audit.json') });
     const request = researchRequest(), reply = await send(runtime, request);
     expect(reply.ok, reply.error).toBe(true); expect(reply.value.network).toBe('testnet');
     expect(reply.value.transaction).toBeUndefined(); expect(reply.value.signed).toBeUndefined();

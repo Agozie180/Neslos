@@ -2,7 +2,9 @@
 
 The spending authority for Neslos agents. The vault holds one fixed fungible token and accepts an exact authorization signed by the owner's pinned executor key. It reserves the shared allowance before creating an external transfer receipt.
 
-**Verified on 1 November 2026:** 12 Rust unit tests and one integration suite deploying the compiled WASM into a local NEAR sandbox. This is not a deployed testnet/mainnet address. See [the verification record](../../docs/PROOF.md).
+The separate `execute_commerce_v1` method lets the owner dispatch constrained public commerce from vault custody. It shares the private path's daily usage and nonce, and always rejects a policy that requires confidential settlement. This is public owner authority, not attested autonomous execution.
+
+**Verified on 6 November 2026:** 25 Rust unit tests and two integration suites deploying the compiled WASM into local NEAR sandboxes. [The current verification record](../../artifacts/contract-verification.json) binds the tested WASM hash. These tests use virtual fixture assets; they do not establish funded Rhea or TEE execution.
 
 ## Build and test
 
@@ -44,6 +46,9 @@ The owner retains governance/full-access keys outside the agent. Pinning a key a
 | `set_executor_key(public_key, expected_version)` | Owner only; rotate an independently verified executor key |
 | `set_paused(paused, expected_version?)` | Owner only; resume requires the current version; emergency pause is unconditional; increment policy version |
 | `authorize(authorization, signature)` | Any relayer; valid executor signature required; reserves allowance and dispatches the fixed FT |
+| `execute_commerce_v1(request)` | Owner only; checks public allowlist openings, reserves shared allowance, then dispatches a fixed payment or Rhea action |
+| `on_commerce_preflight_v1(request)` | Private callback; verifies Rhea metadata/account and current policy before dispatch |
+| `on_commerce_dispatch_v1(nonce, action)` | Private callback; records bounded public dispatch observations |
 | `on_dispatch(nonce)` | Private callback only; records the actual FT receipt result |
 | `record_settlement(settlement, signature)` | Any relayer; pinned observer signature and valid state transition required |
 | `withdraw_owner(amount)` | Owner only, while paused; transfers the fixed FT back to the owner |
@@ -59,7 +64,7 @@ The field order in [Authorization](src/lib.rs) is the protocol:
 signature = Ed25519.sign(SHA256(Borsh(authorization)), executor_private_key)
 ```
 
-The signed fields bind the domain, network, vault, policy version, nonce, input amount, quoted/minimum output, slippage, quote time/expiry, venue/strategy/recipient commitments, deposit account, output asset, quote hash, privacy, action and audit hash. `action=0` is a private payment; `action=1` funds an allocation reserve. There is no arbitrary-call or lending-position adapter.
+The signed fields bind the domain, network, vault, policy version, nonce, input amount, quoted/minimum output, slippage, quote time/expiry, venue/strategy/recipient commitments, deposit account, output asset, quote hash, privacy, action and audit hash. Within this original authorization format, `action=0` is a private payment and `action=1` funds an allocation reserve. Public lending uses the separate method below; the signing format is unchanged.
 
 [TypeScript wire encoding](../../src/core/wire.ts) and Rust assert the same fixed authorization digest:
 
@@ -68,6 +73,32 @@ The signed fields bind the domain, network, vault, policy version, nonce, input 
 ```
 
 Use the shared encoder rather than manually reordering JSON. U128/U64 JSON values are decimal strings; their Borsh representation is fixed-width little-endian integer bytes.
+
+## Public commerce v1
+
+`execute_commerce_v1({request})` needs 300 Tgas and at least 0.01 NEAR. Only the configured owner may call it. Its request fields, in Borsh order, are:
+
+```text
+domain, network, vault, policy_version:U64, nonce:U64, action:u8,
+amount:U128, target, venue, venue_salt, counterparty_salt,
+quoted_at_ms:U64, expires_at_ms:U64, quote_hash, audit_hash
+```
+
+All other fields are strings. `domain` is `neslos:commerce:v1`; `target` and `vault` are NEAR account IDs. Salt/hash values are 64 lowercase hex characters. `amount` is the fixed vault token's base-unit amount. Venue and counterparty commitments are recomputed on-chain using the canonical JSON encoding in `src/core/crypto.ts`; the counterparty value is exactly `target`. The output policy must permit `nep141:<vault-token>`.
+
+- `action=0`: fixed-token `ft_transfer` to the opened target, with no memo or arbitrary message. This does not implement the Agent Market x402 rail, which currently requires an owner-wallet signed delegate.
+- `action=1`: fixed-token `ft_transfer_call` to the network's hardcoded Rhea account with an empty message. The public venue must open `rhea`.
+- `action=2`: one Rhea `Withdraw` action for the fixed token, with `max_amount` derived from the authorized base units and Rhea's `extra_decimals`. The protocol sends withdrawals to the caller, which is the vault. No debt, collateral or arbitrary action is accepted.
+
+Rhea preflight reads `get_asset` and `get_account`. It checks token identity, bounded decimals, arithmetic overflow, deposit/withdraw enablement, the reported supply cap and absence of reported borrowing. It rechecks pause, confidentiality, policy version, quote age, expiry and the original UTC reservation day before scheduling the spend. These reads do not freeze the external protocol against later governance/state changes.
+
+Every action, including withdrawal, consumes the same daily and per-action allowance. A withdrawal never replenishes prior spending. A proven pre-dispatch rejection or failed direct FT payment restores only its original UTC day's usage. A supply refund, partial use, malformed result or failed protocol dispatch keeps its reservation; callbacks never infer nonpayment from a failed parent receipt that may have successful children.
+
+`Dispatched` establishes only the accepted dispatch result. Rhea's published `execute` schedules token transfer receipts separately; a successful parent receipt does not prove a completed withdrawal. Position shares and the exact FT receipt must be observed separately. Supply/withdrawal tests use a clearly labeled sandbox behavior fixture, not deployed Rhea or real yield. Protocol sources: [official SDK](https://github.com/rhea-finance/burrow-sdk-python), [published supply logic](https://github.com/NearDeFi/burrowland/blob/main/contract/src/fungible_token.rs), [published withdrawal logic](https://github.com/NearDeFi/burrowland/blob/main/contract/src/actions.rs). The older published Rust source is not asserted byte-identical to current deployed Rhea.
+
+The `Vault`, `Policy`, `Record` and status serialization layouts are unchanged. Existing vaults with a retained full-access key can deploy this WASM in place, signing as the vault account without calling `new` or a migration. Verify the key and deployed state first; the owner account's parent name alone does not grant upgrade authority.
+
+The compatibility regression loads [an actual public snapshot of the original testnet vault](tests/fixtures/deployed-v1-state.json), bound to its old code hash at the same finalized block. It preserves version 5, nonce 2, paused policy, both historical records and the original day's 150,000,000 used units.
 
 ## Failure and settlement semantics
 

@@ -3,8 +3,10 @@ import { canonical } from './crypto.js';
 import { NATIVE_USDC, fetchJson } from './research.js';
 import { nearAccount } from './wire.js';
 import { rpcUrls } from './near.js';
+import { commerceRequestSchema, vaultCommerceCall, type CommerceRequest } from './vault-commerce.js';
 
-const status = z.object({ SuccessValue: z.string() }).passthrough();
+const status = z.object({ SuccessValue: z.string() }).strict();
+const receiptSuccess = z.union([status, z.object({ SuccessReceiptId: z.string() }).strict()]);
 const outcomeSchema = z.object({
   final_execution_status: z.literal('FINAL'), status,
   transaction: z.object({ hash: z.string(), signer_id: nearAccount, receiver_id: nearAccount, actions: z.array(z.unknown()) }).passthrough(),
@@ -32,8 +34,8 @@ export function verifyAgentSettlement(outcome: unknown, expected: { hash: string
   return { settlementVerified: true as const, transactionHash: expected.hash, receiptId: receipt.id, token: NATIVE_USDC, sender: expected.sender, payee: expected.payee, amount: expected.amount, verifiedAt: new Date().toISOString() };
 }
 
-function matchingTransfer(receipts: z.infer<typeof outcomeSchema>['receipts_outcome'], sender: string, payee: string, amount: string) {
-  return receipts.find(r => r.outcome.executor_id === NATIVE_USDC && status.safeParse(r.outcome.status).success && r.outcome.logs.some(log => {
+function matchingTransfer(receipts: z.infer<typeof outcomeSchema>['receipts_outcome'], sender: string, payee: string, amount: string, token = NATIVE_USDC) {
+  return receipts.find(r => r.outcome.executor_id === token && receiptSuccess.safeParse(r.outcome.status).success && r.outcome.logs.some(log => {
     if (!log.startsWith('EVENT_JSON:')) return false;
     try {
       const event = z.object({ standard: z.literal('nep141'), event: z.literal('ft_transfer'), data: z.array(z.object({ old_owner_id: nearAccount, new_owner_id: nearAccount, amount: z.string() })) }).parse(JSON.parse(log.slice(11)));
@@ -52,6 +54,23 @@ export function verifyLendingTransaction(outcome: unknown, expected: { hash: str
     try { used = JSON.parse(Buffer.from(v.status.SuccessValue, 'base64').toString('utf8')); } catch { throw new Error('LENDING_USED_AMOUNT_UNKNOWN'); }
     if (used !== expected.amount) throw new Error('LENDING_SUPPLY_NOT_FULLY_ACCEPTED');
   } else if (!matchingTransfer(v.receipts_outcome, expected.protocol, expected.sender, expected.amount)) throw new Error('LENDING_WITHDRAWAL_NOT_PROVEN');
+  return true;
+}
+
+/** Bind an owner->vault call to a successful vault callback and the fixed token's actual transfer. */
+export function verifyVaultCommerceTransaction(outcome: unknown, expected: { hash: string; owner: string; vault: string; token: string; call: { receiverId: string; methodName: string; args: unknown; gas: string; deposit: string }; request: CommerceRequest }) {
+  const v = outcomeSchema.parse(outcome), r = commerceRequestSchema.parse(expected.request), c = expected.call;
+  if (r.vault !== expected.vault || canonical(c) !== canonical(vaultCommerceCall(r))) throw new Error('COMMERCE_RECEIPT_CALL_BINDING');
+  const action = { FunctionCall: { method_name: c.methodName, args: Buffer.from(JSON.stringify(c.args)).toString('base64'), gas: c.gas, deposit: c.deposit } };
+  if (v.transaction.hash !== expected.hash || v.transaction.signer_id !== expected.owner || v.transaction.receiver_id !== expected.vault || canonical(stableRpc(v.transaction.actions)) !== canonical([action])) throw new Error('COMMERCE_TRANSACTION_BINDING');
+  let completed: unknown;
+  try { completed = JSON.parse(Buffer.from(v.status.SuccessValue, 'base64').toString('utf8')); }
+  catch { throw new Error('COMMERCE_DISPATCH_UNPROVEN'); }
+  // A finalized, successful transaction can still have a false protocol callback.
+  if (completed === false) return false;
+  if (completed !== true) throw new Error('COMMERCE_DISPATCH_UNPROVEN');
+  const sender = r.action === 2 ? r.target : expected.vault, payee = r.action === 2 ? expected.vault : r.target;
+  if (!matchingTransfer(v.receipts_outcome, sender, payee, r.amount, expected.token)) throw new Error('COMMERCE_TRANSFER_NOT_PROVEN');
   return true;
 }
 

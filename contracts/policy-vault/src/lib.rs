@@ -1,5 +1,7 @@
 //! Exact, policy-bound NEAR agent spending. The owner pins an independently attested executor key.
 //! Intel attestation and hidden recipient/quote bindings are verified off-chain by that pinned TEE.
+mod commerce;
+pub use commerce::CommerceRequestV1;
 use near_sdk::{
     borsh, env, ext_contract, near, store::LookupMap, AccountId, Gas, NearToken,
     PanicOnDefault, Promise, PromiseOrValue, PromiseError, json_types::{U128, U64},

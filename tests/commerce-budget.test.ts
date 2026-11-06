@@ -55,3 +55,20 @@ describe('durable commerce allowance', () => {
     expect((await budget.operation(op.id)).result).toEqual({ verified: false });
   });
 });
+
+describe('vault commerce journal', () => {
+  it('binds the vault and network while recording principal without a local spending authority', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'neslos-commerce-v2-'));
+    const p = { format: 'neslos-commerce-policy-v2' as const, account: 'owner.testnet', vault: 'vault.testnet', network: 'testnet' as const, totalNativeLimitYocto: '20', allowPublicLending: true, allowedAgentHandles: [], openings: [] };
+    const budget = new CommerceBudget(dir, p);
+    await budget.once({ ...operation(), amount: '999999999999999999999999' }, async () => ({}), async () => ({}));
+    expect(await budget.status()).toMatchObject({ reservedAtomic: '999999999999999999999999' });
+    await expect(new CommerceBudget(dir, { ...p, vault: 'other.testnet' }).status()).rejects.toThrow('COMMERCE_VAULT_CONFLICT');
+    await expect(new CommerceBudget(dir, { ...p, network: 'mainnet' }).status()).rejects.toThrow('COMMERCE_ACCOUNT_CONFLICT');
+  });
+  it('cannot reinterpret historical owner-wallet operations as vault-funded operations', async () => {
+    const { budget, dir } = await setup(); await budget.status();
+    const { totalLimitAtomic: _total, perActionLimitAtomic: _action, ...p } = policy;
+    await expect(new CommerceBudget(dir, { ...p, format: 'neslos-commerce-policy-v2', vault: 'vault.near', openings: [] }).status()).rejects.toThrow('COMMERCE_VAULT_CONFLICT');
+  });
+});

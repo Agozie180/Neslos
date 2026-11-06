@@ -65,7 +65,7 @@ This example caps reserved inference at $0.25; it is not a model/deployment appr
 
 Each batch reserves three complete calls before transmission. The input estimate counts serialized UTF-8 bytes plus 4,096 template tokens per request; all requested output tokens are reserved. Failed or unknown outcomes retain the full reservation. The pinned SDK disables automatic completion retries. Retrying a completed job returns its saved result; retrying an interrupted paid job returns `INFERENCE_OUTCOME_UNKNOWN` without charging again. No eligible markets means no model call.
 
-Hosting is a separate charge. For the current $3 combined authorization, the private task record allocates at most $0.25 to inference and $2.75 to hosting. No paid inference or provisioning has been performed. Do not launch hosting without checking its price, billing mode, retained-storage costs and a reliable stop time inside the remaining allowance.
+Hosting is a separate charge. For the current $3 combined authorization, the private task record allocates at most $0.25 to inference and $2.75 to hosting. No paid inference call or CVM launch has occurred; Phala [rejected the provisioning request](TDX-DEPLOYMENT-STATUS.md). Do not launch hosting without checking its price, billing mode, retained-storage costs and a reliable stop time inside the remaining allowance.
 
 ## Journal backup and recovery
 

@@ -9,6 +9,9 @@ export const ONECLICK_URL = 'https://1click.chaindefuser.com/v0';
 const tokenSchema = z.object({ assetId: z.string().min(1).max(200), blockchain: z.string(), symbol: z.string(), decimals: z.number().int().min(0).max(30), contractAddress: z.string().nullish() }).passthrough();
 export interface QuoteParameters { amount: string; maxSlippageBps: number; recipient: string; refundTo: string; dry: boolean; destinationAsset?: string }
 export interface ValidatedQuote { response: QuoteResponse; hash: string; signatureVerified: true; privacyBinding: 'signed-confidential-recipient'; requestedSlippageBps: number; enforcedSlippageBps: number; fetchedAt: string }
+/** Quote/status credentials identify the integration. A User-Session access token belongs only on account read APIs. */
+export interface OneClickPartnerAuth { kind: 'partner-jwt'; token: string }
+const partnerAuthSchema = z.object({ kind: z.literal('partner-jwt'), token: z.string().min(1).max(32768).regex(/^\S+$/) }).strict();
 
 /** Validate every security-relevant echo in addition to the provider's cryptographic signature. */
 export function validateQuote(response: QuoteResponse, request: QuoteRequest, maxSlippageBps: number, now = Date.now()): ValidatedQuote {
@@ -36,7 +39,16 @@ export function validateQuote(response: QuoteResponse, request: QuoteRequest, ma
 }
 
 export class IntentsClient {
-  constructor(private jwt = process.env.ONECLICK_JWT) {}
+  #partnerJwt?: string;
+  constructor(auth?: OneClickPartnerAuth) {
+    const candidate = auth ?? (process.env.ONECLICK_JWT ? { kind: 'partner-jwt', token: process.env.ONECLICK_JWT } : undefined);
+    if (candidate !== undefined) {
+      const parsed = partnerAuthSchema.safeParse(candidate);
+      if (!parsed.success) throw new Error('ONECLICK_PARTNER_AUTH_CONFIG: quote credentials must be a partner JWT.');
+      this.#partnerJwt = parsed.data.token;
+    }
+  }
+  private partnerHeaders(): Record<string, string> { return this.#partnerJwt ? { 'X-API-Key': this.#partnerJwt } : {}; }
   async quote(params: QuoteParameters): Promise<ValidatedQuote> {
     if (units(params.amount) <= 0n || !Number.isSafeInteger(params.maxSlippageBps) || params.maxSlippageBps < 0 || params.maxSlippageBps > 1000) throw new Error('Invalid amount or slippage.');
     nearAccount.parse(params.refundTo); nearAccount.parse(params.recipient);
@@ -51,14 +63,14 @@ export class IntentsClient {
       recipient: params.recipient, recipientType: QuoteRequest.recipientType.CONFIDENTIAL_INTENTS,
       confidentiality: QuoteRequest.confidentiality.ADVANCED, deadline: new Date(Date.now() + 180_000).toISOString(),
     };
-    const response = await fetchJson(`${ONECLICK_URL}/quote`, { method: 'POST', headers: { 'content-type': 'application/json', ...(this.jwt ? { authorization: `Bearer ${this.jwt}` } : {}) }, body: JSON.stringify(request) }) as QuoteResponse;
+    const response = await fetchJson(`${ONECLICK_URL}/quote`, { method: 'POST', headers: { 'content-type': 'application/json', ...this.partnerHeaders() }, body: JSON.stringify(request) }) as QuoteResponse;
     return validateQuote(response, request, params.maxSlippageBps);
   }
   async status(quote: ValidatedQuote): Promise<{ outcome: 'pending' | 'success' | 'refunded' | 'failed' | 'unknown'; raw: unknown }> {
     if (quote.response.quoteRequest.dry || !quote.response.quote.depositAddress) throw new Error('A dry quote cannot settle.');
     const address = nearAccount.parse(quote.response.quote.depositAddress);
     try {
-      const raw = await fetchJson(`${ONECLICK_URL}/status?depositAddress=${encodeURIComponent(address)}`);
+      const raw = await fetchJson(`${ONECLICK_URL}/status?depositAddress=${encodeURIComponent(address)}`, { headers: this.partnerHeaders() });
       const result = z.object({ status: z.string(), quoteResponse: z.unknown() }).parse(raw);
       const signed = result.quoteResponse as QuoteResponse;
       if (!verifyQuoteSignature(signed) || sha256(canonical(signed)) !== quote.hash) throw new Error('Status refers to a different or unsigned quote.');
