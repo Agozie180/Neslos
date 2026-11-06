@@ -1,15 +1,15 @@
 # Verification record
 
-Updated **4 November 2026** after reviewing the [private owner/TEE work](TEE-RUNBOOK.md) and [foundation fixes](FOUNDATION-FIXES-2026-11-03.md). Application, browser and contract checks passed again in Ubuntu WSL; the TEE image build and container smoke check also passed. [GitHub CI runs](https://github.com/Agozie180/Neslos/actions/workflows/verify.yml) record results for each pushed revision. Public testnet evidence is listed separately. None of these results establishes genuine remote hardware execution or funded Intents settlement.
+Updated **6 November 2026** after the [foundation audit](AUDIT-2026-11-06.md). Application, browser and contract checks passed again in Ubuntu WSL. Public testnet evidence remains a historical proof of the older deployed WASM. The previously tested TEE container is packaging evidence; genuine remote hardware and funded Intents settlement remain unverified. [GitHub CI](https://github.com/Agozie180/Neslos/actions/workflows/verify.yml) covers pushed revisions, not this working tree.
 
 | Check | Result | Reproduce |
 | --- | --- | --- |
-| Application, policy, API, private runtime, SDK, owner recovery and cryptographic tests | **193 passed**, 0 failed across 21 files | `npm run verify` |
+| Application, policy, API, private runtime, SDK, owner recovery and cryptographic tests | **285 passed**, 0 failed/skipped across 29 files | `npm run verify` |
 | Strict TypeScript, frontend and API/TEE compilation | **Passed** | `npm run verify` |
-| Contract unit tests | **12 passed**, 0 failed | `npm run test:contract:unit` |
+| Contract unit tests | **13 passed**, 0 failed | `npm run test:contract:unit` |
 | Deployed local NEAR sandbox suite | **1 passed**, 0 failed; multiple real local transactions and receipts | `npm run test:contract` |
-| Chromium desktop/mobile and source-selection tests | **5 passed**, 0 failed | `npm run test:browser` |
-| Dedicated TEE image | Linux/amd64 build passed; restricted UID-1000 container serves bootstrap evidence, refuses private commands in bootstrap and rejects a fake quote in private mode | [Build and smoke commands](TEE-RUNBOOK.md#build-and-verify-locally) |
+| Chromium desktop/mobile and source-selection tests | **6 passed**, 0 failed | `npm run test:browser` |
+| Dedicated TEE image | Rebuilt and smoke-tested on **6 November**; restricted UID-1000 Linux/amd64 container refuses bootstrap private commands and rejects a fake quote | [Build and smoke commands](TEE-RUNBOOK.md#build-and-verify-locally) |
 | Earlier main revision on a clean GitHub runner: application and contract jobs | **Both passed** at source commit `4739ce41fd2673b702411dad38a4cc5ae699c37d`; this predates the private owner/TEE changes | [Run 41702140067](https://github.com/Agozie180/Neslos/actions/runs/41702140067) |
 
 Runtime: Node 24.22.2; Rust 1.93.0; cargo-near 0.22.0; near-sdk 5.29.0. The contract build and sandbox ran in WSL Ubuntu. Package versions and transitive resolutions are in the checked-in lockfiles.
@@ -22,9 +22,9 @@ The 4 November owner-workspace build adds structured strategy vetoes, durable in
 
 ```text
 File:        artifacts/policy_vault.wasm
-Size:        202344 bytes
+Size:        203266 bytes
 Build:       host non-reproducible-wasm
-SHA-256:     196460a40676c7901143a9adf63ce61f63e25bf862e0acb4d9d51ff491e32b73
+SHA-256:     c15ce323dccfc8d7f8d026c1e9bc51f8ef383b61065cd4682b8579cae6a32c46
 ```
 
 The sandbox deploys that compiled artifact and a minimal **test fixture token**. Its output includes:
@@ -33,11 +33,11 @@ The sandbox deploys that compiled artifact and a minimal **test fixture token**.
 SANDBOX_EVIDENCE: recipient=150000000; failed_dispatch_restored=true; nonce=2; usage=150000000; paused=true; owner_recovered=50000000; real_funds=false
 ```
 
-The test asserts balances and contract state after each operation. The terminal line alone is not the proof; the [test source](../contracts/policy-vault/tests/sandbox.rs), compiled artifact and reproducible execution are the evidence. The corrected non-login WSL wrapper completed the full contract check in 66.884 seconds on 4 November. This is a single-run measurement, not a performance benchmark. The vault source and WASM hash are unchanged by the foundation fixes.
+The test asserts balances and state after each operation. The terminal line alone is not proof; [test source](../contracts/policy-vault/tests/sandbox.rs), artifact and reproducible execution are the evidence. The 6 November run completed in 104.666 seconds, including builds, 13 unit tests and the sandbox. This is a single-run measurement. The new contract rejects stale/missing resume versions and preserves unconditional emergency pause; it changes the WASM hash without changing state layout or authorization wire format.
 
 ## Public testnet proof
 
-The owner-controlled [vault.neslos.testnet](https://testnet.nearblocks.io/address/vault.neslos.testnet) uses [token.neslos.testnet](https://testnet.nearblocks.io/address/token.neslos.testnet), a deliberately minimal fixture token. [Deployment evidence](../deploy/testnet.json) includes the finalized creation transactions and code downloaded from both accounts. The vault's SHA-256 equals the local reviewed artifact above.
+The owner-controlled [vault.neslos.testnet](https://testnet.nearblocks.io/address/vault.neslos.testnet) uses [token.neslos.testnet](https://testnet.nearblocks.io/address/token.neslos.testnet), a minimal fixture token. [Deployment evidence](../deploy/testnet.json) records the original transactions and code. A fresh 6 November download still has SHA-256 `196460a40676c7901143a9adf63ce61f63e25bf862e0acb4d9d51ff491e32b73`; it differs from the updated local artifact. The resume fix needs deployment. The historical allowed transaction timed out when re-queried on 6 November, so its earlier proof is not described as freshly reverified.
 
 [Proof evidence](../deploy/testnet-proof.json), finalized on 3 November at `2026-11-03T17:32:18.128Z`, contains 12 transaction links. Four expected rejections are recorded as failed chain transactions; that is the successful result of those negative tests.
 

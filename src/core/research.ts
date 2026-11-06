@@ -46,12 +46,17 @@ export function normalizeRhea(data: unknown, mode: 'live' | 'reference', fetched
   const response = data as { code?: string; data?: unknown[] };
   if (String(response.code) !== '0' || !Array.isArray(response.data)) throw new Error('Invalid Rhea response.');
   const markets: Market[] = [];
+  const seen = new Set<string>();
   for (const row of response.data) {
+    if (!row || typeof row !== 'object') continue;
+    const r = row as Record<string, unknown>;
+    const token = typeof r.token === 'string' ? r.token : '';
+    if (!Object.hasOwn(knownTokens, token)) continue;
+    // One ID must describe exactly one observation before researchers can vote on it.
+    if (seen.has(token)) throw new Error('DUPLICATE_MARKET: conflicting Rhea token observations.');
+    seen.add(token);
     try {
-      const r = row as Record<string, unknown>;
-      const token = typeof r.token === 'string' ? r.token : '';
-      const known = knownTokens[token];
-      if (!known) continue;
+      const known = knownTokens[token]!;
       const totalApy = numeric(r.supply_apy), baseApy = numeric(r.base_apy), rewardApy = numeric(r.supply_farm_apy);
       const tvlUsd = numeric(r.total_supplied_price), liquidityUsd = numeric(r.available_liquidity_price);
       if (totalApy > 500 || baseApy > 500 || rewardApy > 500 || tvlUsd <= 0 || liquidityUsd > tvlUsd * 1.01) continue;
@@ -74,6 +79,7 @@ function normalizeLlama(data: unknown, fetchedAt: string): Market[] {
   return records.flatMap(row => {
     try {
       const r = row as Record<string, unknown>;
+      if (typeof r.project !== 'string' || !Object.hasOwn(projects, r.project)) return [];
       const project = projects[String(r.project)];
       if (String(r.chain).toLowerCase() !== 'near' || !project || typeof r.pool !== 'string' || typeof r.symbol !== 'string' || r.symbol.length > 40) return [];
       const totalApy = numeric(r.apy), baseApy = numeric(r.apyBase ?? r.apy), rewardApy = numeric(r.apyReward ?? 0), tvlUsd = numeric(r.tvlUsd);

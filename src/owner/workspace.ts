@@ -12,13 +12,10 @@ import { connectOwner, transactionOutcome, writePrivateJson } from './account.js
 import { downloadPrivateAudit, openPrivateReceipt, ownerRuntimeSchema, runPrivateJob, sendPrivate, verifyPrivateAudit, type PrivateJob } from './private.js';
 import { executeTransactionPlan, makeTransactionPlan, planHash, plannedCall, transactionPlanSchema } from './transactions.js';
 import { ScheduleStore } from './scheduler.js';
+import { allowlistChangeSchema, changeAllowlists, ownerAllowlists, ownerOpeningsSchema, type OwnerAllowlists } from './policy.js';
+export { ownerOpeningsSchema } from './policy.js';
 
 const uuid = z.string().uuid();
-const venue = z.enum(['near-intents', 'rhea-lending', 'rhea-dex', 'meta-pool', 'linear']);
-export const ownerOpeningsSchema = z.object({
-  venues: z.array(z.object({ name: venue, salt: hashHex }).strict()).min(1).max(16),
-  counterparties: z.array(z.object({ name: z.string().min(1).max(60), recipient: nearAccount, salt: hashHex }).strict()).max(32),
-}).strict();
 export const ownerMissionSchema = z.object({
   id: uuid, type: z.enum(['research', 'prepare']), prompt: z.string().trim().min(5).max(1600),
   amount: z.string().optional(), kind: z.enum(['allocation-reserve', 'private-payment']).default('allocation-reserve'),
@@ -31,6 +28,7 @@ export interface OwnerState {
   endpoint?: string; executorPublicKey?: string; signerConfigured: boolean;
   chain?: Awaited<ReturnType<typeof readVault>>; chainError?: string;
   counterparties: { name: string; recipient: string }[];
+  allowlists?: OwnerAllowlists;
   jobs: { id: string; type: string; state: string }[];
   plans: { hash: string; kind: string; network: string }[];
   schedules: { id: string; type: string; state: string; runs: number; maxRuns: number; nextRunAt: string; errorCode?: string }[];
@@ -74,6 +72,7 @@ export class OwnerWorkspace {
     const openings = await optionalJson(this.path('openings.json'));
     if (openings) state.counterparties = ownerOpeningsSchema.parse(openings).counterparties.map(({ name, recipient }) => ({ name, recipient }));
     try { state.chain = await readVault(state.vault, state.network); } catch { state.chainError = 'Finalized vault state is unavailable. Refresh before reviewing a transaction.'; }
+    if (openings && state.chain) state.allowlists = ownerAllowlists(state.chain.config.policy, ownerOpeningsSchema.parse(openings));
     for (const file of await this.files('jobs', /^[a-f0-9-]{36}\.json$/)) {
       const job = await this.job(file.slice(0, -5)); state.jobs.push({ id: job.command.id, type: job.command.type, state: job.state });
     }
@@ -129,9 +128,11 @@ export class OwnerWorkspace {
     return { hash, plan, call: plannedCall(plan) };
   }
   async policyPlan(input: unknown) {
-    const changes = z.object({ dailyLimit: z.string(), perActionLimit: z.string(), maxSlippageBps: z.number().int(), requireConfidential: z.boolean(), outputAssets: z.array(z.string()).min(1).max(16) }).strict().parse(input);
+    const changes = z.object({ dailyLimit: z.string(), perActionLimit: z.string(), maxSlippageBps: z.number().int(), requireConfidential: z.boolean(), outputAssets: z.array(z.string()).min(1).max(16), ...allowlistChangeSchema.shape }).strict().parse(input);
     const config = await this.config(), state = await readVault(config.vault, config.network);
-    const policy = chainPolicySchema.parse({ ...state.config.policy, daily_limit: changes.dailyLimit, per_action_limit: changes.perActionLimit, max_slippage_bps: changes.maxSlippageBps, require_confidential: changes.requireConfidential, output_assets: changes.outputAssets });
+    const allowlists = changes.allowedVenues !== undefined || changes.allowedCounterparties !== undefined
+      ? changeAllowlists(state.config.policy, await this.openings(), { allowedVenues: changes.allowedVenues, allowedCounterparties: changes.allowedCounterparties }) : {};
+    const policy = chainPolicySchema.parse({ ...state.config.policy, ...allowlists, daily_limit: changes.dailyLimit, per_action_limit: changes.perActionLimit, max_slippage_bps: changes.maxSlippageBps, require_confidential: changes.requireConfidential, output_assets: changes.outputAssets });
     if (BigInt(policy.daily_limit) === 0n || BigInt(policy.per_action_limit) === 0n || BigInt(policy.per_action_limit) > BigInt(policy.daily_limit)) throw new Error('POLICY_LIMITS');
     return this.createPlan({ kind: 'policy', policy }, undefined, state.config.policy_version);
   }

@@ -1,7 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 import { AuditLog } from '../core/audit.js';
-import { createTeeIdentity, freshChallenge, verifyTeeEvidence, type TeeIdentity, type TeePolicy } from '../core/attestation.js';
+import { createTeeIdentity, freshChallenge, teePolicySchema, verifyTeeEvidence, type TeeIdentity, type TeePolicy } from '../core/attestation.js';
 import { decryptChannel, encryptChannel, type Envelope } from '../core/channel.js';
 import { canonical, commitment, sha256, signHash } from '../core/crypto.js';
 import { inferencePolicySchema, PrivateResearchers, type InferencePolicy } from '../core/inference.js';
@@ -54,6 +54,9 @@ export class PrivateRuntime {
   }
   static async create(options: Options): Promise<PrivateRuntime> {
     nearAccount.parse(options.vault); hashHex.parse(options.ownerToken);
+    // Keep attestation pins and credit authority on one validated startup snapshot.
+    // A caller retaining the input object must not change them after verification.
+    options = { ...options, teePolicy: teePolicySchema.parse(options.teePolicy), inferencePolicy: inferencePolicySchema.parse(options.inferencePolicy) };
     const identity = await createTeeIdentity(options.socket);
     const challenge = freshChallenge();
     await verifyTeeEvidence(await identity.attest(challenge), options.teePolicy, challenge);

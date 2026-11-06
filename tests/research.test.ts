@@ -29,4 +29,20 @@ describe('NEAR yield evidence', () => {
     const r = await new ResearchService().discover({ referenceOnly: true });
     expect(rankMarkets(r.markets, { ...DEFAULT_POLICY, allowedVenues: ['near-intents'] }).filter(m => m.eligible)).toHaveLength(0);
   });
+  it('does not recognize inherited object properties as supported token IDs', async () => {
+    const { response } = JSON.parse(await readFile('fixtures/rhea-2026-11-01.json', 'utf8'));
+    const valid = response.data.find((r: { token: string }) => r.token === NATIVE_USDC);
+    const result = normalizeRhea({ code: '0', data: [valid, ...['__proto__', 'constructor', 'toString'].map(token => ({ ...valid, token }))] }, 'live', new Date().toISOString());
+    expect(result.map(m => m.tokenId)).toEqual([NATIVE_USDC]);
+  });
+  it('rejects duplicate market identities instead of permitting conflicting research evidence', async () => {
+    const { response } = JSON.parse(await readFile('fixtures/rhea-2026-11-01.json', 'utf8'));
+    response.data.push({ ...response.data.find((r: { token: string }) => r.token === NATIVE_USDC), base_apy: '100' });
+    expect(() => normalizeRhea(response, 'live', new Date().toISOString())).toThrow('DUPLICATE_MARKET');
+  });
+  it('does not recognize inherited properties as additional NEAR protocols', async () => {
+    const { response } = JSON.parse(await readFile('fixtures/rhea-2026-11-01.json', 'utf8'));
+    const service = new ResearchService(async url => url.includes('rhea.finance') ? response : { data: [{ project: '__proto__', chain: 'Near', pool: 'fake', symbol: 'FAKE', apy: 5, tvlUsd: 1000000 }] });
+    expect((await service.discover()).markets.some(m => m.id === 'llama:fake')).toBe(false);
+  });
 });

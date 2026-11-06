@@ -33,9 +33,9 @@ export class PrivateResearchers {
     if (!apiKey) throw new Error('NEARAI_API_KEY is required inside the TEE.');
     this.client = new InferenceClient({
       apiKey, e2ee: true, attestationCacheTimeToLiveMs: 0,
-      gatewayVerification: { includeSpkiFingerprint: true, policy: { acceptedTcbStatuses: ['UpToDate'] }, verifiers: { deployment: d => checkDeployment(d, policy.gateway) } },
+      gatewayVerification: { includeSpkiFingerprint: true, policy: { acceptedTcbStatuses: ['UpToDate'] }, verifiers: { deployment: d => checkDeployment(d, this.policy.gateway) } },
       modelVerification: { policy: { acceptedTcbStatuses: ['UpToDate'], gpuEvidence: 'required' } },
-      deploymentPolicy: ({ model, deployment }) => { if (model !== policy.modelId) throw new Error('Unapproved inference model.'); checkDeployment(deployment, policy.model); },
+      deploymentPolicy: ({ model, deployment }) => { if (model !== this.policy.modelId) throw new Error('Unapproved inference model.'); checkDeployment(deployment, this.policy.model); },
     });
   }
   async research(evidence: ResearchResult, policy: Policy, prompt: string, outputAssets?: readonly string[]): Promise<AgentReport[]> {
@@ -60,7 +60,9 @@ export class PrivateResearchers {
     const catalog = z.object({ models: z.array(z.object({ modelId: z.string(), inputCostPerToken: price, outputCostPerToken: price, metadata: z.object({ verifiable: z.boolean(), attestationSupported: z.boolean(), providerType: z.string() }) })) }).parse(await fetchJson('https://cloud-api.near.ai/v1/model/list'));
     const current = catalog.models.find(m => m.modelId === this.policy.modelId);
     if (!current || !current.metadata.verifiable || !current.metadata.attestationSupported || current.metadata.providerType !== 'vllm' || BigInt(current.inputCostPerToken.amount) > BigInt(this.policy.budget.inputNanoUsdPerToken) || BigInt(current.outputCostPerToken.amount) > BigInt(this.policy.budget.outputNanoUsdPerToken)) throw new Error('INFERENCE_PRICE_CHANGED: review the current model price before using credits.');
-    await this.reserve(reservation); // Must be durable before any chargeable request. Never refund unknown outcomes.
+    // The catalogue lookup may cross UTC midnight. Charge the day of reservation,
+    // not the day on which the request was estimated before that network wait.
+    await this.reserve({ ...reservation, createdAt: new Date().toISOString() }); // Must be durable before any chargeable request. Never refund unknown outcomes.
     const results = await Promise.allSettled(tasks.map(async (task, index) => {
       const completion = await this.client.chat.completions.create(requests[index]!);
       const verified = await this.client.verifyResponse(completion.id);

@@ -1,6 +1,23 @@
 import { useState } from 'react';
 import type { OwnerState } from '../owner/workspace.js';
 import { parseUsdc } from '../core/amounts.js';
+import type { AllowlistChange, OwnerAllowlists } from '../owner/policy.js';
+
+export function AllowlistFields({ view, changes, disabled, onChange }: { view?: OwnerAllowlists; changes: AllowlistChange; disabled: boolean; onChange: (change: AllowlistChange) => void }) {
+  if (!view) return <p className="fine-print">Load the local venue and recipient details to edit approved members.</p>;
+  const groups = [
+    { title: 'Allowed venues', key: 'allowedVenues' as const, rows: view.venues, complete: view.venuesComplete },
+    { title: 'Allowed counterparties', key: 'allowedCounterparties' as const, rows: view.counterparties, complete: view.counterpartiesComplete },
+  ];
+  return <div className="owner-allowlists">{groups.map(group => {
+    const selected = changes[group.key] ?? group.rows.filter(row => row.allowed).map(row => row.name);
+    return <fieldset key={group.key} disabled={disabled || !group.complete}><legend>{group.title}</legend>
+      {group.rows.map(row => <label className="check-label" key={row.name}><input type="checkbox" checked={selected.includes(row.name)} onChange={e => onChange({ ...changes, [group.key]: e.target.checked ? [...selected, row.name] : selected.filter(name => name !== row.name) })} />{row.name}</label>)}
+      {!group.complete && <p className="fine-print">Local details are missing for a current member. Restore the owner configuration before editing this list.</p>}
+      {group.complete && selected.length === 0 && <p role="alert" className="error-text">Select at least one member.</p>}
+    </fieldset>;
+  })}<p className="fine-print">Changes take effect after you review and submit the policy transaction. Private salts stay on this computer.</p></div>;
+}
 
 export function FundingPanel({ disabled, onPlan }: { disabled: boolean; onPlan: (operation: unknown) => void }) {
   const [amount, setAmount] = useState('1');

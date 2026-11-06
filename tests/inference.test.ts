@@ -5,6 +5,7 @@ vi.mock('@nearai/inference-sdk/node', () => ({ InferenceClient: class {
   chat = { completions: { create: mocks.create } }; verifyResponse = mocks.verify;
 } }));
 import { PrivateResearchers } from '../src/core/inference.js';
+import { checkInferenceBudget, DISABLED_INFERENCE_BUDGET, inferenceUsage, type InferenceReservation } from '../src/core/inference-budget.js';
 import { DEFAULT_POLICY } from '../src/core/policy.js';
 import type { ResearchResult } from '../src/core/types.js';
 
@@ -16,7 +17,7 @@ beforeEach(() => {
   mocks.verify.mockResolvedValue({ signatureKind: 'provider_tee' });
   vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => Response.json({ models: [{ modelId: 'test-model', inputCostPerToken: { amount: 80, scale: 9, currency: 'USD' }, outputCostPerToken: { amount: 500, scale: 9, currency: 'USD' }, metadata: { verifiable: true, attestationSupported: true, providerType: 'vllm' } }] })));
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
 describe('NEAR AI researcher orchestration with fixture SDK responses', () => {
   it('requires encrypted inference, fresh attestations and approved gateway/model measurements', async () => {
     const researchers = new PrivateResearchers(policy, 'fixture-only', mocks.reserve);
@@ -63,5 +64,32 @@ describe('NEAR AI researcher orchestration with fixture SDK responses', () => {
   it('rejects an increased catalogue price before reserving or spending credit', async () => {
     await expect(new PrivateResearchers({ ...policy, budget: { ...policy.budget, inputNanoUsdPerToken: '1' } }, 'fixture', mocks.reserve).research(evidence, DEFAULT_POLICY, 'Research')).rejects.toThrow('PRICE_CHANGED');
     expect(mocks.reserve).not.toHaveBeenCalled(); expect(mocks.create).not.toHaveBeenCalled();
+  });
+  it('accounts for the day credit is reserved when catalogue verification crosses midnight', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-06T23:59:59.999Z'));
+    const catalogue = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation(async (...args) => {
+      vi.setSystemTime(new Date('2026-11-07T00:00:00.001Z'));
+      return catalogue(...args);
+    });
+    await new PrivateResearchers(policy, 'fixture', mocks.reserve).research(evidence, DEFAULT_POLICY, 'Research');
+    const reserved = mocks.reserve.mock.calls[0]![0] as InferenceReservation;
+    expect(inferenceUsage([reserved]).dayNanoUsd).toBe(reserved.reservedNanoUsd);
+    expect(() => checkInferenceBudget([reserved], { ...reserved, createdAt: new Date().toISOString() }, {
+      ...DISABLED_INFERENCE_BUDGET, ...policy.budget, dailyLimitNanoUsd: reserved.reservedNanoUsd,
+    })).toThrow('INFERENCE_BUDGET_EXHAUSTED');
+  });
+  it('keeps independently approved deployment pins when the caller mutates its input policy', () => {
+    const supplied = structuredClone(policy);
+    new PrivateResearchers(supplied, 'fixture', mocks.reserve);
+    const options = mocks.options.mock.calls[0]![0];
+    supplied.gateway.osImageHash = 'ee'.repeat(32);
+    supplied.model.composeHash = 'ff'.repeat(32);
+    supplied.modelId = 'replacement-model';
+    expect(() => options.gatewayVerification.verifiers.deployment({ runtimeMeasurements: policy.gateway })).not.toThrow();
+    expect(() => options.deploymentPolicy({ model: policy.modelId, deployment: { runtimeMeasurements: policy.model } })).not.toThrow();
+    expect(() => options.gatewayVerification.verifiers.deployment({ runtimeMeasurements: supplied.gateway })).toThrow('INFERENCE_MEASUREMENT');
+    expect(() => options.deploymentPolicy({ model: supplied.modelId, deployment: { runtimeMeasurements: supplied.model } })).toThrow('Unapproved');
   });
 });

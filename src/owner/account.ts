@@ -38,9 +38,18 @@ export interface TransactionRecord {
 }
 
 export function transactionOutcome(response: unknown): { success: boolean; final: boolean } {
-  const result = response as { final_execution_status?: string; status?: unknown };
-  const status = result.status;
-  return { final: result.final_execution_status === 'FINAL', success: !!status && typeof status === 'object' && 'SuccessValue' in status };
+  const parsed = z.object({ final_execution_status: z.literal('FINAL'), status: z.union([
+    z.object({ SuccessValue: z.string() }).strict(),
+    z.object({ Failure: z.record(z.string(), z.unknown()) }).strict(),
+  ]) }).safeParse(response);
+  return { final: parsed.success, success: parsed.success && 'SuccessValue' in parsed.data.status };
+}
+
+/** Bind the RPC's claim to the transaction we signed; RPC consensus remains a trust dependency. */
+export function verifyTransactionOutcome(response: unknown, expected: Pick<TransactionRecord, 'hash' | 'signer' | 'receiver'>) {
+  const parsed = z.object({ transaction: z.object({ hash: z.string(), signer_id: nearAccount, receiver_id: nearAccount }) }).safeParse(response);
+  if (!parsed.success || parsed.data.transaction.hash !== expected.hash || parsed.data.transaction.signer_id !== expected.signer || parsed.data.transaction.receiver_id !== expected.receiver) throw new Error('TRANSACTION_RESULT_BINDING: response does not match the saved transaction.');
+  if (!transactionOutcome(response).final) throw new Error('TRANSACTION_PENDING: retain the journal and observe the original hash.');
 }
 
 /** Persist the exact SDK-signed transaction before broadcasting. Re-entry only observes its hash. */
@@ -52,10 +61,10 @@ export async function submitOnce(account: TransactionAccount, network: NearNetwo
   catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
   if (existing) {
     if (existing.format !== 'neslos-owner-transaction-v1' || existing.network !== network || existing.signer !== account.accountId || existing.receiver !== receiver || existing.fingerprint !== fingerprint) throw new Error('TRANSACTION_CONFLICT: this operation already has different signed inputs.');
-    if (existing.state === 'final') return existing;
+    if (existing.state === 'final') { verifyTransactionOutcome(existing.outcome, existing); return existing; }
     try {
       const outcome = await retryNearRead(() => account.provider.viewTransactionStatus({ txHash: existing.hash, accountId: account.accountId, waitUntil: 'FINAL' }));
-      if (!transactionOutcome(outcome).final) throw new Error('Not final.');
+      verifyTransactionOutcome(outcome, existing);
       const record: TransactionRecord = { ...existing, state: 'final', outcome };
       await writePrivateJson(journalFile, record);
       return record;
@@ -71,6 +80,7 @@ export async function submitOnce(account: TransactionAccount, network: NearNetwo
   try { outcome = await account.provider.sendTransactionUntil(signed, 'FINAL'); }
   catch { throw new Error('TRANSACTION_UNKNOWN: reconcile ' + hash + ' from the saved journal before doing anything else.'); }
   if (!transactionOutcome(outcome).final) throw new Error('TRANSACTION_PENDING: observe ' + hash + '; do not recreate the payment.');
+  verifyTransactionOutcome(outcome, record);
   const completed: TransactionRecord = { ...record, state: 'final', outcome };
   await writePrivateJson(journalFile, completed);
   return completed;

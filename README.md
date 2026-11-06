@@ -6,7 +6,7 @@ Neslos is an agent treasury for people who want automated research and payments 
 
 Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. Target: **$55,000 grand prize** and Security, Privacy, DeFi and Swarms tracks ($15,000 per track). This project has not been submitted or awarded a prize.
 
-**Verification repeated on 4 November in Ubuntu WSL:** 226 application tests, 5 browser tests, 12 contract unit tests and 1 NEAR sandbox suite passed. The dedicated Linux TEE image also builds and rejects fake hardware evidence in container tests. [GitHub CI runs](https://github.com/Agozie180/Neslos/actions/workflows/verify.yml) record results for each pushed revision. The public testnet proof completed all 12 steps. [Evidence and limits](docs/PROOF.md).
+**Verification repeated on 6 November:** 285 application tests, 6 browser tests, 13 contract unit tests and 1 NEAR sandbox suite passed in Ubuntu WSL, with strict TypeScript and production builds. The [foundation audit](docs/AUDIT-2026-11-06.md) repaired five defects, including stale unpause and mismatched transaction recovery. The new vault protection is not yet deployed; the retained public testnet proof covers the older WASM. [Evidence and limits](docs/PROOF.md).
 
 | Start here | What you can inspect |
 | --- | --- |
@@ -107,7 +107,7 @@ The on-chain vault can check private commitment membership, but opening those co
 | Confidential Intents / 1Click | Official token discovery and quote-signature verifier. Requires signed `CONFIDENTIAL_INTENTS` routing. The live confidential quote probe returned **HTTP 401 without a JWT**; no successful live quote is claimed. |
 | Intel TDX / dstack | DCAP verification, pinned MRTD/RTMR measurements, debug rejection, fresh nonce and signing/transport-key binding. Real hardware has not been provisioned here. |
 | NEAR AI | E2EE, pinned gateway/model deployment, strict TCB checks, GPU evidence and explicit provider response verification. Encrypted structured reviews affect strategy, with durable credit limits and no duplicate paid retry. The API key passed validation; genuine live TEE inference remains unverified. |
-| External paid agents | Not implemented. The Agents track is not claimed without a real paid agent job. |
+| External paid agents | Separate owner-operated x402/USDC adapter with local budget and settlement tests. It is outside the vault and TEE; no live paid job is claimed. [Scope](docs/COMMERCE.md). |
 
 “Best yield” means the leading eligible opportunity among queried markets. Ranking uses base APY plus 25% of reward APY, with explicit bridge/utilization penalties; it is a transparent heuristic, not a return prediction. Rates and available liquidity can change.
 

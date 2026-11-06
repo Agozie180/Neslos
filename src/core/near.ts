@@ -38,6 +38,7 @@ export async function viewNear(account: string, method: string, args: unknown, n
     contractId: account, method, args: z.record(z.string(), z.unknown()).parse(args),
     blockQuery: blockHash ? { blockId: blockHash } : { finality: 'final' },
   }));
+  if (blockHash && response.block_hash !== blockHash) throw new Error('NEAR_SNAPSHOT: provider returned a different block from the requested one.');
   return { value: JSON.parse(Buffer.from(response.result).toString('utf8')), blockHash: response.block_hash, blockHeight: response.block_height };
 }
 export async function readVault(vault: string, network: 'mainnet' | 'testnet') {
@@ -50,8 +51,14 @@ export async function readVault(vault: string, network: 'mainnet' | 'testnet') {
   ]);
   for (const r of results) if (r.status === 'rejected') throw new Error('NEAR_STATE: could not verify a coherent budget and token balance.', { cause: r.reason });
   const [budgetView, balanceView] = results.map(r => (r as PromiseFulfilledResult<Awaited<ReturnType<typeof viewNear>>>).value);
+  for (const view of [budgetView!, balanceView!]) {
+    if (view.blockHash !== configView.blockHash || view.blockHeight !== configView.blockHeight) throw new Error('NEAR_SNAPSHOT: inconsistent finalized block identity.');
+  }
   const budget = chainBudgetSchema.parse(budgetView!.value);
   const balance = z.string().parse(balanceView!.value); units(balance);
   if (config.policy_version !== budget.policy_version) throw new Error('NEAR_SNAPSHOT: inconsistent finalized policy version.');
+  const limit = units(config.policy.daily_limit), used = units(budget.used);
+  const remaining = used >= limit ? 0n : limit - used;
+  if (units(budget.remaining) !== remaining || budget.paused !== config.policy.paused) throw new Error('NEAR_SNAPSHOT: budget contradicts the finalized policy.');
   return { config, budget, balance, blockHash: configView.blockHash, blockHeight: configView.blockHeight };
 }
