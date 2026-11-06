@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createTeeIdentity, reportData, verifyTeeEvidence, type TeePolicy } from '../src/core/attestation.js';
 import { PrivateRuntime } from '../src/tee/runtime.js';
+import { inferenceBootFixture, modelDeploymentFixture } from './fixtures/inference.js';
 
 // The actual published dstack SDK talks to a Unix socket protocol fixture.
 // Returned keys/quotes are TEST data. The real DCAP verifier must reject the quote.
@@ -36,7 +37,7 @@ describe.skipIf(process.platform !== 'linux')('published dstack SDK protocol and
     await expect(verifyTeeEvidence(evidence, pins, nonce)).rejects.toThrow();
   });
   it('does not start the private runtime merely because a dstack socket responds', async () => {
-    await expect(PrivateRuntime.create({ network: 'testnet', vault: 'vault.testnet', ownerToken: 'bb'.repeat(32), teePolicy: pins, inferencePolicy: { modelId: 'fixture', gateway: { osImageHash: 'cc'.repeat(32), composeHash: 'dd'.repeat(32) }, model: { osImageHash: 'ee'.repeat(32), composeHash: 'ff'.repeat(32) } }, nearAiKey: 'fixture', journalPath: join(directory, 'audit.json'), socket })).rejects.toThrow();
+    await expect(PrivateRuntime.create({ network: 'testnet', vault: 'vault.testnet', ownerToken: 'bb'.repeat(32), teePolicy: pins, inferencePolicy: { modelId: 'fixture', gateway: { osImageHash: 'cc'.repeat(32), composeHash: 'dd'.repeat(32), boot: inferenceBootFixture }, model: { osImageHash: 'ee'.repeat(32), composeHash: 'ff'.repeat(32), boot: inferenceBootFixture }, modelDeployment: modelDeploymentFixture }, nearAiKey: 'fixture', journalPath: join(directory, 'audit.json'), socket })).rejects.toThrow();
     expect(requests.some(r => r.path === '/GetQuote')).toBe(true);
   });
   it('rejects malformed derived keys before using them', async () => {

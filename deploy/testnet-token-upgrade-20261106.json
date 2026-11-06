@@ -1,0 +1,14 @@
+{
+  "format": "neslos-testnet-token-upgrade-proof-v1",
+  "network": "testnet",
+  "target": "token.neslos.testnet",
+  "oldHash": "0ecf777ad2cb1ebb3e07cd589a524de00c190828cb4996de9cb97ff2468b5c31",
+  "newHash": "45365f13a0bd8778e92727d98e0b7e71502dd31db72a2709966730abb2443545",
+  "transactionHash": "6kiRbYFBpyzV1VqTfNfoEkA64KxdBLBEoey9RmsoBeRE",
+  "explorer": "https://testnet.nearblocks.io/txns/6kiRbYFBpyzV1VqTfNfoEkA64KxdBLBEoey9RmsoBeRE",
+  "rawStateUnchanged": true,
+  "stateFingerprint": "e786260fc1b8bfe9d1db45a8796c130a04283ec64dc42f6370a35294cd8a6fcd",
+  "blockHash": "5v9GxA1kzSZhVDEy4y1ULytE9PWodPhzVUiehXFNVG9m",
+  "verifiedAt": "2026-11-06T11:49:58.519Z",
+  "disclosure": "Fixture-only upgrade adds NEP141 transfer events without changing balances or storage layout."
+}

@@ -4,6 +4,8 @@ The local rehearsal is ready to run. The live path is intentionally a different 
 
 For the implemented private owner CLI, dedicated TEE image, bootstrap, audit access and transaction workflow, use the [TEE runbook](TEE-RUNBOOK.md). It also records current free-credit options. The sections below retain contract/testnet setup and the underlying configuration model.
 
+The 6 November Phala provisioning attempt is currently [blocked by a provider terms-of-use response](TDX-DEPLOYMENT-STATUS.md). For the new public vault commerce client and the existing testnet vault's reviewed, state-preserving upgrade procedure, see [Vault commerce](COMMERCE.md).
+
 ## Local application
 
 Use Node 24.22.2 (minimum 24.22.1), npm, and the checked-in lockfile.
@@ -100,7 +102,7 @@ The implementation is in src/tee/runtime.ts, src/tee/index.ts and src/core/priva
 1. Provision a genuine dstack Intel TDX confidential VM with the reviewed image. Mount its guest-agent socket and persistent encrypted-journal volume.
 2. Establish approved OS/application measurements through the trusted build/provisioning process. Obtain quote evidence without private requests; independently verify its Intel chain, runtime measurements and key binding.
 3. Provide a strict TEE measurement file matching teePolicySchema. It must contain format=neslos-tdx-policy-v1 plus actual 48-byte mrTd and rtMr0…rtMr3 values in lowercase hex.
-4. Provide an inference policy file with an approved modelId and independently pinned gateway/model osImageHash and composeHash values. Its schema is inferencePolicySchema.
+4. Provide an inference policy file with an approved modelId, independently derived gateway/model boot registers and OS/Compose hashes, and the reviewed Compose Manager deployment plus complete action-history hash. Its schema is inferencePolicySchema; see the [current policy requirements](TEE-RUNBOOK.md#enable-private-research).
 5. Inject NEARAI_API_KEY, ONECLICK_JWT, NESLOS_OWNER_TOKEN (a random 32-byte hex secret), NESLOS_NETWORK, NESLOS_VAULT_ACCOUNT, NESLOS_TEE_POLICY_FILE and NESLOS_INFERENCE_POLICY_FILE through the platform's encrypted environment mechanism.
 6. Set NESLOS_DSTACK_SOCKET (default /var/run/dstack.sock) and NESLOS_JOURNAL (default /data/neslos-audit.json). Keep the journal persistent; it contains authenticated ciphertext, not plaintext keys.
 7. Start npm run tee. Invalid/missing hardware evidence or measurements stop initialization.
@@ -121,7 +123,7 @@ The testnet fixture vault is deployed. A provisioned TEE, independently pinned h
 
     npm run quote:dry
 
-This uses actual token discovery and the official signature verifier. The confidential endpoint returned HTTP 401 without a JWT during the 1 November probe. Set ONECLICK_JWT in the process environment or a local .env file. A missing token is displayed as a setup requirement. No public/unsigned quote is substituted for a confidential one.
+This uses actual token discovery and the official signature verifier. The confidential endpoint returned HTTP 401 without a JWT during the 1 November probe. Set ONECLICK_JWT to the **partner JWT** in the process environment or a local .env file; the client sends it as `X-API-Key`. An owner's User-Session token is for private account reads and must not replace the partner credential. See [Confidential Intents authentication](CONFIDENTIAL-AUTH.md) for endpoint-specific credentials and recovery requirements. A missing token is displayed as a setup requirement. No public/unsigned quote is substituted for a confidential one.
 
 ## Independent receipt verification
 

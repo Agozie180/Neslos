@@ -8,7 +8,7 @@ vi.mock('@defuse-protocol/one-click-sdk-typescript', async original => {
   // Real SDK Ed25519 verification with a fixture key, confined to this test module.
   return { ...sdk, verifyQuoteSignature: (response: QuoteResponse) => sdk.verifyQuoteSignature(response, quotePublicKey) };
 });
-import { IntentsClient, validateQuote } from '../src/core/intents.js';
+import { IntentsClient, validateQuote, type OneClickPartnerAuth } from '../src/core/intents.js';
 import { NATIVE_USDC } from '../src/core/research.js';
 
 beforeEach(() => vi.resetAllMocks());
@@ -39,12 +39,27 @@ describe('signed quote validation with the official SDK and a test signer', () =
       { assetId: 'nep141:' + NATIVE_USDC, blockchain: 'near', symbol: 'USDC', decimals: 6 },
       { assetId: 'nep141:usdt.tether-token.near', blockchain: 'near', symbol: 'USDT', decimals: 6 },
     ]).mockImplementationOnce(async (_url, options) => signFixture({ ...response, quoteRequest: JSON.parse(options.body) }));
-    const result = await new IntentsClient('fixture-token').quote({ amount: '150000000', maxSlippageBps: 50, recipient: 'recipient.near', refundTo: 'vault.near', dry: false });
+    const client = new IntentsClient({ kind: 'partner-jwt', token: 'fixture-partner-token' });
+    const result = await client.quote({ amount: '150000000', maxSlippageBps: 50, recipient: 'recipient.near', refundTo: 'vault.near', dry: false });
     expect(result.response.quoteRequest).toMatchObject({ depositType: 'ORIGIN_CHAIN', recipientType: 'CONFIDENTIAL_INTENTS', confidentiality: 'advanced' });
     expect(result.response.quote.depositAddress).toBe('deposit.near');
+    expect(mocks.fetchJson.mock.calls[0]![1]).toEqual({});
+    expect(mocks.fetchJson.mock.calls[1]![1].headers).toEqual({ 'content-type': 'application/json', 'X-API-Key': 'fixture-partner-token' });
+    expect(JSON.stringify(client)).not.toContain('fixture-partner-token');
+  });
+  it('rejects user-session credentials and ambiguous raw strings before any quote request', () => {
+    for (const auth of [{ kind: 'user-session', token: 'fixture-user-access' }, 'fixture-user-access', { kind: 'partner-jwt', token: 'bad\r\nheader' }]) {
+      expect(() => new IntentsClient(auth as OneClickPartnerAuth)).toThrow('ONECLICK_PARTNER_AUTH_CONFIG');
+    }
+    expect(mocks.fetchJson).not.toHaveBeenCalled();
   });
 });
 describe('provider settlement observations', () => {
+  it('uses only partner authentication for status', async () => {
+    const response = quoteFixture(); mocks.fetchJson.mockResolvedValue({ status: 'SUCCESS', quoteResponse: response });
+    await new IntentsClient({ kind: 'partner-jwt', token: 'fixture-partner-token' }).status(validateQuote(response, response.quoteRequest, 50));
+    expect(mocks.fetchJson.mock.calls[0]![1]).toEqual({ headers: { 'X-API-Key': 'fixture-partner-token' } });
+  });
   it.each([
     ['PENDING_DEPOSIT', 'pending'], ['KNOWN_DEPOSIT_TX', 'pending'], ['PROCESSING', 'pending'], ['INCOMPLETE_DEPOSIT', 'pending'],
     ['SUCCESS', 'success'], ['REFUNDED', 'refunded'], ['FAILED', 'failed'], ['NEW_PROVIDER_STATUS', 'unknown'], ['__proto__', 'unknown'],

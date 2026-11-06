@@ -44,9 +44,17 @@ async fn real_receipts_enforce_policy_and_reconcile_failed_ft_dispatch() -> test
 
     let valid = auth(0, 1, recipient.account_id());
     let signature = sign(&valid);
-    vault.call_function("authorize", json!({"authorization": valid, "signature": signature}))
+    let payment = vault.call_function("authorize", json!({"authorization": valid, "signature": signature}))
         .transaction().gas(NearGas::from_tgas(100)).deposit(NearToken::from_millinear(10))
         .with_signer(relay.account_id().clone(), signer.clone()).send_to(&network).await?.assert_success();
+    let expected_transfer = json!({"standard":"nep141","version":"1.0.0","event":"ft_transfer","data":[{"old_owner_id":vault.account_id(),"new_owner_id":recipient.account_id(),"amount":"150000000"}]});
+    let transfer_events: Vec<near_sdk::serde_json::Value> = payment.receipt_outcomes().iter()
+        .filter(|receipt| receipt.executor_id == *token.account_id() && receipt.is_success())
+        .flat_map(|receipt| receipt.logs.iter())
+        .filter_map(|line| line.strip_prefix("EVENT_JSON:"))
+        .filter_map(|line| near_sdk::serde_json::from_str::<near_sdk::serde_json::Value>(line).ok())
+        .filter(|event| event["standard"] == "nep141").collect();
+    assert_eq!(transfer_events, vec![expected_transfer]);
     let record: Record = vault.call_function("get_record", json!({"nonce":"0"})).read_only().fetch_from(&network).await?.data;
     assert_eq!(record.status, Status::Dispatched);
     let balance: U128 = token.call_function("ft_balance_of", json!({"account_id": recipient.account_id()})).read_only().fetch_from(&network).await?.data;
@@ -94,9 +102,10 @@ async fn real_receipts_enforce_policy_and_reconcile_failed_ft_dispatch() -> test
 
     // The actual FT receipt fails because this receiver has no storage registration.
     let failed = auth(1, 3, unregistered.account_id());
-    vault.call_function("authorize", json!({"signature":sign(&failed), "authorization":failed}))
+    let failed_payment = vault.call_function("authorize", json!({"signature":sign(&failed), "authorization":failed}))
         .transaction().gas(NearGas::from_tgas(100)).deposit(NearToken::from_millinear(10))
         .with_signer(relay.account_id().clone(), signer.clone()).send_to(&network).await?.assert_success();
+    assert!(!failed_payment.logs().iter().any(|line| line.contains("\"standard\":\"nep141\"")), "A failed token receipt must not emit a successful transfer event");
     let failed_record: Record = vault.call_function("get_record", json!({"nonce":"1"})).read_only().fetch_from(&network).await?.data;
     assert_eq!(failed_record.status, Status::DispatchFailed);
     let after: Budget = vault.call_function("get_budget", ()).read_only().fetch_from(&network).await?.data;
@@ -129,8 +138,10 @@ async fn real_receipts_enforce_policy_and_reconcile_failed_ft_dispatch() -> test
     vault.call_function("authorize", json!({"signature":sign(&paused), "authorization":paused}))
         .transaction().gas(NearGas::from_tgas(100)).deposit(NearToken::from_millinear(10))
         .with_signer(relay.account_id().clone(), signer.clone()).send_to(&network).await?.assert_failure();
-    vault.call_function("withdraw_owner", json!({"amount":"50000000"})).transaction().gas(NearGas::from_tgas(60))
+    let recovery = vault.call_function("withdraw_owner", json!({"amount":"50000000"})).transaction().gas(NearGas::from_tgas(60))
         .deposit(NearToken::from_yoctonear(1)).with_signer(owner.account_id().clone(), signer.clone()).send_to(&network).await?.assert_success();
+    let expected_recovery = json!({"standard":"nep141","version":"1.0.0","event":"ft_transfer","data":[{"old_owner_id":vault.account_id(),"new_owner_id":owner.account_id(),"amount":"50000000","memo":"Neslos owner recovery"}]});
+    assert!(recovery.receipt_outcomes().iter().filter(|receipt| receipt.executor_id == *token.account_id() && receipt.is_success()).flat_map(|receipt| receipt.logs.iter()).filter_map(|line| line.strip_prefix("EVENT_JSON:")).any(|line| near_sdk::serde_json::from_str::<near_sdk::serde_json::Value>(line).is_ok_and(|event| event == expected_recovery)));
     let recovered: U128 = token.call_function("ft_balance_of", json!({"account_id":owner.account_id()})).read_only().fetch_from(&network).await?.data;
     assert_eq!(recovered.0, 50_000_000);
     vault.call_function("set_paused", json!({"paused":false, "expected_version":"4"})).transaction()
@@ -143,6 +154,6 @@ async fn real_receipts_enforce_policy_and_reconcile_failed_ft_dispatch() -> test
     let final_budget: Budget = vault.call_function("get_budget", ()).read_only().fetch_from(&network).await?.data;
     assert!(final_budget.paused); assert_eq!(final_budget.policy_version.0, 6);
     assert_eq!(final_budget.used.0, 150_000_000); assert_eq!(final_budget.next_nonce.0, 2);
-    println!("SANDBOX_EVIDENCE: recipient=150000000; failed_dispatch_restored=true; nonce=2; usage=150000000; paused=true; owner_recovered=50000000; real_funds=false");
+    println!("SANDBOX_EVIDENCE: recipient=150000000; failed_dispatch_restored=true; nonce=2; usage=150000000; paused=true; owner_recovered=50000000; nep141_events_verified=true; failed_transfer_event_absent=true; real_funds=false");
     Ok(())
 }

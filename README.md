@@ -6,7 +6,7 @@ Neslos is an agent treasury for people who want automated research and payments 
 
 Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. Target: **$55,000 grand prize** and Security, Privacy, DeFi and Swarms tracks ($15,000 per track). This project has not been submitted or awarded a prize.
 
-**Verification repeated on 6 November:** 285 application tests, 6 browser tests, 13 contract unit tests and 1 NEAR sandbox suite passed in Ubuntu WSL, with strict TypeScript and production builds. The [foundation audit](docs/AUDIT-2026-11-06.md) repaired five defects, including stale unpause and mismatched transaction recovery. The new vault protection is not yet deployed; the retained public testnet proof covers the older WASM. [Evidence and limits](docs/PROOF.md).
+**Updated on 6 November:** the existing testnet vault was upgraded with its state preserved. A real vault payment, daily-limit rejection and replay rejection are [recorded on testnet](docs/VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md). The [foundation fixes](docs/AUDIT-2026-11-06.md) and owner-commerce limits are now deployed. Genuine provider attestation passed [inference preflight](docs/INFERENCE-LIVE-REVIEW-2026-11-06.md), but full inference approval and [Neslos TDX hosting](docs/TDX-DEPLOYMENT-STATUS.md) remain incomplete. [Evidence and limits](docs/PROOF.md).
 
 | Start here | What you can inspect |
 | --- | --- |
@@ -19,7 +19,7 @@ Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. Ta
 | [TEE runbook and free access](docs/TEE-RUNBOOK.md) | Owner CLI, private research/audit, dstack deployment and verified credit options |
 | [Hackathon research](docs/RESEARCH.md) | Official rules, source links, track fit and deadline |
 
-The public testnet vault is [vault.neslos.testnet](https://testnet.nearblocks.io/address/vault.neslos.testnet). [Deployment](deploy/testnet.json) and [proof receipts](deploy/testnet-proof.json) verify a public test-token demonstration. Public hosting, demo video and hardware evidence remain pending; the private path requires provisioning and credentials.
+The public testnet vault is [vault.neslos.testnet](https://testnet.nearblocks.io/address/vault.neslos.testnet). Its [upgrade](deploy/testnet-upgrade-20261106.json) and [commerce proof](deploy/testnet-commerce-proof-20261106.json) use public fixture tokens. The [original deployment](deploy/testnet.json) and [earlier proof](deploy/testnet-proof.json) remain historical evidence. Public hosting, demo video and hardware evidence for the Neslos executor remain pending.
 
 ## What we built
 
@@ -27,7 +27,7 @@ Four connected screens turn the policy into an observable workflow:
 
 - **Control room:** mission composer, six execution stages, shared allowance and adversarial demonstrations.
 - **Yield research:** Rhea lending data, base/reward APY, exit liquidity, source links and explicit policy exclusions. Broader NEAR discovery uses DeFiLlama when available.
-- **Policy vault:** daily and per-action USDC caps, approved venues/counterparties, slippage, research constraints and pause. Editing a policy preserves consumption.
+- **Policy vault:** daily and per-action caps in the configured token, approved venues/counterparties, slippage and pause. Editing a policy preserves consumption. The guardian applies research constraints before proposing a spend.
 - **Audit trail:** encrypted payloads, signed hash-chain receipts, browser-side verification, export/import and a tampered-copy test.
 
 The agent roles are lending researcher, liquidity researcher, risk researcher, strategist, guardian, executor and settlement observer. Rehearsal research is deterministic. The separate private runtime runs three verified, encrypted NEAR AI research requests; deterministic code retains spending authority.
@@ -104,10 +104,11 @@ The on-chain vault can check private commitment membership, but opening those co
 | Rhea Finance | Live `/list_token_data` queries; 18 raw markets in the captured response, 10 supported by the normalizer. Explicitly dated fallback; no fabricated upstream observation timestamp. |
 | DeFiLlama | Additional NEAR protocol discovery. These rows are research-only until liquidity and execution are verified. |
 | NEAR policy vault | Rust/near-sdk WASM executed in a local sandbox and deployed on public testnet; downloaded code hashes, finalized receipts, spending limits and test-token balances verified. |
-| Confidential Intents / 1Click | Official token discovery and quote-signature verifier. Requires signed `CONFIDENTIAL_INTENTS` routing. The live confidential quote probe returned **HTTP 401 without a JWT**; no successful live quote is claimed. |
-| Intel TDX / dstack | DCAP verification, pinned MRTD/RTMR measurements, debug rejection, fresh nonce and signing/transport-key binding. Real hardware has not been provisioned here. |
-| NEAR AI | E2EE, pinned gateway/model deployment, strict TCB checks, GPU evidence and explicit provider response verification. Encrypted structured reviews affect strategy, with durable credit limits and no duplicate paid retry. The API key passed validation; genuine live TEE inference remains unverified. |
-| External paid agents | Separate owner-operated x402/USDC adapter with local budget and settlement tests. It is outside the vault and TEE; no live paid job is claimed. [Scope](docs/COMMERCE.md). |
+| Confidential Intents / 1Click | Signed `CONFIDENTIAL_INTENTS` routing and strict quote checks. No-spend wallet authentication and private-balance reads succeeded; a separate partner key is still required for quotes and recovery. No funded settlement is claimed. [Authentication](docs/CONFIDENTIAL-AUTH.md). |
+| Intel TDX / dstack | DCAP checks, pinned registers, debug rejection and fresh nonce/key binding. Phala rejected provisioning; no Neslos CVM is running. [Provider response](docs/TDX-DEPLOYMENT-STATUS.md). |
+| NEAR AI | Live gateway/model TDX and GPU evidence passed preflight. Boot/Compose/history gates are implemented; independently reproducing RTMR0 remains unresolved, so paid inference is disabled. [Review](docs/INFERENCE-LIVE-REVIEW-2026-11-06.md). |
+| Owner commerce | Public payments and fixed Rhea supply/withdrawal use the vault's shared on-chain limits. Testnet payment and rejection receipts are verified; no funded Rhea position is claimed. [Scope](docs/COMMERCE.md). |
+| External paid agents | The marketplace's wallet-delegate rail would bypass the vault. New payment is disabled; historical recovery remains available. No paid job is claimed. |
 
 “Best yield” means the leading eligible opportunity among queried markets. Ranking uses base APY plus 25% of reward APY, with explicit bridge/utilization penalties; it is a transparent heuristic, not a return prediction. Rates and available liquidity can change.
 

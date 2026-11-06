@@ -3,28 +3,35 @@ import { join, resolve } from 'node:path';
 import { z } from 'zod';
 import { canonical, sha256 } from '../core/crypto.js';
 import { units } from '../core/amounts.js';
-import { nearAccount } from '../core/wire.js';
+import { hashHex, nearAccount } from '../core/wire.js';
 import { writePrivateJson } from './account.js';
 
 const atomic = z.string().refine(value => { try { units(value); return true; } catch { return false; } });
-export const commercePolicySchema = z.object({
+const legacyCommercePolicySchema = z.object({
   format: z.literal('neslos-commerce-policy-v1'), network: z.literal('mainnet'), account: nearAccount,
   totalLimitAtomic: atomic, perActionLimitAtomic: atomic,
   totalNativeLimitYocto: atomic,
   allowedAgentHandles: z.array(z.string().regex(/^[a-z0-9-]{1,63}$/)).max(32),
   allowPublicLending: z.boolean(),
 }).strict();
+export const vaultCommercePolicySchema = z.object({
+  format: z.literal('neslos-commerce-policy-v2'), network: z.enum(['mainnet', 'testnet']), account: nearAccount, vault: nearAccount,
+  totalNativeLimitYocto: atomic, allowedAgentHandles: z.array(z.string().regex(/^[a-z0-9-]{1,63}$/)).max(32), allowPublicLending: z.boolean(),
+  openings: z.array(z.object({ venue: z.string().min(1).max(100), target: nearAccount, venueSalt: hashHex, counterpartySalt: hashHex }).strict()).max(32),
+}).strict();
+export const commercePolicySchema = z.discriminatedUnion('format', [legacyCommercePolicySchema, vaultCommercePolicySchema]);
+export type VaultCommercePolicy = z.infer<typeof vaultCommercePolicySchema>;
 export type CommercePolicy = z.infer<typeof commercePolicySchema>;
 const entrySchema = z.object({
-  id: z.string().uuid(), kind: z.enum(['lending-supply', 'lending-withdraw', 'storage', 'agent-job']), inputHash: z.string().regex(/^[a-f0-9]{64}$/),
+  id: z.string().uuid(), kind: z.enum(['lending-supply', 'lending-withdraw', 'storage', 'agent-job', 'vault-payment']), inputHash: z.string().regex(/^[a-f0-9]{64}$/),
   amount: atomic, nativeAmount: atomic, createdAt: z.iso.datetime(), state: z.enum(['reserved', 'submitted', 'complete', 'unknown']),
   preparation: z.unknown().optional(), result: z.unknown().optional(), observation: z.unknown().optional(),
 }).strict();
 type Entry = z.infer<typeof entrySchema>;
-const ledgerSchema = z.object({ format: z.literal('neslos-commerce-ledger-v1'), account: nearAccount, network: z.literal('mainnet'), entries: z.array(entrySchema).max(1000) }).strict();
+const ledgerSchema = z.object({ format: z.literal('neslos-commerce-ledger-v1'), account: nearAccount, network: z.enum(['mainnet', 'testnet']), vault: nearAccount.optional(), entries: z.array(entrySchema).max(1000) }).strict();
 type Ledger = z.infer<typeof ledgerSchema>;
 
-/** One owner wallet, one durable lifetime allowance. Withdrawals never refill it. */
+/** Durable dispatch journal. V2 principal limits live on-chain; only native costs have a local allowance. */
 export class CommerceBudget {
   private directory: string;
   readonly policy: CommercePolicy;
@@ -46,10 +53,11 @@ export class CommerceBudget {
         let initialized = false;
         try { await readFile(marker); initialized = true; } catch (e) { if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e; }
         if (initialized) throw new Error('COMMERCE_JOURNAL_MISSING');
-        ledger = { format: 'neslos-commerce-ledger-v1', account: this.policy.account, network: this.policy.network, entries: [] };
+        ledger = { format: 'neslos-commerce-ledger-v1', account: this.policy.account, network: this.policy.network, ...(this.policy.format === 'neslos-commerce-policy-v2' ? { vault: this.policy.vault } : {}), entries: [] };
         await writePrivateJson(path, ledger, true);
       }
       if (ledger.account !== this.policy.account || ledger.network !== this.policy.network) throw new Error('COMMERCE_ACCOUNT_CONFLICT');
+      if (ledger.vault !== (this.policy.format === 'neslos-commerce-policy-v2' ? this.policy.vault : undefined)) throw new Error('COMMERCE_VAULT_CONFLICT');
       try { const initialized = await open(marker, 'wx', 0o600); try { await initialized.writeFile('Keep commerce.json and this marker together.\n'); await initialized.sync(); } finally { await initialized.close(); } }
       catch (error) { if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error; }
       return await work(ledger, () => writePrivateJson(path, ledgerSchema.parse(ledger)));
@@ -71,8 +79,11 @@ export class CommerceBudget {
       // invalidate a still-live agent payment. Reconcile it before signing again.
       if (ledger.entries.some(e => e.kind === 'agent-job' && e.preparation && !(e.observation as { settlementVerified?: boolean; authorizationExpired?: boolean } | undefined)?.settlementVerified && !(e.observation as { authorizationExpired?: boolean } | undefined)?.authorizationExpired)) throw new Error('COMMERCE_PENDING_DELEGATE');
       const amount = units(operation.amount), used = ledger.entries.reduce((n, e) => n + units(e.amount), 0n);
-      if (amount > 0n && (units(this.policy.totalLimitAtomic) === 0n || units(this.policy.perActionLimitAtomic) === 0n)) throw new Error('COMMERCE_BUDGET_DISABLED');
-      if (amount > units(this.policy.perActionLimitAtomic) || used + amount > units(this.policy.totalLimitAtomic)) throw new Error('COMMERCE_BUDGET_EXHAUSTED');
+      // Legacy accounting is retained only for observing old delegated payments.
+      if (this.policy.format === 'neslos-commerce-policy-v1') {
+        if (amount > 0n && (units(this.policy.totalLimitAtomic) === 0n || units(this.policy.perActionLimitAtomic) === 0n)) throw new Error('COMMERCE_BUDGET_DISABLED');
+        if (amount > units(this.policy.perActionLimitAtomic) || used + amount > units(this.policy.totalLimitAtomic)) throw new Error('COMMERCE_BUDGET_EXHAUSTED');
+      }
       const nativeUsed = ledger.entries.reduce((n, e) => n + units(e.nativeAmount), 0n);
       if (nativeUsed + units(operation.nativeAmount) > units(this.policy.totalNativeLimitYocto)) throw new Error('COMMERCE_NATIVE_BUDGET_EXHAUSTED');
       if (ledger.entries.length >= 1000) throw new Error('COMMERCE_HISTORY_LIMIT');

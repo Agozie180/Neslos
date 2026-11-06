@@ -15,6 +15,14 @@ jobs:
       - run: npm run verify
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
+      - name: Build private-runtime image
+        run: docker build --platform linux/amd64 -f deploy/tee/Dockerfile -t neslos-tee:ci .
+      - name: Reject fake hardware in the restricted runtime
+        run: >-
+          docker run --rm --read-only --cap-drop ALL --security-opt no-new-privileges
+          --network none --tmpfs /tmp:rw,noexec,nosuid,size=64m
+          --mount "type=bind,source=${{ github.workspace }}/tests/tee-container.mjs,target=/tmp/tee-container.mjs,readonly"
+          neslos-tee:ci node /tmp/tee-container.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

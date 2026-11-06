@@ -1,0 +1,85 @@
+{
+  "format": "neslos-testnet-commerce-proof-v1",
+  "verifiedAt": "2026-11-06T11:58:58.099Z",
+  "network": "testnet",
+  "owner": "neslos.testnet",
+  "vault": "vault.neslos.testnet",
+  "token": "token.neslos.testnet",
+  "codeSha256": "545e140a2f452f609ba55b5623d1d48994bde32335c0a7fc05acd644e7cf8aa0",
+  "transferred": "1000000",
+  "previousDailyUsage": "60000000",
+  "dailyLimitDuringProof": "61500000",
+  "rejectedAdditionalAmount": "1000000",
+  "results": [
+    {
+      "step": "configure",
+      "transactionHash": "J7nBP4gpixp8oQxBdmV7nSNW7C1KC5gHBuFZCLu4P86f",
+      "success": true,
+      "explorer": "https://testnet.nearblocks.io/txns/J7nBP4gpixp8oQxBdmV7nSNW7C1KC5gHBuFZCLu4P86f"
+    },
+    {
+      "step": "allowed",
+      "transactionHash": "AtQ8joUuaVkeZsukPj6HLTaE5qj7ApMBFyNTJ3mWLNgX",
+      "success": true,
+      "explorer": "https://testnet.nearblocks.io/txns/AtQ8joUuaVkeZsukPj6HLTaE5qj7ApMBFyNTJ3mWLNgX"
+    },
+    {
+      "step": "daily-limit",
+      "transactionHash": "2MYWSFeJPo5zs3oRGnKx1UM186Tu52gskNG74NwNsgnN",
+      "success": false,
+      "expectedFailure": "DAILY_LIMIT",
+      "explorer": "https://testnet.nearblocks.io/txns/2MYWSFeJPo5zs3oRGnKx1UM186Tu52gskNG74NwNsgnN"
+    },
+    {
+      "step": "replay",
+      "transactionHash": "HkWPdR8g1KRRKtFZxwqNCcFcYir9ZdHdSb9YXYruH3JK",
+      "success": false,
+      "expectedFailure": "NONCE",
+      "explorer": "https://testnet.nearblocks.io/txns/HkWPdR8g1KRRKtFZxwqNCcFcYir9ZdHdSb9YXYruH3JK"
+    },
+    {
+      "step": "restore-paused-policy",
+      "transactionHash": "CaH1LFeJF1BTnvSuhwBM4JtvrM6KxxwYP4Cu3Aqpc1r7",
+      "success": true,
+      "explorer": "https://testnet.nearblocks.io/txns/CaH1LFeJF1BTnvSuhwBM4JtvrM6KxxwYP4Cu3Aqpc1r7"
+    }
+  ],
+  "final": {
+    "config": {
+      "owner_id": "neslos.testnet",
+      "token_id": "token.neslos.testnet",
+      "network": "testnet",
+      "executor_public_key": "cb215418034d445ff41298003fb152644d9d8da9b0119e796ddfc8b971340a4b",
+      "policy": {
+        "daily_limit": "500000000",
+        "per_action_limit": "200000000",
+        "max_slippage_bps": 50,
+        "max_quote_age_ms": "60000",
+        "venue_commitments": [
+          "61a39eb46a920b50cba3e49259232ff1f0546bad179cfcd826a4fe789cdf457f"
+        ],
+        "counterparty_commitments": [
+          "08b52770f795ea4ebe48e9cc98729c8a28b038a1074d3e4efd8b47603e34cce2"
+        ],
+        "output_assets": [
+          "nep141:token.neslos.testnet"
+        ],
+        "require_confidential": false,
+        "paused": true
+      },
+      "policy_version": "9"
+    },
+    "budget": {
+      "day": "20763",
+      "used": "61000000",
+      "remaining": "439000000",
+      "policy_version": "9",
+      "next_nonce": "4",
+      "paused": true
+    },
+    "balance": "739000000",
+    "blockHash": "dhmkDgsVxCfpYGbDf3h5pHNZYb7ZHMcRdTc2vYLNKve",
+    "blockHeight": 276483921
+  },
+  "disclosure": "Real public testnet FT transfer and daily-limit/replay rejection. Fixture tokens; no mainnet, private settlement or TEE claim."
+}

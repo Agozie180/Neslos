@@ -1,5 +1,7 @@
 # Reviewed continuation — 6 November 2026
 
+Historical snapshot from the earlier foundation review. The owner subsequently authorized commit, push, merge and deployment, and the existing testnet vault has since been upgraded. The publication instructions and artifact/test counts below describe that earlier point; see the [current deployment report](VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) and [status](STATUS.md) for subsequent evidence and remaining work.
+
 The [audit](AUDIT-2026-11-06.md) is complete for this working tree, and five confirmed defects have fixes and regressions. The remaining objective is to prove the integrated private flow, then submit honest evidence.
 
 ## Concrete build available

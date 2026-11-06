@@ -1,0 +1,42 @@
+{
+  "format": "neslos-testnet-vault-upgrade-proof-v1",
+  "network": "testnet",
+  "owner": "neslos.testnet",
+  "vault": "vault.neslos.testnet",
+  "planHash": "93c0e82b9b5938e86de75fe70ce9bd3f876276c5fb24dc017e50809bc6fee28b",
+  "transactionHash": "F2vC28Bm87xBSMVQKR2oyf5DBdFaAgPAvY9zuKzJYpjg",
+  "explorer": "https://testnet.nearblocks.io/txns/F2vC28Bm87xBSMVQKR2oyf5DBdFaAgPAvY9zuKzJYpjg",
+  "oldCodeSha256": "196460a40676c7901143a9adf63ce61f63e25bf862e0acb4d9d51ff491e32b73",
+  "newCodeSha256": "545e140a2f452f609ba55b5623d1d48994bde32335c0a7fc05acd644e7cf8aa0",
+  "stateFingerprint": "ef34d2c512d54e0515e8b5507bd2b78d99a2af588d5558c1e97233934596d905",
+  "configUnchanged": true,
+  "rawStateUnchanged": true,
+  "soleOwnerKeyVerified": true,
+  "config": {
+    "owner_id": "neslos.testnet",
+    "token_id": "token.neslos.testnet",
+    "network": "testnet",
+    "executor_public_key": "cb215418034d445ff41298003fb152644d9d8da9b0119e796ddfc8b971340a4b",
+    "policy": {
+      "daily_limit": "500000000",
+      "per_action_limit": "200000000",
+      "max_slippage_bps": 50,
+      "max_quote_age_ms": "60000",
+      "venue_commitments": [
+        "61a39eb46a920b50cba3e49259232ff1f0546bad179cfcd826a4fe789cdf457f"
+      ],
+      "counterparty_commitments": [
+        "08b52770f795ea4ebe48e9cc98729c8a28b038a1074d3e4efd8b47603e34cce2"
+      ],
+      "output_assets": [
+        "nep141:token.neslos.testnet"
+      ],
+      "require_confidential": false,
+      "paused": true
+    },
+    "policy_version": "5"
+  },
+  "blockHash": "2KDMqvzrChrbqE7mLjJYeG4cQ8yaLxJm5nYGQDFKgVBh",
+  "blockHeight": 276479272,
+  "verifiedAt": "2026-11-06T11:10:03.069Z"
+}
