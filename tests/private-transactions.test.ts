@@ -1,6 +1,8 @@
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
+import { baseEncode } from 'near-api-js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ state: vi.fn(), attest: vi.fn(), view: vi.fn() }));
 vi.mock('../src/core/near.js', async original => ({ ...await original<typeof import('../src/core/near.js')>(), readVault: mocks.state, viewNear: mocks.view }));
@@ -18,7 +20,9 @@ beforeEach(async () => { vi.resetAllMocks(); directory = await mkdtemp(join(tmpd
 afterEach(async () => { await rm(directory, { recursive: true, force: true }); });
 function ownerFixture() {
   const create = vi.fn().mockResolvedValue({ transaction: { encode: () => new Uint8Array([1, 2, 3]) }, encode: () => new Uint8Array([4, 5, 6]) });
-  const success = { final_execution_status: 'FINAL', status: { SuccessValue: '' } };
+  const success = { final_execution_status: 'FINAL', status: { SuccessValue: '' }, transaction: {
+    hash: baseEncode(createHash('sha256').update(new Uint8Array([1, 2, 3])).digest()), signer_id: 'owner.near', receiver_id: config.vault,
+  } };
   const send = vi.fn().mockResolvedValue(success), observe = vi.fn().mockResolvedValue(success);
   const owner = { network: 'mainnet', account: { accountId: 'owner.near', createSignedTransaction: create, provider: { sendTransactionUntil: send, viewTransactionStatus: observe } } } as unknown as Parameters<typeof executeTransactionPlan>[0];
   return { owner, create, send, observe };
@@ -31,6 +35,12 @@ function preparedJob(): PrivateJob {
   return { format: 'neslos-private-job-v1', configHash: sha256(canonical(config)), command: { type: 'observe', id: '00000000-0000-4000-8000-000000000000', authorizationHash: signed.hash }, state: 'complete', result: { signed, transaction } };
 }
 describe('reviewed private transaction workflow', () => {
+  it('carries the reviewed version into an unpause transaction while preserving unconditional emergency pause', async () => {
+    const resume = await makeTransactionPlan(config, { kind: 'pause', paused: false });
+    expect(plannedCall(resume).actions[0]!.params.args).toEqual({ paused: false, expected_version: '1' });
+    const pause = await makeTransactionPlan(config, { kind: 'pause', paused: true });
+    expect(plannedCall(pause).actions[0]!.params.args).toEqual({ paused: true });
+  });
   it('binds funding and storage registration to the configured token and approved accounts', async () => {
     mocks.state.mockResolvedValue({ config: { owner_id: 'owner.near', token_id: 'usdc.near', policy_version: '1' } });
     mocks.view.mockResolvedValue({ value: { min: '1250000000000000000000' } });

@@ -72,6 +72,19 @@ afterEach(async () => { vi.unstubAllGlobals(); vi.restoreAllMocks(); await rm(di
 describe('encrypted private runtime', () => {
   const budget: InferenceBudgetPolicy = { ...DISABLED_INFERENCE_BUDGET, totalLimitNanoUsd: '1000', dailyLimitNanoUsd: '1000', maxCalls: 3, inputNanoUsdPerToken: '1', outputNanoUsdPerToken: '1' };
   const reservation = () => ({ id: randomUUID(), modelId: 'fixture', createdAt: new Date().toISOString(), calls: 3, inputTokensBound: 100, outputTokensBound: 200, reservedNanoUsd: '300', requestHash: 'ab'.repeat(32) });
+  it('keeps its approved credit ceiling when the caller mutates the original options', async () => {
+    const suppliedBudget = { ...budget, totalLimitNanoUsd: '300', dailyLimitNanoUsd: '300' };
+    const report = mocks.reports.getMockImplementation()!;
+    mocks.reports.mockImplementation(async () => { await mocks.reserve!(reservation()); return report(); });
+    const runtime = await create(undefined, suppliedBudget);
+    suppliedBudget.totalLimitNanoUsd = '1000'; suppliedBudget.dailyLimitNanoUsd = '1000'; suppliedBudget.maxCalls = 9;
+    const { amount: _amount, kind: _kind, counterparty: _counterparty, ...request } = command();
+    expect((await send(runtime, { ...request, type: 'research' })).ok).toBe(true);
+    expect((await send(runtime, { ...request, type: 'research', id: randomUUID() })).error).toContain('INFERENCE_BUDGET_EXHAUSTED');
+    expect((await send(runtime, { type: 'status', id: randomUUID() })).value.inference).toMatchObject({
+      totalNanoUsd: '300', calls: 3, limits: { totalLimitNanoUsd: '300', dailyLimitNanoUsd: '300', maxCalls: 3 },
+    });
+  });
   it('retains paid failures and credit usage across restart without another paid attempt', async () => {
     mocks.reports.mockImplementation(async () => { await mocks.reserve!(reservation()); throw new Error('PRIVATE_RESEARCH_FAILED'); });
     const request = command();

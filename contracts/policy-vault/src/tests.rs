@@ -76,7 +76,29 @@ fn agent_cannot_change_policy() {
 #[test]
 #[should_panic(expected = "PAUSED")]
 fn owner_pause_takes_effect() {
-    let mut v = vault(); v.set_paused(true); let mut a = auth(0); a.policy_version = U64(2); v.authorize(a.clone(), sign(&a));
+    let mut v = vault(); v.set_paused(true, None); let mut a = auth(0); a.policy_version = U64(2); v.authorize(a.clone(), sign(&a));
+}
+#[test]
+fn stale_or_unversioned_resume_cannot_reopen_a_newer_pause() {
+    let mut v = vault(); let a = auth(0); let _ = v.authorize(a.clone(), sign(&a));
+    v.set_paused(true, None);
+    let reviewed_version = v.policy_version;
+    // Another owner session pauses again after the first session reviewed a resume.
+    v.set_paused(true, Some(U64(1)));
+    assert_eq!(v.policy_version, reviewed_version + 1);
+    for version in [None, Some(U64(reviewed_version))] {
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| v.set_paused(false, version)));
+        assert!(result.is_err());
+        assert!(v.policy.paused);
+        assert_eq!(v.policy_version, reviewed_version + 1);
+        assert_eq!(v.get_budget().used.0, 150_000_000);
+        assert_eq!(v.get_budget().next_nonce.0, 1);
+    }
+    v.set_paused(false, Some(U64(reviewed_version + 1)));
+    assert!(!v.policy.paused);
+    assert_eq!(v.policy_version, reviewed_version + 2);
+    assert_eq!(v.get_budget().used.0, 150_000_000);
+    assert_eq!(v.get_budget().next_nonce.0, 1);
 }
 #[test]
 #[allow(deprecated)]

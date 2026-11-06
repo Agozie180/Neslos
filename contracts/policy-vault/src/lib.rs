@@ -173,8 +173,13 @@ impl Vault {
         validate_key(&public_key); self.executor_public_key = public_key; self.bump_version();
         event("executor_rotated", near_sdk::serde_json::json!({"version": self.policy_version.to_string()}));
     }
-    pub fn set_paused(&mut self, paused: bool) {
-        self.assert_owner(); self.policy.paused = paused; self.bump_version();
+    /// Emergency pause is unconditional; resuming must match the owner's reviewed policy.
+    pub fn set_paused(&mut self, paused: bool, expected_version: Option<U64>) {
+        self.assert_owner();
+        if !paused {
+            assert_eq!(expected_version.expect("EXPECTED_VERSION_REQUIRED").0, self.policy_version, "POLICY_CONFLICT");
+        }
+        self.policy.paused = paused; self.bump_version();
         event("pause_changed", near_sdk::serde_json::json!({"paused": paused, "version": self.policy_version.to_string()}));
     }
 

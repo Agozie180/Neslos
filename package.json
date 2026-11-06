@@ -20,6 +20,7 @@
     "testnet": "node scripts/run.mjs testnet",
     "private": "node scripts/run.mjs private",
     "owner": "node scripts/run.mjs owner",
+    "commerce": "node scripts/run.mjs commerce",
     "cloud:status": "node scripts/cloud.mjs",
     "tee:bundle": "node scripts/tee-bundle.mjs",
     "build:contract": "node scripts/contract.mjs build",
@@ -38,6 +39,7 @@
     "near-api-js": "7.4.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
+    "yaml": "2.9.1",
     "zod": "4.6.7"
   },
   "devDependencies": {

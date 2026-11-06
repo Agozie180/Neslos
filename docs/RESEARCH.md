@@ -1,6 +1,6 @@
 # Hackathon research
 
-Research date: 1 November 2026. Read the [live brief](https://nearhackathon.com/HACKATHON.md) again before submission; the captured copy is in [sources](sources/HACKATHON-2026-11-01.md).
+Research refreshed: 6 November 2026. Read the [live brief](https://nearhackathon.com/HACKATHON.md) again before submission; the latest full copy is in [sources](sources/HACKATHON-2026-11-06.md). The [current audit](AUDIT-2026-11-06.md) records fresh official track/RPC research and observed integration state.
 
 ## Verified event facts
 

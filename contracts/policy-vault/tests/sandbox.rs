@@ -115,6 +115,16 @@ async fn real_receipts_enforce_policy_and_reconcile_failed_ft_dispatch() -> test
 
     vault.call_function("set_paused", json!({"paused":true})).transaction()
         .with_signer(owner.account_id().clone(), signer.clone()).send_to(&network).await?.assert_success();
+    // A delayed resume reviewed before this pause must not reopen the newer policy.
+    vault.call_function("set_paused", json!({"paused":false, "expected_version":"3"})).transaction()
+        .with_signer(owner.account_id().clone(), signer.clone()).send_to(&network).await?.assert_failure();
+    vault.call_function("set_paused", json!({"paused":false})).transaction()
+        .with_signer(owner.account_id().clone(), signer.clone()).send_to(&network).await?.assert_failure();
+    let still_paused: Budget = vault.call_function("get_budget", ()).read_only().fetch_from(&network).await?.data;
+    assert!(still_paused.paused);
+    assert_eq!(still_paused.policy_version.0, 4);
+    assert_eq!(still_paused.used.0, 150_000_000);
+    assert_eq!(still_paused.next_nonce.0, 2);
     let paused = auth(2, 4, recipient.account_id());
     vault.call_function("authorize", json!({"signature":sign(&paused), "authorization":paused}))
         .transaction().gas(NearGas::from_tgas(100)).deposit(NearToken::from_millinear(10))
@@ -123,6 +133,16 @@ async fn real_receipts_enforce_policy_and_reconcile_failed_ft_dispatch() -> test
         .deposit(NearToken::from_yoctonear(1)).with_signer(owner.account_id().clone(), signer.clone()).send_to(&network).await?.assert_success();
     let recovered: U128 = token.call_function("ft_balance_of", json!({"account_id":owner.account_id()})).read_only().fetch_from(&network).await?.data;
     assert_eq!(recovered.0, 50_000_000);
+    vault.call_function("set_paused", json!({"paused":false, "expected_version":"4"})).transaction()
+        .with_signer(owner.account_id().clone(), signer.clone()).send_to(&network).await?.assert_success();
+    let resumed: Budget = vault.call_function("get_budget", ()).read_only().fetch_from(&network).await?.data;
+    assert!(!resumed.paused); assert_eq!(resumed.policy_version.0, 5);
+    // An outdated owner view must still be able to stop spending immediately.
+    vault.call_function("set_paused", json!({"paused":true, "expected_version":"1"})).transaction()
+        .with_signer(owner.account_id().clone(), signer.clone()).send_to(&network).await?.assert_success();
+    let final_budget: Budget = vault.call_function("get_budget", ()).read_only().fetch_from(&network).await?.data;
+    assert!(final_budget.paused); assert_eq!(final_budget.policy_version.0, 6);
+    assert_eq!(final_budget.used.0, 150_000_000); assert_eq!(final_budget.next_nonce.0, 2);
     println!("SANDBOX_EVIDENCE: recipient=150000000; failed_dispatch_restored=true; nonce=2; usage=150000000; paused=true; owner_recovered=50000000; real_funds=false");
     Ok(())
 }

@@ -2,6 +2,8 @@
 
 The private owner CLI and [local owner browser](OWNER-WORKSPACE.md), research/prepare/observe commands, audit export/open, reviewed transaction submission and dstack container package are implemented. The owner guide covers credit caps, finite schedules, storage/funding and segmented journal recovery. Genuine remote execution still needs a provisioned Intel TDX instance, independently approved measurements, and NEAR AI credentials. A local Docker build and test socket cannot supply those.
 
+The updated package was rebuilt and smoke-tested on **6 November 2026** as `neslos-tee:audit-20261106`, local image ID `sha256:19de979b347b0095c199d752f203aaa424bbfd6ce678f34cfb2c441c1c678dd1`. It rejects fake evidence and reports `genuineHardwareVerified:false`. [Current audit and deployment limits](AUDIT-2026-11-06.md).
+
 The first remote demonstration can use **private research plus a testnet vault**. It makes no Intents deposit and needs no GPU of your own: Neslos runs on a CPU TEE and sends encrypted research requests to NEAR AI's attested model service. Research data still describes NEAR mainnet yields. A testnet research result is not a private payment or a lending deposit.
 
 For Phala authentication, distinguish `PHALA_AI_API_KEY` (Private AI) from `PHALA_CLOUD_API_KEY` or official `phala login` (CVM management). `npm run cloud:status` checks each scope without paid calls. The [4 November credential audit](PHALA-AUTH-AUDIT.md) resolved the local scope mismatch and authenticated both products; it also records the verified balance, post-paid billing mode and CPU/storage prices.
@@ -123,7 +125,7 @@ Governance requests also support `{"kind":"pause","paused":true}` and `{"kind":"
 ## Limits that remain
 
 - No genuine remote instance, live inference, signed confidential quote or funded settlement is claimed until its actual evidence is captured. Docker and fixture checks do not replace that.
-- All three model reviewers must explicitly approve an eligible market; their assessments can veto or change the deterministic selection. Actual lending deposits, withdrawals, position accounting and paid external-agent coordination remain future scope.
+- All three model reviewers must explicitly approve an eligible market; their assessments can veto or change selection. Separate public owner-wallet lending and paid-agent adapters exist in [commerce](COMMERCE.md); their funded validation and integration into the private vault remain unfinished.
 - The default browser remains a rehearsal. The separate localhost owner browser uses this same private client and exact transaction workflow. Its cloud-backed operation requires the approved runtime.
 - Immutable encrypted journal segments retain all history through bounded rotation (128 MB; 10,000 completed/failed commands). Keep the manifest and segments together. Finite research/observation schedules are supported. Rollback protection still depends on independently retained checkpoints; after storage failure the runtime fails closed. See the [backup procedure](OWNER-WORKSPACE.md#journal-backup-and-recovery).
 - NEAR public policy, deposits, amounts and timing remain visible. The 1Click provider sees routing fields, and provider status is not an independent destination-chain proof. The private quote endpoint previously required credentials here despite the general 1Click unauthenticated flow.

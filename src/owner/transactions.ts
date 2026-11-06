@@ -45,7 +45,7 @@ export function plannedCall(plan: Plan) {
   } else if (op.kind === 'pin-executor') {
     methodName = 'set_executor_key'; args = { public_key: c.executorPublicKey, expected_version: p.policyVersion };
   } else if (op.kind === 'pause') {
-    methodName = 'set_paused'; args = { paused: op.paused };
+    methodName = 'set_paused'; args = op.paused ? { paused: true } : { paused: false, expected_version: p.policyVersion };
   } else if (op.kind === 'fund') {
     receiverId = op.tokenId; methodName = 'ft_transfer'; args = { receiver_id: c.vault, amount: op.amount }; deposit = '1';
   } else if (op.kind === 'register-token') {

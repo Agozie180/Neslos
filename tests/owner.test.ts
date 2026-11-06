@@ -2,7 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { actions, FailoverRpcError } from 'near-api-js';
+import { createHash } from 'node:crypto';
+import { actions, baseEncode, FailoverRpcError } from 'near-api-js';
 import { AccountDoesNotExistError } from 'near-api-js/rpc-errors';
 import { submitOnce, transactionOutcome, type TransactionRecord } from '../src/owner/account.js';
 import { testnetPlanSchema } from '../src/owner/testnet.js';
@@ -12,8 +13,10 @@ import { completedProofSteps, proofCheckpoint, proofSteps } from '../src/owner/p
 const directories: string[] = [];
 afterEach(async () => { await Promise.all(directories.splice(0).map(path => rm(path, { recursive: true, force: true }))); });
 // near-api-js v7 RpcTransactionResponse flattens the execution outcome.
-const success = { final_execution_status: 'FINAL', status: { SuccessValue: '' } };
-const failure = { final_execution_status: 'FINAL', status: { Failure: { ActionError: 'test rejection' } } };
+const success = { final_execution_status: 'FINAL', status: { SuccessValue: '' }, transaction: {
+  hash: baseEncode(createHash('sha256').update(new Uint8Array([1, 2, 3])).digest()), signer_id: 'owner.testnet', receiver_id: 'recipient.testnet',
+} };
+const failure = { ...success, status: { Failure: { ActionError: 'test rejection' } } };
 async function fixture() {
   const dir = await mkdtemp(join(tmpdir(), 'neslos-owner-')); directories.push(dir);
   // Transport fixtures only. No RPC or funded account is used by these tests.
@@ -74,6 +77,36 @@ describe('owner transaction recovery', () => {
     const f = await fixture(); f.create.mockRejectedValueOnce(new TypeError('fetch failed'));
     await submitOnce(f.account, 'testnet', f.path, 'recipient.testnet', f.action);
     expect(f.create).toHaveBeenCalledTimes(2); expect(f.send).toHaveBeenCalledTimes(1);
+  });
+  it.each([{ hash: 'another-transaction' }, { signer_id: 'another.testnet' }, { receiver_id: 'another.testnet' }])('does not finalize a mismatched RPC transaction %j', async change => {
+    const f = await fixture();
+    f.send.mockResolvedValue({ ...success, transaction: { ...success.transaction, ...change } });
+    await expect(submitOnce(f.account, 'testnet', f.path, 'recipient.testnet', f.action)).rejects.toThrow('TRANSACTION_RESULT_BINDING');
+    expect(JSON.parse(await readFile(f.path, 'utf8')).state).toBe('prepared');
+    const recovered = await submitOnce(f.account, 'testnet', f.path, 'recipient.testnet', f.action);
+    expect(recovered.state).toBe('final');
+    expect(f.send).toHaveBeenCalledTimes(1); expect(f.create).toHaveBeenCalledTimes(1);
+  });
+  it('keeps a mismatched recovery response unresolved and rejects an invalid cached final receipt', async () => {
+    const f = await fixture(); f.send.mockRejectedValue(new Error('timeout'));
+    await expect(submitOnce(f.account, 'testnet', f.path, 'recipient.testnet', f.action)).rejects.toThrow('TRANSACTION_UNKNOWN');
+    f.observe.mockResolvedValue({ ...success, transaction: { ...success.transaction, hash: 'another-transaction' } });
+    await expect(submitOnce(f.account, 'testnet', f.path, 'recipient.testnet', f.action)).rejects.toThrow('TRANSACTION_UNKNOWN');
+    expect(JSON.parse(await readFile(f.path, 'utf8')).state).toBe('prepared');
+    f.observe.mockResolvedValue(success);
+    await submitOnce(f.account, 'testnet', f.path, 'recipient.testnet', f.action);
+    const saved = JSON.parse(await readFile(f.path, 'utf8'));
+    saved.outcome.transaction.receiver_id = 'another.testnet';
+    const { writeFile } = await import('node:fs/promises');
+    await writeFile(f.path, JSON.stringify(saved));
+    await expect(submitOnce(f.account, 'testnet', f.path, 'recipient.testnet', f.action)).rejects.toThrow('TRANSACTION_RESULT_BINDING');
+    expect(f.send).toHaveBeenCalledTimes(1); expect(f.create).toHaveBeenCalledTimes(1);
+  });
+  it('does not interpret incomplete or contradictory status fields as final success', () => {
+    for (const value of [null, undefined, { final_execution_status: 'FINAL' }, { ...success, status: { SuccessValue: 1 } }, { ...success, status: { SuccessValue: '', Failure: {} } }]) {
+      expect(transactionOutcome(value)).toEqual({ final: false, success: false });
+    }
+    expect(transactionOutcome({ ...success, final_execution_status: 'EXECUTED' })).toEqual({ final: false, success: false });
   });
 });
 

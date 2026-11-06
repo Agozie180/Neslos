@@ -42,7 +42,7 @@ The owner retains governance/full-access keys outside the agent. Pinning a key a
 | `get_record(nonce)` | Read the authorization/quote hashes, amount, day, audit hash and status |
 | `set_policy(policy, expected_version)` | Owner only; compare-and-swap update; preserves usage and nonce |
 | `set_executor_key(public_key, expected_version)` | Owner only; rotate an independently verified executor key |
-| `set_paused(paused)` | Owner only; change pause and increment policy version |
+| `set_paused(paused, expected_version?)` | Owner only; resume requires the current version; emergency pause is unconditional; increment policy version |
 | `authorize(authorization, signature)` | Any relayer; valid executor signature required; reserves allowance and dispatches the fixed FT |
 | `on_dispatch(nonce)` | Private callback only; records the actual FT receipt result |
 | `record_settlement(settlement, signature)` | Any relayer; pinned observer signature and valid state transition required |
@@ -84,6 +84,8 @@ stateDiagram-v2
 ```
 
 A failed FT receipt restores **only the original day's** usage and never rewinds the nonce. An oversized successful return is still successful. A timeout, unknown outcome or late provider refund does not replenish allowance. Policy changes, pause and key rotation preserve usage.
+
+Resuming with `set_paused(false, expected_version)` compares the reviewed version on chain. Missing or stale versions fail before mutation, so an older resume cannot undo a newer pause or policy change. Emergency `set_paused(true)` still works without a version, including when a supplied version is stale. Existing deployments need the updated WASM to enforce this resume check.
 
 Settlement evidence comes from the pinned observer. NEAR does not independently verify a destination-chain payment in this contract. The private recipient and venue commitment openings, and their relationship to the provider's deposit address, are checked by the TEE. Those hidden semantics cannot be inferred from the public commitment alone.
 

@@ -58,7 +58,7 @@ P2: owner-reviewed testnet deployment, independently pinned TEE identity and exp
 
 Finite research and settlement-observation schedules are implemented in the local owner server. They retain request IDs, pause on failure, share the runtime inference allowance and never submit transactions. [Owner architecture and operation](OWNER-WORKSPACE.md).
 
-P3 remaining: paid external agent jobs, additional budget assets and public lending-position management.
+P3 remaining: funded validation and appropriate custody integration for the separate [public owner-commerce adapters](COMMERCE.md), plus additional budget assets. Those adapters do not spend through the vault or execute inside its TEE.
 
 Non-goals: custom cryptography, token/bridge/lending protocol development, arbitrary agent contract calls, hidden public DeFi positions, guaranteed returns or guaranteed awards.
 

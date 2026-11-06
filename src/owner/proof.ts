@@ -3,7 +3,7 @@ import { actions, teraToGas, nearToYocto } from 'near-api-js';
 import { canonical, sha256, signHash } from '../core/crypto.js';
 import { readVault, retryNearRead, viewNear } from '../core/near.js';
 import { signAuthorization, settlementBytes, type Authorization, type SettlementWire } from '../core/wire.js';
-import { connectOwner, submitOnce, transactionOutcome, writePrivateJson, json, type TransactionRecord } from './account.js';
+import { connectOwner, submitOnce, transactionOutcome, verifyTransactionOutcome, writePrivateJson, json, type TransactionRecord } from './account.js';
 import { loadTestExecutor, testnetPlanSchema, type TestnetPlan } from './testnet.js';
 
 export const proofSteps = ['resume', 'allowed', 'overspend', 'replay', 'dispatch-failure', 'lower-limit', 'exhausted', 'restore-policy', 'settlement', 'pause', 'paused', 'owner-recovery'] as const;
@@ -58,7 +58,7 @@ export async function proveTestnet(owner: Awaited<ReturnType<typeof connectOwner
     if (saved.format !== 'neslos-owner-transaction-v1' || saved.network !== 'testnet' || saved.signer !== p.owner || saved.receiver !== p.vault) throw new Error('TESTNET_PROOF_JOURNAL_DOMAIN');
     // Even locally final records are checked against the chain before recovery.
     const outcome = await retryNearRead(() => owner.provider.viewTransactionStatus({ txHash: saved.hash, accountId: p.owner, waitUntil: 'FINAL' }));
-    if (!transactionOutcome(outcome).final) throw new Error('TRANSACTION_UNKNOWN: reconcile ' + saved.hash + '; no replacement was sent.');
+    verifyTransactionOutcome(outcome, saved);
     const reconciled: TransactionRecord = { ...saved, state: 'final', outcome };
     await writePrivateJson(path, reconciled);
     records.push(reconciled);
@@ -106,7 +106,7 @@ export async function proveTestnet(owner: Awaited<ReturnType<typeof connectOwner
     return { authorization: result.authorization, signature: result.signature };
   };
   const steps: { method: string; args: () => Promise<Record<string, unknown>>; deposit?: bigint }[] = [
-    { method: 'set_paused', args: async () => ({ paused: false }) },
+    { method: 'set_paused', args: async () => ({ paused: false, expected_version: '1' }) },
     { method: 'authorize', args: () => authorizeArgs('allowed', '150000000', '0', '2'), deposit: nearToYocto('0.01') },
     { method: 'authorize', args: () => authorizeArgs('overspend', '201000000', '1', '2'), deposit: nearToYocto('0.01') },
     { method: 'authorize', args: () => authorizeArgs('allowed', '150000000', '0', '2'), deposit: nearToYocto('0.01') },
