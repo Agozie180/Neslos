@@ -37,7 +37,7 @@ export function createVerifiedInferenceClient(input: InferencePolicy, apiKey: st
       } },
       modelVerification: { policy: { acceptedTcbStatuses: ['UpToDate'], gpuEvidence: 'required' }, verifiers: {
         tdxQuote: createBootPinnedTdxQuoteVerifier(policy.model.boot),
-        deployment: async d => { checkDeployment(d, policy.model); checkModelDeploymentReference(d, policy.modelDeployment); await verifyModelBuildProvenance(d); },
+        deployment: async d => { checkDeployment(d, policy.model); checkModelDeploymentReference(d, policy.modelDeployment); await verifyModelBuildProvenance(d, policy.modelDeployment); },
       } },
       deploymentPolicy: ({ model, deployment }) => { if (model !== policy.modelId) throw new Error('Unapproved inference model.'); checkDeployment(deployment, policy.model); checkModelDeploymentReference(deployment, policy.modelDeployment); },
     });

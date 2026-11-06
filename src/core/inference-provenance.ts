@@ -18,19 +18,21 @@ const bootMeasurement = z.string().regex(/^[a-f0-9]{96}$/);
 /** Derive these from reviewed OS artifacts and VM configuration, never the service's quote. */
 export const inferenceBootPolicySchema = z.object({ mrTd: bootMeasurement, rtMr0: bootMeasurement, rtMr1: bootMeasurement, rtMr2: bootMeasurement }).strict();
 export type InferenceBootPolicy = z.infer<typeof inferenceBootPolicySchema>;
-export const modelDeploymentPolicySchema = z.object({
+const composeFile = z.string().regex(/^[a-zA-Z0-9_.\/-]+$/).refine(path => path.split('/').every(part => part !== '' && part !== '.' && part !== '..'));
+const composeServices = z.array(z.string().min(1).max(200)).min(1).max(1000).refine(services => new Set(services).size === services.length);
+/** The enclosing inference policy binds this owner-selected scope to its modelId. */
+export const modelDeploymentSelectorSchema = z.object({ file: composeFile, services: composeServices });
+export type ModelDeploymentSelector = z.infer<typeof modelDeploymentSelectorSchema>;
+export const modelDeploymentPolicySchema = modelDeploymentSelectorSchema.extend({
   commit: z.string().regex(/^[a-f0-9]{40}$/),
-  file: z.string().regex(/^[a-zA-Z0-9_.\/-]+$/).refine(path => path.split('/').every(part => part !== '' && part !== '.' && part !== '..')),
   fileSha256: z.string().regex(/^[a-f0-9]{64}$/),
   actionsSha256: z.string().regex(/^[a-f0-9]{64}$/),
   managerImage: z.string().regex(/^nearaidev\/compose-manager@sha256:[a-f0-9]{64}$/),
-  services: z.array(z.string().min(1).max(200)).max(1000).optional(),
 }).strict();
 
 export function checkModelDeploymentReference(deployment: MeasuredDeployment, approved: z.infer<typeof modelDeploymentPolicySchema>): void {
-  const actual = modelDeploymentReference(deployment);
+  const actual = modelDeploymentReference(deployment, approved);
   for (const field of ['commit', 'file', 'fileSha256', 'managerImage', 'actionsSha256'] as const) if (actual[field] !== approved[field]) throw new Error('INFERENCE_MODEL_DEPLOYMENT');
-  if (JSON.stringify(actual.services ?? []) !== JSON.stringify(approved.services ?? [])) throw new Error('INFERENCE_MODEL_SERVICES');
 }
 
 /** SDK 0.2.1 authenticates the quote but does not allowlist its boot registers. */
@@ -48,16 +50,41 @@ export function createBootPinnedTdxQuoteVerifier(approved: InferenceBootPolicy, 
   };
 }
 
-export function modelDeploymentReference(deployment: MeasuredDeployment) {
+/**
+ * Select requested source bytes from the latest relevant attempted launch.
+ * The authenticated log records attempts before completion, not container state.
+ * Never infer successful/current execution from this source reference.
+ */
+export function modelDeploymentReference(deployment: MeasuredDeployment, selector: ModelDeploymentSelector) {
+  const parsed = modelDeploymentSelectorSchema.safeParse(selector);
+  if (!parsed.success) throw new Error('PROVENANCE_MODEL_SELECTOR');
+  const selected = parsed.data;
   const manager = deployment.composeManager;
   if (!manager) throw new Error('PROVENANCE_MANAGER_MISSING');
   const entries = [...manager.actions].reverse();
-  const action = entries.find(e => e.action === 'compose_up');
+  const action = entries.find(entry => {
+    if (entry.action === 'compose_stage' || entry.action === 'compose_manager_started') return false;
+    // Unrecognized controls (including container-only restarts) cannot safely be
+    // scoped to compose services. Do not select an older attempted launch.
+    if (entry.action !== 'compose_up' && entry.action !== 'compose_down') throw new Error('PROVENANCE_COMPOSE_CONTROL');
+    const services = composeServices.safeParse(entry.services);
+    // Omitted/empty services may address the whole compose project. Do not infer
+    // disjointness from a different filename or fall back to an older launch.
+    if (!services.success) throw new Error('PROVENANCE_COMPOSE_SCOPE');
+    // compose up uses --remove-orphans and includes dependencies; the signed log
+    // omits project/env/outcome. Disjoint service names, even in another file,
+    // cannot establish that a later mutation left this selection unaffected.
+    if (!selected.services.some(service => services.data.includes(service))) throw new Error('PROVENANCE_COMPOSE_AMBIGUOUS_MUTATION');
+    if (entry.file !== selected.file) throw new Error('PROVENANCE_COMPOSE_SCOPE');
+    if (entry.action !== 'compose_up') throw new Error('PROVENANCE_COMPOSE_STOP_ATTEMPT');
+    if (!selected.services.every(service => services.data.includes(service))) throw new Error('PROVENANCE_COMPOSE_SPLIT_REFERENCE');
+    return true;
+  });
   const started = entries.find(e => e.action === 'compose_manager_started');
   if (!action?.commit || !/^[a-f0-9]{40}$/.test(action.commit) || !action.file || !/^[a-zA-Z0-9_.\/-]+$/.test(action.file) || action.file.split('/').some(s => !s || s === '.' || s === '..') || !/^[a-f0-9]{64}$/.test(action.file_sha256 ?? '')) throw new Error('PROVENANCE_COMPOSE_REFERENCE');
   const digest = /^nearaidev\/compose-manager@(sha256:[a-f0-9]{64})$/.exec(started?.image?.replace(/^docker\.io\//, '') ?? '')?.[1];
   if (!digest) throw new Error('PROVENANCE_MANAGER_IMAGE');
-  return { commit: action.commit, file: action.file, fileSha256: action.file_sha256!, services: action.services, managerImage: `nearaidev/compose-manager@${digest}`, managerDigest: digest,
+  return { referenceKind: 'latest-attempted-compose-up' as const, commit: action.commit, file: action.file, fileSha256: action.file_sha256!, services: selected.services, managerImage: `nearaidev/compose-manager@${digest}`, managerDigest: digest,
     // Locally canonicalized full history, including earlier engine launches and
     // control actions. This is distinct from the SDK's wire actionsHash format.
     actionsSha256: sha256(canonical(manager.actions)),
@@ -83,9 +110,12 @@ export function normalizeAuthenticatedCompose(bytes: Uint8Array, expectedHash: s
   return JSON.stringify({ docker_compose_file: JSON.stringify({ services }) });
 }
 
-/** Input must come from SDK hardware verification, never raw provider JSON. */
-export async function verifyModelBuildProvenance(deployment: MeasuredDeployment, githubToken?: string) {
-  const reference = modelDeploymentReference(deployment);
+/**
+ * Input must come from SDK hardware verification, never raw provider JSON.
+ * Verifies selected source bytes and image builds, not successful/current execution.
+ */
+export async function verifyModelBuildProvenance(deployment: MeasuredDeployment, selector: ModelDeploymentSelector, githubToken?: string) {
+  const reference = modelDeploymentReference(deployment, selector);
   const url = `https://raw.githubusercontent.com/nearai/cvm-compose-files/${reference.commit}/${reference.file}`;
   const response = await fetch(url, { redirect: 'error', signal: AbortSignal.timeout(30000) });
   if (!response.ok || !response.body) throw new Error('PROVENANCE_COMPOSE_UNAVAILABLE');

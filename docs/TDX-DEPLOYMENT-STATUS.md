@@ -40,6 +40,26 @@ The [provision API reference](https://docs.phala.com/api-reference/cvms/provisio
 
 No support message was sent by the documentation investigation. No provisioning variants were submitted. Local container checks and prepared measurement material remain useful development evidence, but they cannot substitute for an accepted deployment and independently verified hardware attestation.
 
+## Request compatibility audit addendum
+
+A deeper 6 November audit found one definite local request defect: the submitted `docker_compose_file` is **230,107 UTF-8 bytes**, and `pre_launch_script` is empty. Phala's official SDK limits their combined size to **204,800 bytes**, so the payload exceeds that limit by **25,307 bytes**. The exact saved compose was replayed through the [official compose schema](https://github.com/Phala-Network/phala-cloud/blob/0bffb28da4092a06c4d0ad179e317f3488c33fd1/js/src/types/app_compose.ts) and rejected with the documented size error. This is not a newly introduced API limit: [Phala PR 166](https://github.com/Phala-Network/phala-cloud/pull/166) added it on 5 February 2026.
+
+Both Neslos bundle generators now enforce that combined UTF-8 byte limit before writing output. The retained local prepare helper also checks it before any provisioning request. Boundary tests cover exactly-at-limit payloads, combined compose/script overflow, multibyte text and an oversized bundle producing no deployment artifacts. These changes prevent submission of an incompatible payload; they do **not** establish a repair for the provider's terms-of-use restriction.
+
+| Suspected cause | Evidence and conclusion |
+| --- | --- |
+| Wrong API base, auth header or version | The request used the official Cloud API, `X-API-Key`, and SDK-supported `2026-06-23`. The same CLI profile authenticates and lists zero CVMs. No credential-scope error was identified. |
+| Missing instance type or OS image | A same-profile, read-only official resource-graph request returned `tdx.small` and non-development `dstack-0.5.12` with available CPU, memory and CVM slots on two nodes. PHALA KMS records advertised that OS image. Resource visibility is not policy approval. |
+| Invalid Docker image reference or architecture | Both services use the same official Node tag-plus-digest reference; local Docker resolves its recorded digest as Linux/amd64. The provider's own image-classifier decision is not exposed. |
+| Damaged bundle or substituted compose | Saved request text matches the compose file; compressed bundle hash and all 44 file hashes match the manifest. Sensitive runtime environment values are placeholders. |
+| Payload too large | Confirmed: 230,107 bytes exceeds 204,800. Local guards are fixed. The received terms-of-use error does not disclose whether size caused it. |
+| KMS casing or deprecated endpoint | Current SDK accepts uppercase `PHALA` and states that `/cvms/provision` remains available; the public OpenAPI shows lowercase KMS enum values. This documentation discrepancy does not prove the rejection's cause and was not tested with a provisioning variant. |
+| Image/application/account restriction | Official troubleshooting associates this message category with image anti-spam rules. No matched rule, account-wide ban, or false positive is established. Provider review is needed. |
+
+The audit found no supported causal basis for changing endpoints, image names, instance profiles or packaging and retrying through the policy denial. An unsent, credential-free support draft and reproducible offline evidence are saved in `.local/phala-provision-audit-20261106/`. No paid or provisioning calls were made during the audit.
+
+The original lockfile contains development dependency metadata as well as production dependencies. Removing that metadata might reduce an inline bundle, but no replacement lockfile or reduced application has been produced: manual pruning can change npm's dependency/peer/optional resolution and `npm ci` validation. A separately reviewed production dependency artifact would need to preserve exact package versions and integrity entries and pass a clean offline-equivalence assessment before use. It is not a demonstrated fix for the policy response. The existing full-image packaging path avoids inline application size growth, but submitting it after this denial still requires a legitimate provider-supported resolution.
+
 ## Inline bundle storage boundary
 
 The inline alternative authenticates application and lockfile bytes at runtime; it installs dependencies with lockfile integrity during setup. Its runtime verifier does not hash the installed `node_modules` tree. A runtime-only Docker restart does not rerun setup, and a preexisting substituted dependency could survive on the application volume. The current runtime mounts that volume read-only and setup receives no runtime secrets, so no application write path was demonstrated. This still requires trusted volume initialization and integrity. It is not an independently verified arbitrary-volume recovery mechanism. Use the full digest-pinned image deployment, or review fresh ephemeral reconstruction of the entire application and dependency tree, before accepting a hostile persistent-volume threat model.

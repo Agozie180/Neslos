@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
-import { access, readFile } from 'node:fs/promises';
+import { access, open, readFile, realpath, rename, unlink } from 'node:fs/promises';
+import { dirname } from 'node:path';
 import { baseDecode, baseEncode, type KeyPair } from 'near-api-js';
 import { z } from 'zod';
 import { canonical, sha256 } from '../core/crypto.js';
@@ -71,6 +72,7 @@ export function assertConfidentialAuthPayload(payload: string, publicKey: string
 }
 
 const apiSessionSchema = z.object({ accessToken: z.string().min(1).max(32768), refreshToken: z.string().min(1).max(32768), expiresIn: z.number().int().positive().max(604800), refreshExpiresIn: z.number().int().positive().max(31536000) });
+const apiRefreshSchema = z.object({ accessToken: z.string().min(1).max(32768).regex(/^\S+$/), expiresIn: z.number().int().positive().max(604800) }).strict();
 const sessionSchema = z.object({ format: z.literal('neslos-confidential-user-session-v1'), recipient: implicitId, publicKey: z.string(), authPayloadHash: z.string().regex(/^[a-f0-9]{64}$/), receivedAt: z.iso.datetime(), accessExpiresAt: z.iso.datetime(), refreshExpiresAt: z.iso.datetime(), accessToken: z.string().min(1).max(32768), refreshToken: z.string().min(1).max(32768) }).strict();
 
 async function boundedJson(response: Response) {
@@ -133,6 +135,67 @@ export async function authenticateConfidentialOwner(signer: AuthSigner, expected
   const receivedAt = Date.now(), accessExpiresAt = new Date(receivedAt + auth.expiresIn * 1000).toISOString(), refreshExpiresAt = new Date(receivedAt + auth.refreshExpiresIn * 1000).toISOString();
   await writePrivateJson(sessionFile, sessionSchema.parse({ format: 'neslos-confidential-user-session-v1', recipient: expectedRecipient, publicKey, authPayloadHash: sha256(payload), receivedAt: new Date(receivedAt).toISOString(), accessExpiresAt, refreshExpiresAt, accessToken: auth.accessToken, refreshToken: auth.refreshToken }), true);
   return { recipient: expectedRecipient, publicKey, authenticated: true, noSpendIntent: true, authPayloadHash: sha256(payload), accessExpiresAt, refreshExpiresAt, sessionFile };
+}
+
+/** Refreshes only access credentials. No signature, transaction or token-bearing return value. */
+export async function refreshConfidentialOwnerSession(sessionFile: string, expectedRecipient: string, fetchImpl: typeof fetch = fetch) {
+  let path: string;
+  try { path = await realpath(sessionFile); } catch { throw new Error('CONFIDENTIAL_REFRESH_SESSION_INVALID'); }
+  const lockPath = path + '.refresh.lock';
+  let lock: Awaited<ReturnType<typeof open>>;
+  try { lock = await open(lockPath, 'wx', 0o600); }
+  catch (error) { throw new Error((error as NodeJS.ErrnoException).code === 'EEXIST' ? 'CONFIDENTIAL_REFRESH_BUSY' : 'CONFIDENTIAL_REFRESH_STORAGE'); }
+  try {
+    let original: string, session: z.infer<typeof sessionSchema>;
+    try {
+      original = await readFile(path, 'utf8');
+      if (Buffer.byteLength(original) > 131072) throw new Error();
+      session = sessionSchema.parse(JSON.parse(original));
+      if (!/^\S+$/.test(session.refreshToken)) throw new Error();
+    } catch { throw new Error('CONFIDENTIAL_REFRESH_SESSION_INVALID'); }
+    try {
+      if (session.recipient !== implicitId.parse(expectedRecipient) || confidentialImplicitId(session.publicKey) !== expectedRecipient) throw new Error();
+    } catch { throw new Error('CONFIDENTIAL_AUTH_IDENTITY'); }
+    const requestedAt = Date.now();
+    if (Date.parse(session.refreshExpiresAt) <= requestedAt) throw new Error('CONFIDENTIAL_REFRESH_EXPIRED');
+    let response: Response;
+    try {
+      response = await fetchImpl(API + '/auth/refresh', { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(30000), headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify({ refreshToken: session.refreshToken }) });
+    } catch { throw new Error('CONFIDENTIAL_REFRESH_UNAVAILABLE'); }
+    if (response.status !== 200 && response.status !== 201) {
+      try { await response.body?.cancel(); } catch { /* Keep transport and provider details private. */ }
+      throw new Error('CONFIDENTIAL_REFRESH_HTTP_' + response.status);
+    }
+    let refreshed: z.infer<typeof apiRefreshSchema>;
+    try { refreshed = apiRefreshSchema.parse(await boundedJson(response)); }
+    catch { throw new Error('CONFIDENTIAL_REFRESH_INVALID_RESPONSE'); }
+    // Start expiry at request time, conservatively accounting for transport delay.
+    const expires = requestedAt + refreshed.expiresIn * 1000;
+    if (expires <= Date.now()) throw new Error('CONFIDENTIAL_REFRESH_INVALID_RESPONSE');
+    const accessExpiresAt = new Date(expires).toISOString();
+    const updated = { ...session, accessToken: refreshed.accessToken, accessExpiresAt };
+    const temporary = path + '.refresh-' + randomBytes(16).toString('hex') + '.pending';
+    let pending: Awaited<ReturnType<typeof open>> | undefined;
+    try {
+      // Refuse an out-of-band replacement rather than overwriting another session.
+      if (await readFile(path, 'utf8') !== original) throw new Error('CONFIDENTIAL_REFRESH_SESSION_CHANGED');
+      pending = await open(temporary, 'wx', 0o600);
+      await pending.writeFile(JSON.stringify(updated, null, 2) + '\n'); await pending.sync(); await pending.close();
+      if (await readFile(path, 'utf8') !== original) throw new Error('CONFIDENTIAL_REFRESH_SESSION_CHANGED');
+      await rename(temporary, path);
+      if (process.platform !== 'win32') {
+        const directory = await open(dirname(path), 'r');
+        try { await directory.sync(); } finally { await directory.close(); }
+      }
+    } catch (error) {
+      throw new Error(error instanceof Error && error.message === 'CONFIDENTIAL_REFRESH_SESSION_CHANGED' ? 'CONFIDENTIAL_REFRESH_SESSION_CHANGED' : 'CONFIDENTIAL_REFRESH_SAVE_FAILED');
+    } finally {
+      if (pending) { await pending.close().catch(() => {}); await unlink(temporary).catch(() => {}); }
+    }
+    return { recipient: session.recipient, publicKey: session.publicKey, refreshed: true, noSpendIntent: true, accessExpiresAt, refreshExpiresAt: session.refreshExpiresAt, sessionFile };
+  } finally {
+    await lock.close().catch(() => {}); await unlink(lockPath).catch(() => {});
+  }
 }
 
 /** Private read only. This helper has no transaction, deposit, generate-intent or submit-intent method. */

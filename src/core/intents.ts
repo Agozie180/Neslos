@@ -49,7 +49,12 @@ export class IntentsClient {
     }
   }
   private partnerHeaders(): Record<string, string> { return this.#partnerJwt ? { 'X-API-Key': this.#partnerJwt } : {}; }
+  /** This adapter always requests the confidential balance rail, which requires partner access. */
+  assertConfidentialQuoteConfigured(): void {
+    if (!this.#partnerJwt) throw new Error('ONECLICK_PARTNER_AUTH_REQUIRED: Set ONECLICK_JWT to a free partner API key from https://partners.near-intents.org before preparing confidential quotes. A User-Session token is not a partner key.');
+  }
   async quote(params: QuoteParameters): Promise<ValidatedQuote> {
+    this.assertConfidentialQuoteConfigured();
     if (units(params.amount) <= 0n || !Number.isSafeInteger(params.maxSlippageBps) || params.maxSlippageBps < 0 || params.maxSlippageBps > 1000) throw new Error('Invalid amount or slippage.');
     nearAccount.parse(params.refundTo); nearAccount.parse(params.recipient);
     const tokens = z.array(tokenSchema).max(20_000).parse(await fetchJson(`${ONECLICK_URL}/tokens`, {}, 8_000_000));
