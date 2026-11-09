@@ -23,7 +23,7 @@ On NEAR, input amounts, token transfers, contract policy parameters, nonces, out
 
 The quote provider sees the fields required to route a quote, including assets, amount, refund account and recipient. HTTPS and a provider signature do not by themselves prove all provider-side processing took place in a TEE.
 
-A public Rhea lending position remains public. The implemented action funds an **allocation reserve**; it does not open or manage a lending position. The rehearsal guardian rejects public lending when confidentiality is required.
+A public Rhea lending position remains public. The private payment path supports an **allocation reserve**; it does not open or manage a lending position, and the rehearsal simulates that reserve. The separate [owner-commerce path](COMMERCE.md) implements public lending supply/withdrawal through the vault, but a funded Rhea position remains unproved. Both the guardian and vault reject public lending when confidentiality is required.
 
 ## A verified flag is not verification
 
@@ -59,4 +59,4 @@ Reproduce the coverage finding in tests/intents.test.ts. The fixture is syntheti
 
 The hard budget asset is native USDC on NEAR, in six-decimal integer units, on a UTC calendar-day basis. NEAR gas, storage, TEE hosting and inference credits have separate budgets. Authorize attaches 0.01 NEAR for bounded record storage and the FT call's one yoctoNEAR. The funding asset contract is immutable.
 
-This is a hackathon implementation, with adversarial and local-chain tests. It has not received an independent security audit or demonstrated funded mainnet settlement.
+This is a hackathon implementation, with adversarial and local-chain tests, and has not received an independent security audit. The [9 November owner-wallet mainnet round trip](CONFIDENTIAL-SETTLEMENT-2026-11-09.md) returned its full 0.001 NEAR principal, but native charges exceeded the stated 0.004 NEAR cap because the funding estimate omitted account-creation charges. That provider test used neither TDX nor the Neslos vault. Funded settlement through the complete TDX/mainnet-vault path remains unproved.

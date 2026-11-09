@@ -1,5 +1,7 @@
 # Deployment blocker: root and foundation audit — 7 November 2026
 
+> Historical snapshot. Later standard-image deployments succeeded, and [private NEAR AI research, audit and restart verification passed on 9 November](NEAR-PRIVATE-RESEARCH-2026-11-09.md). Those temporary CVMs are retired. Earlier deployment, publication, inference and submission statements below describe this stage; see [current status](STATUS.md) for remaining work.
+
 This records the audit before the owner's provider reply. The [subsequent follow-up](TDX-PROVIDER-FOLLOWUP-2026-11-07.md) supersedes the continuation steps below: Phala offers no pre-approval, the compact bundle removes the registry requirement, and its schema-valid request was also rejected. No CVM was committed.
 
 **The old deployment request has a confirmed size defect. The replacement full-image request passes offline schema validation. Neither finding explains or clears Phala's historical terms-of-use rejection.** The rejection applies to the saved 6 November inline request; no rejection of the current image, account-wide ban, or successful Neslos TDX deployment has been established.

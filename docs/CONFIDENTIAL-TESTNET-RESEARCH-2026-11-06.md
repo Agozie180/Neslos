@@ -1,5 +1,7 @@
 # Confidential Intents and testnet — 6 November 2026
 
+> Historical research snapshot. The later [9 November owner-wallet Confidential Intents round trip](CONFIDENTIAL-SETTLEMENT-2026-11-09.md) returned full principal but exceeded its native fee cap. The no-spend observations and proposed next steps below describe this earlier review; funded TDX/mainnet-vault settlement remains unproved.
+
 **A mainnet Neslos vault is not required for hackathon eligibility. The reviewed official sources do not offer a testnet deployment of the hosted NEAR Intents / Confidential Intents settlement service.** An independently deployed copy of the open-source verifier can demonstrate real contract execution with test tokens, but does not connect to the production confidential network.
 
 This review fetched the live hackathon brief, Intents documentation and OpenAPI, current official examples, and pinned contract/solver sources. It performed public downloads only: no credentials, signatures, deposits, deployments or confidential-account queries. Raw captures and a source manifest are retained under `.local/confidential-testnet-research-20261106/`.

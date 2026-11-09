@@ -1,5 +1,7 @@
 # TDX startup integrity audit — 7 November 2026
 
+> Historical snapshot. Later standard-image deployments succeeded, and [private NEAR AI research, audit and restart verification passed on 9 November](NEAR-PRIVATE-RESEARCH-2026-11-09.md). Those temporary CVMs are retired. Earlier deployment, publication, inference and submission statements below describe this stage; see [current status](STATUS.md) for remaining work.
+
 **Fixed: inline bundles now reject substituted dependencies and additional application paths before importing application code.** The V3 candidate targets `vault.neslos.testnet`, owned by `neslos.testnet`, in attestation-only mode. It passes the full application checks, an actual Linux install and startup tests, and Phala's offline request schema. It has not been submitted or deployed.
 
 ## Finding and repair

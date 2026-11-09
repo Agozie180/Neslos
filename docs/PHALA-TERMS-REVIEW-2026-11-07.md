@@ -1,5 +1,7 @@
 # Neslos review against Phala Cloud Terms — 7 November 2026
 
+> Historical snapshot. Later standard-image deployments succeeded, and [private NEAR AI research, audit and restart verification passed on 9 November](NEAR-PRIVATE-RESEARCH-2026-11-09.md). Those temporary CVMs are retired. Earlier deployment, publication, inference and submission statements below describe this stage; see [current status](STATUS.md) for remaining work.
+
 **Later live deployment evidence, 22:14 UTC:** the Ubuntu-tested private GHCR image is running on Phala with production `dstack-0.6.1`. HTTPS health, disabled private commands and fresh Intel/DCAP-verified TDX evidence passed. Startup required Phala’s official registry-login script plus a writable root-only Docker credential directory. The owner explicitly authorized the encrypted registry token. This establishes an accepted, working attestation-only configuration; it does not identify the earlier HTTP 400 predicate or settle the broader finance-workflow interpretation below. See [live verification](TDX-LIVE-VERIFICATION-2026-11-07.md).
 
 **No confirmed prohibited workload was identified in the current attestation-only candidate. That finding does not establish acceptance of the broader finance application. The main unresolved question is whether Phala applies its reward-workload restrictions to Neslos's intended yield research and owner-controlled lending, particularly on promotional credit.**

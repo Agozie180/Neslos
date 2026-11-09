@@ -1,5 +1,7 @@
 # Testnet TDX continuation — 7 November 2026
 
+> Historical snapshot. Later standard-image deployments succeeded, and [private NEAR AI research, audit and restart verification passed on 9 November](NEAR-PRIVATE-RESEARCH-2026-11-09.md). Those temporary CVMs are retired. Earlier deployment, publication, inference and submission statements below describe this stage; see [current status](STATUS.md) for remaining work.
+
 **Latest:** the [provider-response follow-up](TDX-PROVIDER-FOLLOWUP-2026-11-07.md) supersedes the earlier continuation steps below. A new compact, attestation-only bundle preserves all application/lock bytes, passes 579 application tests and Linux packaging checks, and fits the provider limit. Its corrected API submission still received a policy denial. No CVM was committed; Phala offers no pre-approval and specifically suggests the normal console flow.
 
 **Subsequent local repair:** the [V3 startup audit](TDX-STARTUP-AUDIT-2026-11-07.md) adds full installed-dependency and exact application-file verification before import. All 582 current application tests and actual Linux startup/tampering checks pass. The new 150,387-byte candidate has not been submitted; the historical provider denial remains unresolved.
