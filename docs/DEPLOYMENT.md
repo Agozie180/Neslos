@@ -1,10 +1,10 @@
 # Deployment and verification
 
-The local rehearsal is ready to run. The live path is intentionally a different process: it must prove its hardware identity before it can handle private jobs. Do not expose the rehearsal API as a funded owner wallet.
+The [public rehearsal](https://neslos.vercel.app) and local application are ready to run. The separate private runtime completed [verified NEAR AI research inside TDX on 9 November](NEAR-PRIVATE-RESEARCH-2026-11-09.md), including encrypted audit and restart persistence. Its temporary server was deleted after verification to stop hosting charges. The demo and archived evidence remain available without continuous TDX hosting.
 
 For the implemented private owner CLI, dedicated TEE image, bootstrap, audit access and transaction workflow, use the [TEE runbook](TEE-RUNBOOK.md). It also records current free-credit options. The sections below retain contract/testnet setup and the underlying configuration model.
 
-The 6 November Phala provisioning attempt is currently [blocked by a provider terms-of-use response](TDX-DEPLOYMENT-STATUS.md). For the new public vault commerce client and the existing testnet vault's reviewed, state-preserving upgrade procedure, see [Vault commerce](COMMERCE.md).
+The 6–7 November inline provisioning attempts are [historical investigations](TDX-DEPLOYMENT-STATUS.md#historical-attempts-and-audits); standard-image deployments subsequently succeeded. Their earlier provider response is no longer the current deployment status. For public vault commerce and the testnet vault's reviewed, state-preserving upgrade procedure, see [Vault commerce](COMMERCE.md). The rehearsal API remains separate from funded owner controls.
 
 ## Local application
 
@@ -43,7 +43,7 @@ Production health/session checks and three live browser tests passed on 9 Novemb
 
 The Dockerfile builds a standalone Node application. Set HOST=0.0.0.0 and PORT as required by the host. Behind HTTPS, set NODE_ENV=production and NESLOS_PUBLIC_ORIGIN to the exact public HTTPS origin. Production cookies require HTTPS.
 
-The application uses isolated, bounded, memory-only rehearsal sessions. Use a single process or sticky routing for a demo; a restart expires its sessions. Publish only after reviewing the intended host and public URL. Keep it available through judging.
+The application uses isolated, bounded, memory-only rehearsal sessions. Use a single process or sticky routing for a demo; a restart expires its sessions. The public rehearsal is the hosted demo to keep available through judging. The private TDX proof uses archived evidence and optional finite verification sessions, with no requirement to keep a paid CVM running.
 
     docker build -t neslos-rehearsal .
     docker run --rm -p 8787:8787 -e HOST=0.0.0.0 neslos-rehearsal

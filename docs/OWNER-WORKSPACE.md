@@ -4,9 +4,11 @@
 
 Run `npm run build` first. The owner server needs the built web assets and Node 24.22.2. On this Windows workspace the npm wrapper selects the compatible local Node. When using WSL, private files stay in the Linux checkout; the WSL wrapper deliberately does not sync credentials or private state.
 
+**Verification status, 9 November 2026:** private client/CLI research, encrypted audit and restart persistence passed inside independently verified TDX. The temporary server was deleted after the completed proof to stop hosting charges. The [evidence archive](NEAR-PRIVATE-RESEARCH-2026-11-09.md) remains available for review; continuous TDX hosting is outside the demo's operating plan. Browser controls have automated fixture coverage, with live owner-browser validation still separate.
+
 ## Connect the owner
 
-Follow the [TEE runbook](TEE-RUNBOOK.md#provision-and-establish-trust) to deploy a CPU TDX runtime, independently approve its measurements, and initialize `.private/tee/runtime.json`. Create `.private/tee/owner-token.json` with `npm run private -- new-token --out .private/tee/owner-token.json`; provision the same token through the platform's encrypted secrets.
+For an optional new live private session, follow the [TEE runbook](TEE-RUNBOOK.md#provision-and-establish-trust) to deploy a CPU TDX runtime for a finite budgeted window, independently approve its measurements, and initialize `.private/tee/runtime.json`. Create `.private/tee/owner-token.json` with `npm run private -- new-token --out .private/tee/owner-token.json`; provision the same token through the platform's encrypted secrets. The default unconfigured dashboard can inspect the public testnet vault without a TDX deployment.
 
 Create `.private/tee/contacts.json` with the intended venues and recipients:
 
@@ -65,7 +67,7 @@ This example caps reserved inference at $0.25; it is not a model/deployment appr
 
 Each batch reserves three complete calls before transmission. The input estimate counts serialized UTF-8 bytes plus 4,096 template tokens per request; all requested output tokens are reserved. Failed or unknown outcomes retain the full reservation. The pinned SDK disables automatic completion retries. Retrying a completed job returns its saved result; retrying an interrupted paid job returns `INFERENCE_OUTCOME_UNKNOWN` without charging again. No eligible markets means no model call.
 
-Hosting is a separate charge. The existing $3 combined cap allocates at most $0.25 to inference and $2.75 to hosting. Three historical CVM launches are conservatively reserved as three full hours ($0.182340); all are retired. The [9 November stage](TDX-PRIVATE-STAGE-2026-11-09.md) verified encrypted owner status/audit with zero paid inference. Further hosting must retain the budget history and a finite deletion schedule within the remaining allowance.
+Hosting is a separate charge. The existing **$3 combined cap** allocates at most $0.25 to inference and $2.75 to hosting. The completed [9 November research proof](NEAR-PRIVATE-RESEARCH-2026-11-09.md#testnet-restoration-and-cost) retains **$0.25371624** in conservative reservations: four one-hour hosting reservations ($0.243120) and nine inference calls ($0.01059624), including failed attempts. Three calls were local diagnostics and six ran in TDX. All CVMs are retired. These reservations are not a reconciled provider bill. An optional future session must retain this budget history and have a finite deletion schedule; the completed proof does not require ongoing hosting.
 
 ## Journal backup and recovery
 
@@ -79,4 +81,8 @@ Operational bounds are **128 MB of encrypted segments and 10,000 completed/faile
 
 ## What remains external
 
-Local tests exercise the owner UI, private protocol, crash recovery, budget limits and exact transaction controls with labelled fixtures. Genuine TDX hosting and encrypted owner CLI status/audit have live evidence. Model deployment/routing approval, a verified paid research response, the owner's browser-to-cloud workflow, and persistence across a live CVM restart remain unverified. The [historical credential audit](PHALA-AUTH-AUDIT.md) distinguishes `PHALA_AI_API_KEY` from official Cloud CLI authentication; its $5 balance is a dated observation. `npm run cloud:status` checks current account access without paid calls. The NEAR AI key passed its no-charge validity check. Credentialed confidential quotes have separate evidence, but funded settlement, lending positions and paid external-agent jobs remain unfinished.
+The private client/CLI completed three signed NEAR AI research reports inside independently verified Neslos TDX. Encrypted status/audit, receipt opening, wrong-owner rejection, replay, persistence across a live restart and exhausted-budget rejection passed. The reviewed provider policy pins the observed deployment and explicitly trusts provider administration of effective runtime, routing and model weights; loaded weight bytes are not independently proved. [Proof and exact boundary](NEAR-PRIVATE-RESEARCH-2026-11-09.md).
+
+Local tests cover the owner UI, private protocol, crash recovery, budgets and exact transaction controls with labelled fixtures. A live owner-browser session, funded Confidential Intents settlement, funded Rhea positions and paid external-agent jobs remain separate validation or integration work. The TDX instance's deliberate retirement is completed cost control.
+
+The [historical credential audit](PHALA-AUTH-AUDIT.md) distinguishes `PHALA_AI_API_KEY` from official Cloud CLI authentication; its balance is a dated observation. `npm run cloud:status` checks current account access without paid inference or provisioning. Credentialed confidential quotes have separate retained evidence and must be refreshed before any future funded action.

@@ -4,7 +4,7 @@ The spending authority for Neslos agents. The vault holds one fixed fungible tok
 
 The separate `execute_commerce_v1` method lets the owner dispatch constrained public commerce from vault custody. It shares the private path's daily usage and nonce, and always rejects a policy that requires confidential settlement. This is public owner authority, not attested autonomous execution.
 
-**Verified on 6 November 2026:** 25 Rust unit tests and two integration suites deploying the compiled WASM into local NEAR sandboxes. [The current verification record](../../artifacts/contract-verification.json) binds the tested WASM hash. These tests use virtual fixture assets; they do not establish funded Rhea or TEE execution.
+**Verified on 6 November 2026:** 25 Rust unit tests and two integration suites deploying the compiled WASM into local NEAR sandboxes. The committed [deployment and commerce proof](../../docs/VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) records the deployed WASM hash and public testnet receipts. Both jobs also passed for application revision `e5629ba` in the [9 November CI run](https://github.com/Agozie180/Neslos/actions/runs/42657642156). Local runs generate `artifacts/contract-verification.json`; that output is not committed. These tests use fixture assets and do not establish funded Rhea or TEE execution.
 
 ## Build and test
 

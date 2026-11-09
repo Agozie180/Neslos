@@ -2,15 +2,15 @@
 
 The [NEAR private research report](NEAR-PRIVATE-RESEARCH-2026-11-09.md) records the strict direct integration and live verification. Earlier [audit findings](MODEL-DEPLOYMENT-AUDIT-2026-11-09.md) explain why authenticated deployment history must not be described as proof of currently loaded weights.
 
-The private owner CLI, local owner browser and dstack container package are implemented. [Live verification on 9 November](NEAR-PRIVATE-RESEARCH-2026-11-09.md) completed all three NEAR AI researchers inside independently verified Neslos TDX, with signed reports, encrypted audit, replay, restart persistence and exhausted-budget rejection. The finite CVM is retired and the vault restored paused; another run needs fresh reviewed approval and hosting. The direct policy explicitly trusts provider deployment/weight administration. The [owner guide](OWNER-WORKSPACE.md) covers finite schedules, credit caps and journal recovery. Local Docker tests use fake hardware and are separate packaging checks.
+The private owner CLI, local owner browser and dstack container package are implemented. [Live verification on 9 November](NEAR-PRIVATE-RESEARCH-2026-11-09.md) completed all three NEAR AI researchers inside independently verified Neslos TDX, with signed reports, encrypted audit, replay, restart persistence and exhausted-budget rejection. The CVM was deleted after the completed proof to stop hosting charges, and the vault was restored paused. The public rehearsal and archived evidence support review without continuous TDX hosting. An optional new private session needs fresh reviewed approval, an explicit budget and a finite hosting window. The direct policy explicitly trusts provider deployment/weight administration. The [owner guide](OWNER-WORKSPACE.md) covers finite schedules, credit caps and journal recovery. Local Docker tests use fake hardware and are separate packaging checks.
 
 An earlier package was rebuilt and smoke-tested on **6 November 2026** as `neslos-tee:readiness-20261106`, local image ID `sha256:b764b71ace136929ee8611409b1b9f87c853fa534816ffef3c3966b3c1f89a9c`. In a read-only, capability-dropped, network-disabled container it rejects fake evidence and reports `genuineHardwareVerified:false`, running as UID 1000. That local image was not published or deployed; the separate 9 November image and live checks are recorded above. [Current deployment limits](TDX-DEPLOYMENT-STATUS.md).
 
-The first remote demonstration can use **private research plus a testnet vault**. It makes no Intents deposit and needs no GPU of your own: Neslos runs on a CPU TEE and sends encrypted research requests to NEAR AI's attested model service. Research data still describes NEAR mainnet yields. A testnet research result is not a private payment or a lending deposit.
+The completed remote proof used **private research plus a testnet vault**. It made no Intents deposit and needed no GPU of the owner's own: Neslos ran on a CPU TEE and sent encrypted research requests to NEAR AI's attested model service. Research data describes NEAR mainnet yields. A testnet research result does not establish a private payment or a lending deposit.
 
 For Phala authentication, distinguish `PHALA_AI_API_KEY` (Private AI) from `PHALA_CLOUD_API_KEY` or official `phala login` (CVM management). `npm run cloud:status` checks each scope without paid calls. The [4 November credential audit](PHALA-AUTH-AUDIT.md) resolved the local scope mismatch and authenticated both products; it also records the verified balance, post-paid billing mode and CPU/storage prices.
 
-Use `npm run cloud:status -- --deployment-checks` to inspect email verification, workspace role, billing status and remaining quotas too. Unknown fields stay unknown; this command never establishes provider policy acceptance. The [7 November rejection audit](PHALA-REJECTION-AUDIT-2026-11-07.md) records the actual healthy exposed account state and the unresolved server-side denial.
+Use `npm run cloud:status -- --deployment-checks` to inspect email verification, workspace role, billing status and remaining quotas too. Unknown fields stay unknown; this command never establishes provider policy acceptance. The [7 November rejection audit](PHALA-REJECTION-AUDIT-2026-11-07.md) records the earlier inline request denial. Standard-image deployments later succeeded; the historical response's internal cause remains undisclosed.
 
 ## Free access options, checked 3 November 2026
 
@@ -27,7 +27,7 @@ Do not rent a confidential GPU for this architecture. Do not describe an ordinar
 
 A support request the owner can send:
 
-> I'm building Neslos for NEAR HACKATHON, ending 14 November 2026. It uses an Intel TDX/dstack executor, verified NEAR AI inference, and an on-chain spending vault. Do you offer enough CPU CVM credit for development and a demo through judging? I need a genuine quote-capable instance and a way to prevent charges beyond the credit. The runtime is a single Node container; no GPU is needed.
+> I'm building Neslos for NEAR HACKATHON, ending 14 November 2026. It uses an Intel TDX/dstack executor, verified NEAR AI inference, and an on-chain spending vault. Do you offer CPU CVM credit for short, time-limited development and verification sessions? I need a genuine quote-capable instance and a way to cap charges and delete it after each session. The runtime is a single Node container; no GPU is needed.
 
 ## Build and verify locally
 
@@ -177,7 +177,7 @@ Governance requests also support `{"kind":"pause","paused":true}` and `{"kind":"
 
 ## Limits that remain
 
-- Private NEAR AI research and TDX owner controls have live evidence, including restart persistence. The finite server is retired; a new run needs fresh approval and bounded hosting. Loaded weights remain under explicit provider-administration trust. Funded confidential settlement remains unverified.
+- Private NEAR AI research and TDX owner controls have live evidence, including restart persistence. The server was deliberately retired after the completed proof to control cost. A new run is optional and needs fresh approval and bounded hosting. Loaded weights remain under explicit provider-administration trust. Funded confidential settlement remains unverified.
 - All three model reviewers must explicitly approve an eligible market; their assessments can veto or change selection. The separate [public commerce client](COMMERCE.md) routes lending/payment principal through the vault's limits and rejects confidential policies; it is not a TEE execution path. Funded lending validation remains unfinished, and Agent Market payment is disabled because its documented rail requires a wallet delegate.
 - The default browser remains a rehearsal. The separate localhost owner browser uses this same private client and exact transaction workflow. Its cloud-backed operation requires the approved runtime.
 - Immutable encrypted journal segments retain all history through bounded rotation (128 MB; 10,000 completed/failed commands). Keep the manifest and segments together. Finite research/observation schedules are supported. Rollback protection still depends on independently retained checkpoints; after storage failure the runtime fails closed. See the [backup procedure](OWNER-WORKSPACE.md#journal-backup-and-recovery).

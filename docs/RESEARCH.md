@@ -1,6 +1,6 @@
 # Hackathon research
 
-Project status refreshed: 9 November 2026. Event facts below come from the 6 November research; read the [live brief](https://nearhackathon.com/HACKATHON.md) again before submission. The latest retained full copy is in [sources](sources/HACKATHON-2026-11-06.md). See [current status](STATUS.md), [inference review](INFERENCE-LIVE-REVIEW-2026-11-06.md) and [testnet/Confidential Intents research](CONFIDENTIAL-TESTNET-RESEARCH-2026-11-06.md) for dated evidence.
+Project status and the live event's deadline, publication and eligibility requirements were checked on 9 November 2026. Read the [live brief](https://nearhackathon.com/HACKATHON.md) again before submission; the latest retained full copy is in [sources](sources/HACKATHON-2026-11-06.md). See [current status](STATUS.md), [private research proof](NEAR-PRIVATE-RESEARCH-2026-11-09.md) and [testnet/Confidential Intents research](CONFIDENTIAL-TESTNET-RESEARCH-2026-11-06.md) for dated evidence.
 
 ## Verified event facts
 
@@ -10,7 +10,7 @@ Project status refreshed: 9 November 2026. Event facts below come from the 6 Nov
 - No registration is required to start. Public repo + human-published public X demo are required before the one final submission per project.
 - Work since the 19 October announcement qualifies; older baselines and reused libraries must be disclosed. AI-assisted work is allowed.
 - Testnet-only work is eligible in every track, and no named integration is mandatory. **Hosted NEAR Intents / Confidential Intents has no supported testnet.** Mainnet `dry: true` quotes require no funded transaction; an independently deployed verifier is a separate environment, not the hosted confidential service.
-- A local-only demo is eligible with reproducible instructions and a video. Hosted demos should survive through judging, ideally 25 November.
+- A local-only demo is eligible with reproducible instructions and a video. Hosted demos should remain available through 18 November, ideally 25 November. Neslos uses its public Vercel rehearsal for that access; the private TDX proof is archived after a finite verification session. Continuous paid TDX hosting is outside the operating plan.
 - Humans decide awards. Claude Code and Codex screen reproducibility and feature claims.
 - Submission requires the human's actual team/contact/payout information, chosen tracks, links, consent and approval of the exact final payload. No placeholders or invented account.
 
@@ -22,13 +22,13 @@ All track IDs: defi, thesis, privacy, business, swarms, security, agents, realwo
 
 ## Proposed track fit
 
-| Track | Official direction | Evidence Neslos needs |
+| Track | Official direction | Current Neslos evidence and scope |
 | --- | --- | --- |
-| security | Spending limits, policy engines, sandboxed wallets | Enforced vault limits and adversarial tests |
-| privacy | Confidential computation, private finance, protected AI | Verified hardware, encrypted inference/receipts, accurate boundaries |
-| defi | Vaults and trading agents settling through NEAR Intents | Cited Rhea research, real dry quotes, eventual settlement receipts |
-| swarms | Coordination and economies between agents | Independent researchers, shared evidence, budget arbitration |
-| agents | Agents hiring, earning and spending | Add only once a real paid agent job is demonstrated |
+| security | Spending limits, policy engines, sandboxed wallets | Public testnet enforcement, adversarial tests and exact transaction recovery |
+| privacy | Confidential computation, private finance, protected AI | Completed TDX research with encrypted NEAR AI inference and signed audit; provider-administration trust explicitly disclosed |
+| defi | Vaults and trading agents settling through NEAR Intents | Live Rhea research, enforced vault rules and credentialed dry quotes; funded settlement/lending remains unproved |
+| swarms | Coordination and economies between agents | Three signed researcher reports, shared market evidence and deterministic selection/budget controls |
+| agents | Agents hiring, earning and spending | Excluded from the proposed selection until a compatible paid-job integration is demonstrated |
 
 ## Sources studied
 

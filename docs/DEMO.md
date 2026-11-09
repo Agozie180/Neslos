@@ -2,7 +2,7 @@
 
 The one sentence to remember: **agents can propose; only the policy can authorize.**
 
-Use the [live Vercel rehearsal](https://neslos.vercel.app) or the local application. The hosted frontend/API and three production browser tests passed on 9 November. Present the retained [testnet commerce proof](VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) and [private NEAR AI research proof](NEAR-PRIVATE-RESEARCH-2026-11-09.md) separately from the rehearsal. All three researchers completed inside independently verified TDX; the finite server is now retired.
+Use the [live Vercel rehearsal](https://neslos.vercel.app) or the local application. The hosted frontend/API and three production browser tests passed on 9 November. Present the retained [testnet commerce proof](VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) and [private NEAR AI research proof](NEAR-PRIVATE-RESEARCH-2026-11-09.md) alongside the rehearsal. All three researchers completed inside independently verified TDX. That temporary server was deleted after verification to stop hosting charges; the public demo and evidence archive support the presentation without a paid TDX instance running.
 
 | Time | Action | Evidence to show |
 | --- | --- | --- |
@@ -18,14 +18,33 @@ Use the reproducible reference checkbox for a stable recorded demonstration. Exp
 
 Suggested narration:
 
-“Neslos is a private agent treasury on NEAR. Researchers discover opportunities; a strategist proposes; a deterministic guardian checks the owner's rules. The spending contract enforces the shared cap even when multiple agents compete. Sensitive production work belongs in an independently attested TEE, with encrypted, verified NEAR AI inference. And when an action is denied, the denial is just as verifiable as a successful settlement.”
+“Neslos is a private agent treasury on NEAR. Researchers compare opportunities; a strategist proposes; a deterministic guardian checks the owner's rules. The spending contract enforces the shared cap even when several agents compete. Here, an overspend is blocked and an allowed rehearsal produces a receipt we can verify. Separately, three NEAR AI researchers completed inside independently verified Intel TDX. Their signed research, encrypted audit and restart checks are archived. We retired the server after verification to stop hosting charges. Agents propose. Your policy decides.”
 
 Use the dated hardware, research and chain receipts for the claims they demonstrate. Label the browser recording as a rehearsal. The research archive proves the separate private-client/CLI flow under its declared trust policy; it does not establish a funded settlement or a currently running TDX endpoint.
+
+## Evidence for review
+
+| Review step | Expected result | Source |
+| --- | --- | --- |
+| Run the public or local demo | Overspend denied, allowed rehearsal completes, original audit verifies and a tampered copy fails | [README walkthrough](../README.md#try-it-in-90-seconds) |
+| Run local checks | Application/build and browser checks pass; Linux covers platform-specific checks | [Reproduction commands](../README.md#reproduce-the-checks) |
+| Inspect chain enforcement | Finalized public testnet transactions and fixture-token balances support payment/limit/replay claims | [Commerce proof](VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) |
+| Inspect private research | Three signed researchers, verified hardware/build inputs, restart and budget rejection; provider-administration trust disclosed | [Research proof](NEAR-PRIVATE-RESEARCH-2026-11-09.md) · [Evidence index](../deploy/near-private-research-20261109/record.json) |
+
+The archive contains public hardware/build evidence and sanitized results. Private prompts and receipt openings remain with the owner. Reviewers can inspect the committed evidence without cloud credentials or renting a new TDX instance; repeating a live hardware/inference session is a separate optional paid operation.
 
 ## Submission preparation
 
 The deadline is 14 November 2026 at 23:59 UTC (15 November at 00:59 in Lagos). Target security, privacy, defi and swarms only to the extent supported by the finished evidence. Add agents only after a real paid agent job exists.
 
-Prepare the public repository, a human-published X demo, real team/contact/payout information, precise track claims and the final application payload. The user must approve publication and the exact final submission. Do not invent a deployment, team member, prize result or account address.
+Track the remaining publication work here:
+
+- [ ] Make the reviewed repository public for judging.
+- [ ] Record the demo using the walkthrough and dated proof above; keep the public rehearsal accessible through judging.
+- [ ] Have the human publish the public X demo, mention NEAR HACKATHON, tag `@NEARProtocol` and `#NEARHackathon`, and retain the post URL.
+- [ ] Collect the human's actual team/contact details, mainnet payout account, consent and final track selection.
+- [ ] Recheck the [live event brief](https://nearhackathon.com/HACKATHON.md), review the exact final payload and submit once.
+
+The event accepts attached video or screenshots for an accessible hosted demo; a local-only demo requires video. A recording is planned for Neslos. The user must approve publication and the exact final submission. Do not invent a deployment, team member, prize result or account address. Continuous TDX hosting is not part of this checklist.
 
 The event does not publish a numerical scoring rubric. Protect the strongest evidence: on-chain spending enforcement, an adversarial demonstration, independent verification, and a runnable product.

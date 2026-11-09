@@ -1,65 +1,88 @@
-# Neslos — private agents, publicly enforceable limits
+# Neslos
 
-**Agents propose. Your policy decides what can spend.**
+**Private agent research. Spending limits enforced on NEAR.**
 
-**[Open the live rehearsal](https://neslos.vercel.app).** The Vercel frontend and API are deployed. On 9 November, three live desktop/mobile browser tests passed: overspend rejection, a completed mission, policy updates, and audit verification. This demo uses simulated funds and deterministic research.
+Neslos is an agent treasury for people who want help researching opportunities and preparing payments while keeping control of their funds. Three researchers assess lending, liquidity and risk; a strategist proposes an action; a deterministic guardian checks the owner's policy. The NEAR vault enforces the spending limit before funds leave custody.
 
-Neslos is an agent treasury for people who want automated research and payments without giving an agent unrestricted custody. Researchers compare NEAR DeFi opportunities, a strategist proposes an action, and a deterministic guardian checks the owner's rules. A NEAR policy vault enforces a shared spending allowance; the private runtime verifies its TEE before accepting sensitive work.
+**Agents propose. Your policy decides.**
 
-Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. Target: **$55,000 grand prize** and Security, Privacy, DeFi and Swarms tracks ($15,000 per track). This project has not been submitted or awarded a prize.
+[Try the live demo](https://neslos.vercel.app) · [Run locally](#run-locally) · [Inspect the evidence](#what-has-been-verified) · [Read the architecture](docs/ARCHITECTURE.md)
 
-**Updated on 9 November:** [private NEAR AI research passed inside independently verified TDX](docs/NEAR-PRIVATE-RESEARCH-2026-11-09.md). All three researchers returned signed reports covering two live markets. Encrypted audit, receipt opening, replay, restart persistence and exhausted-budget rejection passed. The scoped direct policy explicitly trusts NEAR's deployment/weight administration. The temporary CVM is retired and the testnet vault restored paused; no funded settlement was attempted. [Current status](docs/STATUS.md) · [Evidence and limits](docs/PROOF.md).
+![Neslos control room showing a blocked overspend, a completed 150-token rehearsal and 350 tokens of remaining allowance](docs/images/control-room.png)
 
-Latest Ubuntu WSL verification passed **638 tests across 46 files**, TypeScript, web/server builds and restricted Linux container checks. All 63 final image build inputs match the retained build context. Earlier [startup integrity](docs/TDX-STARTUP-AUDIT-2026-11-07.md), [deployment diagnostics](docs/PHALA-REJECTION-AUDIT-2026-11-07.md) and [foundation audit](docs/TDX-FOUNDATION-AUDIT-2026-11-07.md) reports preserve the earlier investigation.
+*The public demo is a rehearsal: simulated funds, deterministic research and real cryptographic audit receipts. This screenshot uses the labelled reference dataset. Public testnet enforcement and private AI research have separate verification records below.*
 
-| Start here | What you can inspect |
-| --- | --- |
-| [Run locally](#run-locally) | No wallet, credentials or funds required |
-| [90-second demonstration](docs/DEMO.md) | Overspend → blocked; allowed mission → signed receipt |
-| [Verification evidence](docs/PROOF.md) | Commands, measured results and the compiled contract checksum |
-| [Architecture](docs/ARCHITECTURE.md) · [Privacy](docs/PRIVACY.md) | Enforcement, trust boundaries and public information |
-| [Contract](contracts/policy-vault/README.md) · [Deployment](docs/DEPLOYMENT.md) | Vault interface and provisioning the attested runtime |
-| [Local owner workspace](docs/OWNER-WORKSPACE.md) | Private browser controls, credit caps, funding, schedules and journal recovery |
-| [TEE runbook and free access](docs/TEE-RUNBOOK.md) | Owner CLI, private research/audit, dstack deployment and verified credit options |
-| [Hackathon research](docs/RESEARCH.md) | Official rules, source links, track fit and deadline |
+## Try it in 90 seconds
 
-The public testnet vault is [vault.neslos.testnet](https://testnet.nearblocks.io/address/vault.neslos.testnet). Its [upgrade](deploy/testnet-upgrade-20261106.json) and [commerce proof](deploy/testnet-commerce-proof-20261106.json) use public fixture tokens. The [original deployment](deploy/testnet.json) and [earlier proof](deploy/testnet-proof.json) remain historical evidence. The latest hardware and research evidence is retained in the [private NEAR AI archive](deploy/near-private-research-20261109/record.json). The Vercel rehearsal is live; the demo video and final submission remain pending.
+Open **[neslos.vercel.app](https://neslos.vercel.app)**. No wallet, API key or funds are required.
 
-**Testnet-only projects qualify in every hackathon track.** Hosted Confidential Intents is mainnet-only; its integration is optional. The roughly 2.4 NEAR estimate concerns code-storage stake for an optional mainnet Neslos vault, before state and gas costs, not eligibility or a confidential settlement fee. [Supported testing paths and budget limits](docs/CONFIDENTIAL-TESTNET-RESEARCH-2026-11-06.md).
+1. **Inspect the rules.** In **Policy vault**, the default limits are $500/day, $200/action and 50 bps slippage, with approved venues and recipients.
+2. **Make the result repeatable.** Return to **Control room** and select **Use the reproducible reference dataset**.
+3. **Try to overspend.** Click **Overspend**. The guardian rejects the proposal and the allowance stays at $500.
+4. **Run an allowed mission.** Launch the default **$150 allocation reserve**. Follow research, proposal, guardian, execution and settlement; the remaining allowance becomes $350.
+5. **Check the evidence.** Open **Audit trail**, select **Verify integrity**, then **Test a tampered copy**. The original verifies; the altered copy fails.
 
-## What we built
+The reference market capture is dated **1 November 2026**. A reserve in this demo simulates earmarking funds; it does not open a lending position. [Full demo script](docs/DEMO.md) · [Audit screenshot](artifacts/neslos-audit.png) · [Mobile screenshot](artifacts/neslos-mobile.png)
 
-Four connected screens turn the policy into an observable workflow:
+## What has been verified
 
-- **Control room:** mission composer, six execution stages, shared allowance and adversarial demonstrations.
-- **Yield research:** Rhea lending data, base/reward APY, exit liquidity, source links and explicit policy exclusions. Broader NEAR discovery uses DeFiLlama when available.
-- **Policy vault:** daily and per-action caps in the configured token, approved venues/counterparties, slippage and pause. Editing a policy preserves consumption. The guardian applies research constraints before proposing a spend.
-- **Audit trail:** encrypted payloads, signed hash-chain receipts, browser-side verification, export/import and a tampered-copy test.
+Results below are dated **9 November 2026**, with the contract's public commerce proof dated **6 November**. Each claim links to the environment and evidence that support it.
 
-The agent roles are lending researcher, liquidity researcher, risk researcher, strategist, guardian, executor and settlement observer. Rehearsal research is deterministic. The separate private runtime completed three verified, encrypted NEAR AI research requests inside TDX, gated by deployment approval and an explicit inference budget. Deterministic code retains spending authority.
+| Claim | Evidence | Scope |
+| --- | --- | --- |
+| The browser workflow runs and rejects policy violations | [Browser tests](tests/e2e/control-room.spec.ts), three passing production tests and retained [verification record](docs/PROOF.md) | Desktop/mobile rehearsal, policy changes, successful mission and audit tamper detection; simulated funds |
+| Spending rules execute on NEAR | [Public vault](https://testnet.nearblocks.io/address/vault.neslos.testnet), [commerce proof](docs/VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) and [transaction record](deploy/testnet-commerce-proof-20261106.json) | Real testnet receipts, fixture-token balances, limit/replay rejection and preserved state across upgrades |
+| Three private AI researchers completed inside verified Intel TDX | [Research report](docs/NEAR-PRIVATE-RESEARCH-2026-11-09.md), [result](deploy/near-private-research-20261109/research-proof.json) and [checksum index](deploy/near-private-research-20261109/record.json) | Signed NEAR AI reports covering two live markets; encrypted audit, wrong-owner rejection, replay, restart persistence and exhausted-budget rejection |
+| Application, contract and container checks pass | [CI run for `e5629ba`](https://github.com/Agozie180/Neslos/actions/runs/42657642156), [workflow](.github/workflows/verify.yml) and [retained Linux checks](deploy/near-private-research-20261109/local-checks.json) | 638 application tests across 46 files in Ubuntu WSL with zero failures/skips; TypeScript and web/server builds; 25 Rust unit tests and two sandbox suites; six CI browser tests and restricted container smoke |
+
+The private research run used encrypted NEAR AI inference, fresh Intel/NVIDIA verification, independently reproduced boot measurements and exact TLS/signer/instance pins. Its reviewed policy explicitly trusts NEAR's administration of routing, runtime and model weights. Loaded weight bytes are not independently proved. The [public archive](deploy/near-private-research-20261109/record.json) contains hardware/build evidence and sanitized results; private prompts and receipt openings remain with the owner. Their hashes identify retained bytes but do not disclose or independently verify the private contents.
+
+**The TDX verification session is complete.** Its temporary server was deleted after the proof to stop hosting charges, and the testnet vault was restored to its original policy and executor, paused at version 13. Reviewing the demo, source, tests and archived evidence does not require renting another TDX instance. [Deployment and cost](#deployment-and-cost) · [Current status](docs/STATUS.md)
+
+## How spending authority works
+
+The models can reject an opportunity or narrow a selection. They cannot increase a limit, expand an allowlist, change the owner policy or sign with the owner's key. The vault checks the exact authorization and reserves the shared allowance before dispatch, so multiple agents compete within one spending policy.
+
+```mermaid
+flowchart TD
+  R[Three researchers and strategist] --> G[Deterministic guardian]
+  P[Owner policy] --> G
+  G -->|Allowed| T[TEE prepares exact transaction plan]
+  G -->|Denied| A[Encrypted audit receipt]
+  T --> O[Owner or authorized relayer submits]
+  O --> V[NEAR vault enforces spending limits]
+  P --> V
+  V -->|Reserve allowance and dispatch| S[Settlement observation]
+  S --> A
+```
+
+This is the implemented execution design. The public demo rehearses its stages. Public testnet transfers and private TDX research are verified separately; a funded Confidential Intents settlement remains future validation.
+
+| Attempt | Enforced behavior | Inspect |
+| --- | --- | --- |
+| Overspend, race agents or replay a payment | Integer token limits, shared allowance reservation and one monotonic contract nonce | [Vault](contracts/policy-vault/src/lib.rs) · [Policy tests](tests/policy.test.ts) |
+| Edit the policy to replenish today's allowance | Policy version changes while consumption and nonce remain | [Contract specification](contracts/policy-vault/README.md) |
+| Substitute the recipient, venue, asset or deposit address | Exact signature binding, commitment membership and output allowlist checks | [Wire format](src/core/wire.ts) · [Binding tests](tests/wire.test.ts) |
+| Request a public route under a confidential policy | Guardian and vault reject incompatible routing | [Guardian](src/core/policy.ts) · [Commerce tests](tests/commerce.test.ts) |
+| Treat a timeout as a refund or resend a payment | Unknown outcomes retain their charge; recovery checks the saved request or transaction hash | [Transaction recovery](src/owner/transactions.ts) · [Recovery tests](tests/private-transactions.test.ts) |
+| Alter a receipt or omit retained history | AES-GCM, Ed25519 and linked hashes verify against an independently retained checkpoint | [Browser verifier](src/web/verify.ts) · [Audit tests](tests/audit-client.test.ts) |
+
+NEAR provides the contract-enforced spending boundary, testnet execution and the private inference service. Rhea supplies lending data; DeFiLlama adds protocol discovery. The confidential payment adapter uses NEAR Intents/1Click. React, TypeScript and Vite provide the interface; Rust/near-sdk implements the vault; Intel TDX/dstack protects the private runtime.
+
+Research ranks eligible opportunities using base APY plus 25% of reward APY, with explicit bridge and utilization penalties. It cites liquidity and exclusions. “Best” means highest under that rule among queried markets; rates and exit liquidity can change. [Research implementation](src/core/research.ts) · [Privacy boundaries](docs/PRIVACY.md)
 
 ## Run locally
 
-Install **Node 24.22.2** (minimum 24.22.1) and npm. From this directory:
+Use **Node 24.22.2** (minimum 24.22.1) and npm. Versions are recorded in [.node-version](.node-version) and [package-lock.json](package-lock.json).
 
 ```sh
+git clone https://github.com/Agozie180/Neslos.git
+cd Neslos
 npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:5173**. API health: http://127.0.0.1:8787/api/health. The default bind is loopback. This Windows workspace also has a verified compatible Node binary which the scripts select automatically.
-
-Try the complete flow:
-
-1. Open **Policy vault**: the default is $500/day, $200/action and 50 bps slippage.
-2. In **Control room**, select **Use the reproducible reference dataset** for a stable demonstration.
-3. Click **Overspend**. Inspect the failed guardian checks; the allowance stays $500.
-4. Launch the default **$150 allocation reserve** mission. Watch research, proposal, guardian, execution and settlement; the remaining allowance becomes $350.
-5. In **Audit trail**, click **Verify integrity**, then **Test a tampered copy**. The original passes; the changed copy fails.
-
-Example mission: “Research NEAR stablecoin yields and prepare a reserve for the best eligible opportunity.” Rehearsal records the objective and uses deterministic, policy-based research. In the separate private runtime, the objective is passed to the verified NEAR AI researchers. The structured amount, counterparty and policy determine spending authority.
-
-**An allocation reserve is not a lending deposit.** The rehearsal simulates funds and settlement; it produces real cryptographic receipts, not chain transactions or hardware attestations. The on-chain contract is exercised separately in the local NEAR sandbox and public testnet.
+Open **http://127.0.0.1:5173**. API health is at **http://127.0.0.1:8787/api/health** and reports `mode: "rehearsal"`, `realFunds: false`. A fresh checkout needs no `.env`, wallet, provider account or paid inference. Select the reference dataset for a repeatable demo without live market access.
 
 For the compiled local application:
 
@@ -68,57 +91,11 @@ npm run verify
 npm start
 ```
 
-Then open http://127.0.0.1:8787.
-
-## How it works
-
-```mermaid
-flowchart LR
-  O[Owner sets policy] --> V[NEAR policy vault]
-  R[Yield and risk researchers] --> S[Strategist proposes]
-  S --> G[Deterministic guardian]
-  V --> G
-  G -->|allowed| T[Attested executor]
-  G -->|denied| A[Encrypted audit receipt]
-  T -->|exact signed authorization| V
-  V -->|reserve allowance, then dispatch| I[Confidential Intents]
-  I --> B[Settlement observer]
-  B --> A
-```
-
-In the private path, the owner verifies fresh TDX evidence before HPKE-encrypting a request. The enclave verifies private commitment openings, obtains encrypted NEAR AI research, checks a signed confidential quote, and prepares a NEAR FunctionCall. The owner or an authorized relayer submits it. The contract independently checks integer limits and the exact signature before transferring the fixed budget token. A settlement observation never causes a second deposit.
-
-## The policy, enforced
-
-| Attempt | Enforcement |
-| --- | --- |
-| Spend more than the daily/per-action cap | Exact u128 USDC arithmetic; shared allowance reserved before external dispatch |
-| Race several agents or replay an authorization | One monotonic contract nonce; atomic reservation; request idempotency |
-| Edit a policy to replenish today's allowance | Policy version changes; existing usage and nonce remain |
-| Substitute a recipient, venue, asset or deposit address | Exact Borsh signature binding, commitment membership and output-asset allowlist |
-| Use public routing under a confidential policy | Guardian rejection, signed confidential-recipient routing and contract confidentiality check |
-| Exceed the slippage cap | Ceiling-rounded integer minimum output, bounded by the signed quote |
-| Forge failure or treat a timeout as a refund | Private FT callback; only a failed receipt restores its original UTC day's allowance |
-| Alter an audit receipt | AES-GCM, Ed25519 and ordered hashes; independent verification against a retained checkpoint |
-
-The on-chain vault can check private commitment membership, but opening those commitments and binding the hidden recipient to the quote are responsibilities of the pinned TEE. Slippage is measured against the signed quote, not an independent fair-value oracle.
-
-## Integrations and their evidence
-
-| Surface | Implementation and current evidence |
-| --- | --- |
-| Rhea Finance | Live `/list_token_data` queries; 18 raw markets in the captured response, 10 supported by the normalizer. Explicitly dated fallback; no fabricated upstream observation timestamp. |
-| DeFiLlama | Additional NEAR protocol discovery. These rows are research-only until liquidity and execution are verified. |
-| NEAR policy vault | Rust/near-sdk WASM executed in a local sandbox and deployed on public testnet; downloaded code hashes, finalized receipts, spending limits and test-token balances verified. |
-| Confidential Intents / 1Click | No-spend authentication, private-balance reads, signed 0.001 wNEAR shield/unshield quotes and unsigned recovery-intent validation have retained evidence. Historical quotes are expired; no funded settlement. [Current review](docs/TESTNET-TDX-2026-11-07.md). |
-| Intel TDX / dstack | Private research and owner controls verified on 9 November: DCAP `UpToDate`, independent boot reconstruction, reviewed RTMR3, signed encrypted audit and restart persistence. Temporary instance retired. [Evidence](docs/NEAR-PRIVATE-RESEARCH-2026-11-09.md). |
-| NEAR AI | Three verified GLM research reports inside Neslos TDX using E2EE, OHTTP and exact TLS/signer/instance pins. Explicit provider-administration trust; loaded weights are not independently measured. [Proof and limits](docs/NEAR-PRIVATE-RESEARCH-2026-11-09.md). |
-| Owner commerce | Public payments and fixed Rhea supply/withdrawal use the vault's shared on-chain limits. Testnet payment and rejection receipts are verified; no funded Rhea position is claimed. [Scope](docs/COMMERCE.md). |
-| External paid agents | The marketplace's wallet-delegate rail would bypass the vault. New payment is disabled; historical recovery remains available. No paid job is claimed. |
-
-“Best yield” means the leading eligible opportunity among queried markets. Ranking uses base APY plus 25% of reward APY, with explicit bridge/utilization penalties; it is a transparent heuristic, not a return prediction. Rates and available liquidity can change.
+Then open **http://127.0.0.1:8787**. The default server binds to loopback. Rehearsal sessions are memory-only and reset when their server session expires or restarts.
 
 ## Reproduce the checks
+
+After `npm ci`, run:
 
 ```sh
 npm run verify
@@ -127,23 +104,50 @@ npm run test:browser
 npm run research -- --reference
 ```
 
-Contract checks require Rust **1.93.0**, the `wasm32-unknown-unknown` target, and **cargo-near 0.22.0**. On Windows, install those inside WSL Ubuntu.
+`verify` runs the application tests, TypeScript checks and production web/server builds. The browser suite covers the public rehearsal and the local owner UI with labelled fixtures. On Linux, install Chromium's system dependencies with `npx playwright install --with-deps chromium` if needed. Linux-specific SDK/tooling tests run in Ubuntu CI; Windows skips those checks. Test counts above identify their recorded run, not every platform or future revision.
+
+Contract checks require **Rust 1.93.0**, the **wasm32-unknown-unknown** target and **cargo-near 0.22.0**. Use Linux or Ubuntu WSL on Windows; [setup instructions](docs/DEPLOYMENT.md#local-near-proof) include system dependencies.
 
 ```sh
 cargo install cargo-near --version 0.22.0 --locked
 npm run test:contract
 ```
 
-The wrapper builds both contracts and starts a local NEAR sandbox. It exercises valid transfers, replay and signature failures, owner policy changes, failed dispatch, private callback protection, settlement records, pause and recovery. No mainnet account is touched. See [deployment instructions](docs/DEPLOYMENT.md) for platform details and the separate TEE process.
+The wrapper builds the vault and fixture contracts, runs Rust unit tests and starts local NEAR sandboxes. It checks actual receipts, balances, signatures, replay, governance, failed dispatch, callbacks, settlement records and recovery. These commands use local test assets and do not provision paid hosting or submit mainnet transactions.
 
-## Limitations and disclosures
+New verification reports appear under `artifacts/`. Dated, committed deployment evidence lives under `deploy/`; the [verification record](docs/PROOF.md) explains provenance and historical results. [All test commands](package.json) · [CI workflow](.github/workflows/verify.yml)
 
-- The default browser application is a **rehearsal** with isolated, memory-only sessions. The separate local **owner workspace** (`npm run owner`) reads finalized chain state and operates an independently configured private runtime. Live private-client/CLI research is verified; owner-browser tests use labelled fixtures and do not prove a live owner-browser session.
-- Sensitive production computation is designed for an attested runtime. Public NEAR deposits, amounts, policy fields, output minima and timing remain visible. A public lending position stays public.
-- The 1Click provider sees routing fields. Neslos does not independently attest that HTTPS endpoint. Provider settlement status is an observation, not an independent destination-chain proof.
-- The private runtime prepares payments and allocation-reserve funding. The private owner CLI verifies the returned call, prints a reviewable plan, and can submit that exact plan with durable transaction recovery. It also operates private research/audit and owner policy/pause/recovery. The public testnet demonstration remains a separate fixture-token proof. The owner dashboard also supports token registration/funding plans and finite research/settlement-observation schedules. Schedules never submit transactions. Neither flow opens a lending position.
-- Spending limits cover the fixed USDC token and UTC calendar days. NEAR gas/storage, inference and TEE hosting have separate budgets. Unknown/late-refund outcomes remain charged.
-- Neslos has verified private NEAR AI research and restart evidence with independently reproduced TDX boot measurements. The temporary instance is retired; another run needs fresh reviewed approval and finite hosting. Provider administration remains trusted for effective routing/runtime and loaded weights. Funded Intents settlement remains unfinished. [STATUS](docs/STATUS.md) records exact checks and remaining work.
-- This is an AI-assisted hackathon implementation, not an independently audited custody product. [Security notes](SECURITY.md) include the known transitive dependency advisory. No yield or prize result is guaranteed.
+## Deployment and cost
 
-Built from the official NEAR contract scaffold and the libraries pinned in the npm and Cargo lockfiles. The bundled Inter font retains its OFL license. See [research](docs/RESEARCH.md) for source provenance and [MIT license](LICENSE) for project code.
+| Surface | Operating model |
+| --- | --- |
+| Public Vercel demo | Available at [neslos.vercel.app](https://neslos.vercel.app); independent of the private TDX service |
+| Local rehearsal and automated checks | Run on the reviewer's machine or CI with no paid inference or TDX deployment |
+| Public testnet vault | Deployed at `vault.neslos.testnet`; original policy/executor restored and spending paused after verification |
+| Private TDX runtime | Temporary, metered verification sessions. The completed 9 November instance is retired to control cost; evidence remains available in the repository |
+
+Continuous TDX hosting is outside this demonstration's operating plan. Another live private run is optional and requires a finite hosting window, fresh attestation, reviewed provider policy and an explicit inference allowance. The [TEE runbook](docs/TEE-RUNBOOK.md) documents that process. Historical reservations total **$0.25371624** within the approved **$3 combined cap**; these are conservative reservations, not a reconciled provider bill. [Cost and retirement evidence](docs/NEAR-PRIVATE-RESEARCH-2026-11-09.md#testnet-restoration-and-cost)
+
+The local [owner workspace](docs/OWNER-WORKSPACE.md) provides policy review, funding plans, private research, audit and recovery. Owner signing keys stay on the owner's machine. Its finite schedules perform research or settlement observation; transaction submission remains a separate reviewed action.
+
+## Scope and next steps
+
+- **Funded integrations:** credentialed Confidential Intents quotes and private-balance reads have evidence; funded settlement and a funded Rhea lending position remain unproved. Historical quotes are expired. Hosted Intents is mainnet-only; testnet-only projects are eligible in every hackathon track.
+- **Owner browser:** automated fixture tests cover the UI. The verified private research run used the private client/CLI; a live owner-browser session has separate validation remaining.
+- **Agent Market:** new paid jobs are disabled because its wallet-delegate payment rail would bypass the vault. A compatible payment integration is required before claiming agent commerce.
+- **Privacy and accounting:** public deposits, amounts, policy fields and timing remain visible. The TEE binds private commitment openings to routes; provider status is an observation rather than an independent destination-chain proof. Slippage is bounded against the signed quote. Principal limits cover one fixed token; gas/storage, inference and hosting have separate budgets.
+- **Production hardening:** independent model-weight measurement, a tested fix for the documented transitive dependency advisory and an external security audit remain beyond the completed proof. [Security notes](SECURITY.md) · [Full trust model](docs/PRIVACY.md)
+
+## Documentation
+
+| Guide | Purpose |
+| --- | --- |
+| [Current status](docs/STATUS.md) · [Verification record](docs/PROOF.md) | Completed work, exact evidence and remaining scope |
+| [Architecture](docs/ARCHITECTURE.md) · [Vault specification](contracts/policy-vault/README.md) | Components, trust boundaries and contract invariants |
+| [Owner workspace](docs/OWNER-WORKSPACE.md) · [Commerce](docs/COMMERCE.md) | Local controls, funding, schedules and transaction recovery |
+| [Deployment](docs/DEPLOYMENT.md) · [TEE runbook](docs/TEE-RUNBOOK.md) | Reproduction, optional private sessions and budget controls |
+| [Demo script](docs/DEMO.md) · [Hackathon research](docs/RESEARCH.md) | Walkthrough, official requirements and submission preparation |
+
+Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026, with work spanning Security, Privacy, DeFi and Swarms. Publication, the human's demo post and final submission are tracked in the [submission checklist](docs/DEMO.md#submission-preparation).
+
+Neslos is an AI-assisted implementation built from the official NEAR contract scaffold and the libraries pinned in its npm/Cargo lockfiles. Project code is [MIT licensed](LICENSE); the bundled Inter font retains its OFL license. [Source acknowledgements](docs/RESEARCH.md#sources-studied)
