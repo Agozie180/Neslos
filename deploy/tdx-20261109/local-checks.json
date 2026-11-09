@@ -1,0 +1,76 @@
+{
+  "at": "2026-11-09T08:01:37.839Z",
+  "focusedRuntimeTests": {
+    "passed": 50,
+    "files": [
+      "tests/runtime.test.ts",
+      "tests/tee-server.test.ts",
+      "tests/attestation.test.ts"
+    ],
+    "note": "Completed before image publication; recorded session result."
+  },
+  "bundleTests": {
+    "passed": 12,
+    "failed": 0,
+    "success": true,
+    "assertions": [
+      {
+        "name": "binds the testnet vault into the measured Compose without accepting an environment override",
+        "status": "passed"
+      },
+      {
+        "name": "rejects an invalid testnet target before writing a bundle: \"vault.neslos.near\"",
+        "status": "passed"
+      },
+      {
+        "name": "rejects an invalid testnet target before writing a bundle: \"vault..neslos.testnet\"",
+        "status": "passed"
+      },
+      {
+        "name": "rejects an invalid testnet target before writing a bundle: \"vault.neslos.testnet\\n\"",
+        "status": "passed"
+      },
+      {
+        "name": "rejects an invalid testnet target before writing a bundle: \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.testnet\"",
+        "status": "passed"
+      },
+      {
+        "name": "enforces the official combined UTF-8 compose and pre-launch size boundary without disclosing content",
+        "status": "passed"
+      },
+      {
+        "name": "authenticates inline bootstrap, application and lock bytes before launch (compact: false)",
+        "status": "passed"
+      },
+      {
+        "name": "authenticates inline bootstrap, application and lock bytes before launch (compact: true)",
+        "status": "passed"
+      },
+      {
+        "name": "rejects invalid inline testnet target \"vault.neslos.near\" before writing output",
+        "status": "passed"
+      },
+      {
+        "name": "rejects invalid inline testnet target \"vault..neslos.testnet\" before writing output",
+        "status": "passed"
+      },
+      {
+        "name": "rejects invalid inline testnet target \"vault.neslos.testnet\\n\" before writing output",
+        "status": "passed"
+      },
+      {
+        "name": "rejects invalid inline testnet target \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.testnet\" before writing output",
+        "status": "passed"
+      }
+    ]
+  },
+  "serverTypeScript": "passed",
+  "containerSmoke": {
+    "containerChecks": "passed",
+    "bootstrapPrivateEndpoint": 503,
+    "fakeQuoteRejected": true,
+    "ownerOnlyFakeQuoteRejected": true,
+    "genuineHardwareVerified": false,
+    "uid": 1000
+  }
+}

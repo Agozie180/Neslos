@@ -1,0 +1,106 @@
+{
+  "format": "neslos-tdx-deployment-record-v1",
+  "recordedAt": "2026-11-09T11:54:59.506Z",
+  "verifiedAt": "2026-11-09T07:59:10.770Z",
+  "vmUuid": "73f70d1d-b63f-4009-96c1-24ec49e14478",
+  "appId": "a555e92fe263680b65331a165f2d8305b2099745",
+  "instanceId": "a0f7ca820e726b061758eb6ddd19cbd73eff1bf1",
+  "endpoint": "https://a555e92fe263680b65331a165f2d8305b2099745-8443.dstack-pha1-prod9.phala.network",
+  "status": "verified-private-owner-controls-retired",
+  "scheduledDeletion": "2026-11-09T08:26:46.622000Z",
+  "deletionConfirmedAt": "2026-11-09T11:54:04.866Z",
+  "activeCvmsAtCheck": 0,
+  "independentBootApproval": true,
+  "privateCommandsEnabledAtVerification": true,
+  "inferenceEnabled": false,
+  "paidInferenceCalls": 0,
+  "chainTransactions": 0,
+  "restartPersistenceVerified": false,
+  "files": [
+    {
+      "name": "attestation.json",
+      "bytes": 17022,
+      "sha256": "98db55d7ca9b14752a6dea7304a6ad730356edad2138d03b9cd37884c760fe56"
+    },
+    {
+      "name": "app-compose.json",
+      "bytes": 21045,
+      "sha256": "17a2ea610ae98a6fc7afe2d5862213f9786ea6708b08eadf044f466ab5fb0cdc"
+    },
+    {
+      "name": "verification.json",
+      "bytes": 4291,
+      "sha256": "9e965b450d0fe482a4f5e151ffa727f8560d61cebb0c825ff2bd9c9e94e41575"
+    },
+    {
+      "name": "boot-calculation.json",
+      "bytes": 5958,
+      "sha256": "257668ed26c3374a8aa9d8bfba9ad9640c04b5e21130610022494ca2807a7ef5"
+    },
+    {
+      "name": "boot-comparison.json",
+      "bytes": 1073,
+      "sha256": "0b5b4da2606e82624981926b12993ef4fa6153e57a74d752e3e9780dea7231e9"
+    },
+    {
+      "name": "vm-config.json",
+      "bytes": 2343,
+      "sha256": "7e144eb8c68a34d3c5f38c1ea5adf4cab837849645c919877d5a02d8eaafc250"
+    },
+    {
+      "name": "approved-policy.json",
+      "bytes": 592,
+      "sha256": "2342e12c755212fe886f9a6e0c075ee82b70799ab395221a5edea29a15599dab"
+    },
+    {
+      "name": "private-command-results.json",
+      "bytes": 1296,
+      "sha256": "63359f9870baedca86f7c96145cfeca08078a9c83b4a42e41d4da48377320078"
+    },
+    {
+      "name": "registry-verification.json",
+      "bytes": 575,
+      "sha256": "e57f0da4426ef4e2b83139565f6885fbc64cc6334973c2fe7ff2fa26700b58db"
+    },
+    {
+      "name": "source-receipt.json",
+      "bytes": 9588,
+      "sha256": "670329376ac80a0890d8844103595af2cddb8550ada268eab2db93bdbe7ad705"
+    },
+    {
+      "name": "inference-readiness.json",
+      "bytes": 981,
+      "sha256": "36e6a61d04a0c5ea124d9f8eb6f0cdb42c4f3222409d26bfd1f96d89b9193efa"
+    },
+    {
+      "name": "retirement.json",
+      "bytes": 280,
+      "sha256": "5b1a92cd73ac4e59e8866a3468dfc2295f1522210078119de7c37da648d5e817"
+    },
+    {
+      "name": "budget-summary.json",
+      "bytes": 285,
+      "sha256": "d1859f7db0b9d1bc9ceba55a2aa65a8318e9cf5f9a0d53e69b156667f4a4d293"
+    },
+    {
+      "name": "boot-calculator.rs",
+      "bytes": 2343,
+      "sha256": "b3191cfd3bd7f60eb5074c33be4880c5e0f5cabf6e1c2794f7ae978a356a7664"
+    },
+    {
+      "name": "os-sha256sum.txt",
+      "bytes": 754,
+      "sha256": "ec43cb8c5e04b6bb6c53b33b16076a01d83d01f7f4b703f2f78a0d947d6247e6"
+    },
+    {
+      "name": "os-metadata.json",
+      "bytes": 679,
+      "sha256": "a724f0ee2bc9c61937b1aa26ce10dab9b289b1ea6b42d10b4464df824ea53319"
+    },
+    {
+      "name": "local-checks.json",
+      "bytes": 2539,
+      "sha256": "f8ab538a484aff0dc6c1d5af70f3b13d84dd85726610b07d446efb9a93a316b2"
+    }
+  ]
+}

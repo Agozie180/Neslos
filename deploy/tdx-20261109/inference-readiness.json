@@ -1,0 +1,35 @@
+{
+  "checkedAt": "2026-11-09T07:09:07.728Z",
+  "inferenceCalls": 0,
+  "modelId": "Qwen/Qwen3.8-27B",
+  "hardwareTcb": "UpToDate",
+  "gpuEvidence": "verified",
+  "actions": 31,
+  "selected": {
+    "file": "prod/qwen38-27b-abliterated-cc-1gpu.yaml",
+    "services": [
+      "model-sg-qwen38-27b-fp8-tp1-lora",
+      "proxy-qwen38-27b"
+    ]
+  },
+  "signingKeyStillSharedWithEarlierOtherDeployment": true,
+  "signerFingerprint": "baa3ecbd95e41766879e007a0dd7645dd614ec4145e87d3bcbf6c143211abf1a",
+  "approved": false,
+  "buildVerified": false,
+  "failure": "PROVENANCE_COMPOSE_SPLIT_REFERENCE",
+  "upstream": [
+    {
+      "source": "routingIssue",
+      "httpStatus": 200,
+      "state": "open",
+      "updated": "2026-09-18T15:21:01Z",
+      "title": "Direct endpoints: return the complete serving model-attestation set",
+      "url": "https://github.com/nearai/cloud-api/issues/1087"
+    },
+    {
+      "source": "sdk",
+      "httpStatus": 200,
+      "version": "0.3.0"
+    }
+  ]
+}

@@ -1,10 +1,10 @@
-import { InferenceClient, verifyDeploymentImageProvenance, type MeasuredDeployment } from '@nearai/inference-sdk/node';
+import { InferenceClient, type MeasuredDeployment } from '@nearai/inference-sdk/node';
 import { z } from 'zod';
 import type { AgentReport, Policy, ResearchResult } from './types.js';
 import { fetchJson, rankMarkets } from './research.js';
 import { assessmentSchema } from './strategy.js';
 import { DISABLED_INFERENCE_BUDGET, estimateInference, inferenceBudgetSchema, type InferenceReservation } from './inference-budget.js';
-import { GATEWAY_IMAGE_POLICIES, checkModelDeploymentReference, createBootPinnedTdxQuoteVerifier, inferenceBootPolicySchema, modelDeploymentPolicySchema, verifyModelBuildProvenance } from './inference-provenance.js';
+import { checkModelDeploymentReference, createBootPinnedTdxQuoteVerifier, inferenceBootPolicySchema, modelDeploymentPolicySchema, verifyGatewayBuildProvenance, verifyModelBuildProvenance } from './inference-provenance.js';
 
 const pin = z.object({ osImageHash: z.string().regex(/^[a-f0-9]{64}$/), composeHash: z.string().regex(/^[a-f0-9]{64}$/), boot: inferenceBootPolicySchema }).strict();
 export const inferencePolicySchema = z.object({ gateway: pin, model: pin, modelId: z.string().min(1).max(100), modelDeployment: modelDeploymentPolicySchema, budget: inferenceBudgetSchema.default(DISABLED_INFERENCE_BUDGET) }).strict();
@@ -33,7 +33,7 @@ export function createVerifiedInferenceClient(input: InferencePolicy, apiKey: st
       apiKey, e2ee: true, attestationCacheTimeToLiveMs: 0,
       gatewayVerification: { includeSpkiFingerprint: true, policy: { acceptedTcbStatuses: ['UpToDate'] }, verifiers: {
         tdxQuote: createBootPinnedTdxQuoteVerifier(policy.gateway.boot),
-        deployment: async d => { checkDeployment(d, policy.gateway); await verifyDeploymentImageProvenance({ appCompose: d.appCompose, imagePolicies: GATEWAY_IMAGE_POLICIES }); },
+        deployment: async d => { checkDeployment(d, policy.gateway); await verifyGatewayBuildProvenance(d.appCompose); },
       } },
       modelVerification: { policy: { acceptedTcbStatuses: ['UpToDate'], gpuEvidence: 'required' }, verifiers: {
         tdxQuote: createBootPinnedTdxQuoteVerifier(policy.model.boot),

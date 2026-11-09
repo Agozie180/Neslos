@@ -1,0 +1,10 @@
+{
+  "at": "2026-11-09T11:54:04.866Z",
+  "authorizedMaximumUsd": "3.00",
+  "hostingAllocationUsd": "2.75",
+  "inferenceAllocationUsd": "0.25",
+  "conservativeReservedOrSpentUsd": "0.182340",
+  "observedBalanceDecreaseUsd": "0.083917",
+  "activeInstances": 0,
+  "paidInferenceCalls": 0
+}

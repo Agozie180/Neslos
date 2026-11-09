@@ -1,0 +1,125 @@
+{
+  "startedAt": "2026-11-07T21:31:03.671Z",
+  "platform": "linux",
+  "node": "v24.22.2",
+  "project": "neslos-wsl-smoke-20261107213103",
+  "work": "/home/useragozie/.cache/neslos-wsl-smoke-20261107213103",
+  "checks": [
+    {
+      "label": "01-compose-validation",
+      "startedAt": "2026-11-07T21:31:03.757Z",
+      "completedAt": "2026-11-07T21:31:03.902Z",
+      "code": 0,
+      "expected": 0,
+      "passed": true
+    },
+    {
+      "label": "02-exact-bundle-setup",
+      "startedAt": "2026-11-07T21:31:03.907Z",
+      "completedAt": "2026-11-07T21:33:40.716Z",
+      "code": 0,
+      "expected": 0,
+      "passed": true
+    },
+    {
+      "label": "03-missing-hardware-fails-closed",
+      "startedAt": "2026-11-07T21:33:40.728Z",
+      "completedAt": "2026-11-07T21:33:46.674Z",
+      "code": 1,
+      "expected": 1,
+      "passed": true
+    },
+    {
+      "label": "04-exact-startup-smoke",
+      "startedAt": "2026-11-07T21:33:46.699Z",
+      "completedAt": "2026-11-07T21:33:58.837Z",
+      "code": 0,
+      "expected": 0,
+      "passed": true
+    },
+    {
+      "label": "05-installed-bundle-hashes",
+      "startedAt": "2026-11-07T21:33:58.843Z",
+      "completedAt": "2026-11-07T21:34:05.641Z",
+      "code": 0,
+      "expected": 0,
+      "passed": true
+    },
+    {
+      "label": "06-standard-image-build",
+      "startedAt": "2026-11-07T21:34:06.155Z",
+      "completedAt": "2026-11-07T21:34:10.527Z",
+      "code": 0,
+      "expected": 0,
+      "passed": true
+    },
+    {
+      "label": "07-standard-image-smoke",
+      "startedAt": "2026-11-07T21:34:10.540Z",
+      "completedAt": "2026-11-07T21:34:17.899Z",
+      "code": 0,
+      "expected": 0,
+      "passed": true
+    },
+    {
+      "label": "08-standard-image-hashes",
+      "startedAt": "2026-11-07T21:34:17.905Z",
+      "completedAt": "2026-11-07T21:34:30.955Z",
+      "code": 0,
+      "expected": 0,
+      "passed": true
+    },
+    {
+      "label": "09-image-metadata",
+      "startedAt": "2026-11-07T21:34:30.985Z",
+      "completedAt": "2026-11-07T21:34:31.175Z",
+      "code": 0,
+      "expected": 0,
+      "passed": true
+    },
+    {
+      "label": "10-test-resource-cleanup",
+      "startedAt": "2026-11-07T21:34:31.195Z",
+      "completedAt": "2026-11-07T21:34:32.066Z",
+      "code": 0,
+      "expected": 0,
+      "passed": true
+    }
+  ],
+  "cloudRequests": 0,
+  "genuineHardwareVerified": false,
+  "composeSha256": "4eb547066a620d79ebcbe9ea77228d63c2e1c0a8e501ed1a6c8ce1ea37fe625c",
+  "localOnlyOverrides": [
+    "Remove host port publishing",
+    "Remove unavailable host dstack socket; harness supplies explicit fixture socket",
+    "Disable runtime external networking",
+    "Read-only smoke harness mount"
+  ],
+  "inlineSmoke": {
+    "containerChecks": "passed",
+    "bootstrapPrivateEndpoint": 503,
+    "fakeQuoteRejected": true,
+    "genuineHardwareVerified": false,
+    "uid": 1000
+  },
+  "imageTag": "neslos-tee:wsl-smoke-20261107213103",
+  "imageId": "sha256:291e071241ae52de15793685af4a4d85db0b2505600ef8d1218f9e86def4ad86",
+  "imageSmoke": {
+    "containerChecks": "passed",
+    "bootstrapPrivateEndpoint": 503,
+    "fakeQuoteRejected": true,
+    "genuineHardwareVerified": false,
+    "uid": 1000
+  },
+  "imageVerification": {
+    "platform": "linux",
+    "arch": "x64",
+    "uid": 1000,
+    "verifiedFiles": 50,
+    "dependencyTreeSha256": "074a0c982d753ebd26dd6d5e0bffc14bd5837c424208195fcb7850fc7fa942fc",
+    "dependencyFiles": 19948,
+    "matchesRejectedBundle": true
+  },
+  "status": "passed",
+  "completedAt": "2026-11-07T21:34:32.072Z"
+}

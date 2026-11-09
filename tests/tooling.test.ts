@@ -8,7 +8,9 @@ let root: string;
 async function put(path: string, value: string) { await mkdir(resolve(path, '..'), { recursive: true }); await writeFile(path, value); }
 async function script(name: string, target: string) { await mkdir(join(target, 'scripts'), { recursive: true }); await copyFile(resolve('scripts', name), join(target, 'scripts', name)); }
 function run(target: string, name: string, args: string[], extraEnv: NodeJS.ProcessEnv = {}) {
-  return spawnSync(process.execPath, [join(target, 'scripts', name), ...args], { cwd: target, env: { ...process.env, ...extraEnv }, encoding: 'utf8', timeout: 15000 });
+  // A WSL run binds its real checkout through NESLOS_SOURCE_ROOT. Each isolated
+  // fixture must measure itself, not repeatedly hash the mounted Windows repo.
+  return spawnSync(process.execPath, [join(target, 'scripts', name), ...args], { cwd: target, env: { ...process.env, NESLOS_SOURCE_ROOT: target, ...extraEnv }, encoding: 'utf8', timeout: 15000 });
 }
 beforeEach(async () => { root = await mkdtemp(join(tmpdir(), 'neslos-evidence-')); });
 afterEach(async () => { await rm(root, { recursive: true, force: true }); });

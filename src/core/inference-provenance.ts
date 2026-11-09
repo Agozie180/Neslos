@@ -14,6 +14,38 @@ const MODEL_IMAGES = { 'nearaidev/vllm-proxy-rs': { repository: 'nearai/inferenc
 const MANAGER_POLICY = { repository: 'nearai/compose-manager', workflow: '.github/workflows/build.yml' };
 const MAX_COMPOSE_BYTES = 1_000_000;
 
+/** Core gateway images are mandatory; verify optional VPC components when present.
+ * The caller still pins the exact authenticated Compose hash independently.
+ */
+export function gatewayImagePolicies(appCompose: string): Record<string, ImageProvenancePolicy> {
+  let images: string[];
+  try {
+    if (typeof appCompose !== 'string' || Buffer.byteLength(appCompose) > MAX_COMPOSE_BYTES) throw new Error();
+    const app = z.object({ docker_compose_file: z.string().max(MAX_COMPOSE_BYTES) }).parse(JSON.parse(appCompose));
+    const compose = z.object({ services: z.record(z.string(), z.object({ image: z.string() })) }).parse(
+      parse(app.docker_compose_file, { merge: true, maxAliasCount: 500, logLevel: 'error' }),
+    );
+    if (Buffer.byteLength(JSON.stringify(compose)) > MAX_COMPOSE_BYTES) throw new Error();
+    images = Object.values(compose.services).map(service => service.image.replace(/^docker\.io\//, ''));
+  } catch { throw new Error('PROVENANCE_GATEWAY_COMPOSE'); }
+  const present = new Set<string>();
+  for (const image of images) {
+    const pinned = /^([a-z0-9][a-z0-9./:_-]*)@sha256:[a-f0-9]{64}$/.exec(image);
+    if (!pinned || pinned[0] !== image) throw new Error('PROVENANCE_GATEWAY_IMAGE_PIN');
+    const repository = pinned[1]!.replace(/:[^/]*$/, '');
+    if (repository.startsWith('nearaidev/') && !Object.hasOwn(GATEWAY_IMAGE_POLICIES, repository)) throw new Error('PROVENANCE_GATEWAY_UNKNOWN_IMAGE');
+    present.add(repository);
+  }
+  for (const required of ['nearaidev/cloud-api', 'nearaidev/cvm-ingress']) {
+    if (!present.has(required)) throw new Error('PROVENANCE_GATEWAY_REQUIRED_IMAGE');
+  }
+  return Object.fromEntries(Object.entries(GATEWAY_IMAGE_POLICIES).filter(([repository]) => present.has(repository)));
+}
+
+export async function verifyGatewayBuildProvenance(appCompose: string, githubToken?: string) {
+  await verifyDeploymentImageProvenance({ appCompose, imagePolicies: gatewayImagePolicies(appCompose), githubToken });
+}
+
 const bootMeasurement = z.string().regex(/^[a-f0-9]{96}$/);
 /** Derive these from reviewed OS artifacts and VM configuration, never the service's quote. */
 export const inferenceBootPolicySchema = z.object({ mrTd: bootMeasurement, rtMr0: bootMeasurement, rtMr1: bootMeasurement, rtMr2: bootMeasurement }).strict();

@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/run.mjs build",
+    "build:web": "node scripts/run.mjs web",
     "start": "node scripts/run.mjs start",
     "test": "node scripts/run.mjs test",
     "verify": "node scripts/run.mjs verify",
@@ -21,6 +22,7 @@
     "private": "node scripts/run.mjs private",
     "owner": "node scripts/run.mjs owner",
     "commerce": "node scripts/run.mjs commerce",
+    "confidential": "node scripts/run.mjs confidential",
     "cloud:status": "node scripts/cloud.mjs",
     "tee:bundle": "node scripts/tee-bundle.mjs",
     "build:contract": "node scripts/contract.mjs build",

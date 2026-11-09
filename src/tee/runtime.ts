@@ -5,7 +5,7 @@ import { createTeeIdentity, freshChallenge, teePolicySchema, verifyTeeEvidence, 
 import { decryptChannel, encryptChannel, type Envelope } from '../core/channel.js';
 import { canonical, commitment, sha256, signHash } from '../core/crypto.js';
 import { inferencePolicySchema, PrivateResearchers, type InferencePolicy } from '../core/inference.js';
-import { checkInferenceBudget, inferenceReservationSchema, inferenceUsage, type InferenceReservation } from '../core/inference-budget.js';
+import { checkInferenceBudget, DISABLED_INFERENCE_BUDGET, inferenceReservationSchema, inferenceUsage, type InferenceBudgetPolicy, type InferenceReservation } from '../core/inference-budget.js';
 import { selectStrategy } from '../core/strategy.js';
 import { IntentsClient, type ValidatedQuote } from '../core/intents.js';
 import { readVault, viewNear } from '../core/near.js';
@@ -21,13 +21,14 @@ export { commandSchema, prepareSchema } from '../core/private-protocol.js';
 const requestSchema = z.object({ ownerToken: hashHex, expiresAt: z.number().int(), replyKey: hashHex, command: commandSchema }).strict();
 type Command = PrivateCommand;
 type Prepared = { authorization: Authorization; signature: string; hash: string };
-interface Options { network: 'mainnet' | 'testnet'; vault: string; teePolicy: TeePolicy; inferencePolicy: InferencePolicy; ownerToken: string; nearAiKey: string; journalPath: string; socket?: string }
+interface Options { network: 'mainnet' | 'testnet'; vault: string; teePolicy: TeePolicy; inferenceEnabled?: boolean; inferencePolicy?: InferencePolicy; ownerToken: string; nearAiKey?: string; journalPath: string; socket?: string }
 
 /** All private research, openings, quote inspection, signing and journal decryption happen here. */
 export class PrivateRuntime {
   private audit: AuditLog;
   private research = new ResearchService();
-  private researchers: PrivateResearchers;
+  private researchers?: PrivateResearchers;
+  private readonly inferenceBudget: InferenceBudgetPolicy;
   private intents = new IntentsClient();
   private journal: AuditJournal;
   private queue: Promise<unknown> = Promise.resolve();
@@ -39,12 +40,14 @@ export class PrivateRuntime {
   private failed = new Map<string, { fingerprint: string; reason: string }>();
   private prepared = new Map<string, { signed: Prepared; quote: ValidatedQuote }>();
   get ready() { return !this.journalUnavailable; }
+  get inferenceEnabled() { return this.researchers !== undefined; }
   private constructor(private options: Options, readonly identity: TeeIdentity) {
     this.audit = new AuditLog('attested', { signingSeed: identity.signingSeed, encryptionKey: identity.auditKey });
-    this.researchers = new PrivateResearchers(options.inferencePolicy, options.nearAiKey, async reservation => {
+    this.inferenceBudget = options.inferenceEnabled === false ? { ...DISABLED_INFERENCE_BUDGET } : inferencePolicySchema.parse(options.inferencePolicy).budget;
+    if (options.inferenceEnabled !== false) this.researchers = new PrivateResearchers(options.inferencePolicy!, options.nearAiKey!, async reservation => {
       if (this.journalUnavailable) throw new Error('JOURNAL_UNAVAILABLE');
       if (!this.executing) throw new Error('INFERENCE_COMMAND_REQUIRED');
-      checkInferenceBudget(this.inferenceReservations, reservation, inferencePolicySchema.parse(options.inferencePolicy).budget);
+      checkInferenceBudget(this.inferenceReservations, reservation, this.inferenceBudget);
       this.audit.append('inference.reserved', this.executing.id, { fingerprint: this.executing.fingerprint, reservation });
       await this.persist();
       this.inferenceReservations.push(reservation);
@@ -56,7 +59,10 @@ export class PrivateRuntime {
     nearAccount.parse(options.vault); hashHex.parse(options.ownerToken);
     // Keep attestation pins and credit authority on one validated startup snapshot.
     // A caller retaining the input object must not change them after verification.
-    options = { ...options, teePolicy: teePolicySchema.parse(options.teePolicy), inferencePolicy: inferencePolicySchema.parse(options.inferencePolicy) };
+    const inferenceEnabled = options.inferenceEnabled !== false;
+    if (!inferenceEnabled && (options.inferencePolicy || options.nearAiKey)) throw new Error('INFERENCE_DISABLED_CONFIGURATION');
+    if (inferenceEnabled && !options.nearAiKey) throw new Error('NEARAI_API_KEY is required.');
+    options = { ...options, inferenceEnabled, teePolicy: teePolicySchema.parse(options.teePolicy), inferencePolicy: inferenceEnabled ? inferencePolicySchema.parse(options.inferencePolicy) : undefined };
     const identity = await createTeeIdentity(options.socket);
     const challenge = freshChallenge();
     await verifyTeeEvidence(await identity.attest(challenge), options.teePolicy, challenge);
@@ -112,11 +118,12 @@ export class PrivateRuntime {
     return { nonce, envelope: response, signature: signHash(sha256(canonical({ nonce, envelope: response })), this.identity.signingKey) };
   }
   private async execute(command: Command): Promise<unknown> {
-    if (command.type === 'status') return { ready: this.ready, inference: { ...inferenceUsage(this.inferenceReservations), limits: inferencePolicySchema.parse(this.options.inferencePolicy).budget }, completedCommands: this.completed.size, commandLimit: JOURNAL_COMMAND_LIMIT, journalLimitBytes: JOURNAL_LIMIT_BYTES };
+    if (command.type === 'status') return { ready: this.ready, inference: { enabled: this.inferenceEnabled, ...inferenceUsage(this.inferenceReservations), limits: this.inferenceBudget }, completedCommands: this.completed.size, commandLimit: JOURNAL_COMMAND_LIMIT, journalLimitBytes: JOURNAL_LIMIT_BYTES };
     // Read-only export must remain available at the completed-command quota.
     // These responses are not appended to the journal they export (no recursive growth).
     if (command.type === 'audit-export') return this.exportAudit(command);
     if (command.type === 'audit-open') return this.openAudit(command);
+    if (!this.researchers && (command.type === 'research' || command.type === 'prepare')) throw new Error('PRIVATE_RESEARCH_DISABLED: this deployment enables owner status, observation and audit commands only.');
     if (this.journalUnavailable) throw new Error('JOURNAL_UNAVAILABLE: restore durable storage and restart before another private command.');
     const fingerprint = sha256(canonical(command));
     const previous = this.completed.get(command.id);
@@ -178,7 +185,7 @@ export class PrivateRuntime {
     };
     const research = await this.research.discover({ refresh: true });
     if (research.sourceMode !== 'live') throw new Error('LIVE_RESEARCH_REQUIRED');
-    const reports = await this.researchers.research(research, policy, command.prompt, chain.output_assets);
+    const reports = await this.researchers!.research(research, policy, command.prompt, chain.output_assets);
     const ranking = rankMarkets(research.markets, policy, chain.output_assets), strategy = selectStrategy(ranking, reports);
     const result = { research, reports, ranking, strategy, chainBlock: state.blockHash,
       network: this.options.network, policyVersion: state.config.policy_version,
@@ -207,7 +214,7 @@ export class PrivateRuntime {
     const ranked = rankMarkets(research.markets, policy, state.config.policy.output_assets);
     if (command.kind === 'allocation-reserve' && !ranked.some(m => m.eligible)) throw new Error('NO_ELIGIBLE_MARKET');
     if (command.kind === 'private-payment' && !state.config.policy.output_assets.includes('nep141:usdt.tether-token.near')) throw new Error('OUTPUT_ASSET: the vault policy excludes the destination token.');
-    const reports = await this.researchers.research(research, policy, command.prompt, state.config.policy.output_assets);
+    const reports = await this.researchers!.research(research, policy, command.prompt, state.config.policy.output_assets);
     const strategyDecision = selectStrategy(ranked, reports);
     const best = ranked.find(m => m.id === strategyDecision.selectedMarketId);
     if (command.kind === 'allocation-reserve' && !best) throw new Error('RESEARCH_REFUSED: no eligible market received all three researchers\' approval.');

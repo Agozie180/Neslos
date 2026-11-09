@@ -83,14 +83,18 @@ export async function loadConfiguration({ cwd = process.cwd(), env: inherited = 
   return config;
 }
 
-export async function createReport({ env = {}, warnings = [], cloudSource = 'environment', fetchImpl = fetch, now = () => new Date() } = {}) {
+export async function createReport({ env = {}, warnings = [], cloudSource = 'environment', deploymentChecks = false, fetchImpl = fetch, now = () => new Date() } = {}) {
   const report = { checkedAt: now().toISOString(), inferenceRequests: 0, provisionedInstances: 0, warnings: [...warnings], phala: {} };
   const cache = new Map();
+  let cloudAccount;
   function probe(service, key) {
     const id = service + ':' + key;
     if (!cache.has(id)) {
       const headers = service === 'privateAi' ? { authorization: 'Bearer ' + key } : { 'X-API-Key': key, 'X-Phala-Version': PHALA_VERSION };
-      cache.set(id, inspect(PHALA_API + (service === 'privateAi' ? '/private_ai/self' : '/auth/me'), headers, 'GET', fetchImpl).then(result => account(result, service)));
+      cache.set(id, inspect(PHALA_API + (service === 'privateAi' ? '/private_ai/self' : '/auth/me'), headers, 'GET', fetchImpl).then(result => {
+        if (service === 'cloud' && result.ok) cloudAccount = result.value;
+        return account(result, service);
+      }));
     }
     return cache.get(id);
   }
@@ -122,6 +126,15 @@ export async function createReport({ env = {}, warnings = [], cloudSource = 'env
     report.phala.cloud.instances = !result.ok ? { status: result.status, httpStatus: result.httpStatus }
       : Array.isArray(rows) && rows.every(record) ? { status: 'available', returnedCount: rows.length }
       : { status: 'malformed-response' };
+    if (deploymentChecks) {
+      const slug = cloudAccount.workspace.slug;
+      const headers = { 'X-API-Key': env.PHALA_CLOUD_API_KEY, 'X-Phala-Version': PHALA_VERSION };
+      const [workspace, quotas] = await Promise.all([
+        inspect(PHALA_API + '/workspaces/' + encodeURIComponent(slug), headers, 'GET', fetchImpl),
+        inspect(PHALA_API + '/workspaces/' + encodeURIComponent(slug) + '/quotas', headers, 'GET', fetchImpl),
+      ]);
+      report.phala.cloud.deploymentChecks = deploymentAccountChecks(cloudAccount, workspace, quotas);
+    }
   }
   if (nonempty(env.NEARAI_API_KEY)) {
     const result = await inspect('https://cloud-api.near.ai/v1/check_api_key', { authorization: 'Bearer ' + env.NEARAI_API_KEY }, 'POST', fetchImpl);
@@ -146,7 +159,33 @@ export async function createReport({ env = {}, warnings = [], cloudSource = 'env
   }));
 }
 
+// These are observable prerequisites, not the provider's undisclosed eligibility
+// decision. Missing fields remain unknown; a valid API key does not mean deployable.
+export function deploymentAccountChecks(current, workspace, quotas) {
+  const role = String(current?.workspace?.role ?? '').toLowerCase();
+  const state = workspace.ok && record(workspace.value) ? workspace.value : {};
+  const quota = quotas.ok && record(quotas.value?.quotas) ? quotas.value.quotas : {};
+  const metric = name => {
+    const value = quota[name];
+    return record(value) && Number.isSafeInteger(value.limit) && value.limit >= 0 && Number.isSafeInteger(value.remaining) && value.remaining >= 0 && value.remaining <= value.limit
+      ? { limit: value.limit, remaining: value.remaining } : null;
+  };
+  return {
+    emailVerified: typeof current?.user?.email_verified === 'boolean' ? current.user.email_verified : null,
+    workspaceRole: ['owner', 'admin', 'member'].includes(role) ? role : null,
+    billingStatus: ['active', 'suspended', 'abandoned'].includes(state.billing_status) ? state.billing_status : null,
+    workspaceStatus: workspace.ok ? record(workspace.value) ? 'available' : 'malformed-response' : workspace.status,
+    quotaStatus: quotas.ok ? record(quotas.value?.quotas) ? 'available' : 'malformed-response' : quotas.status,
+    quotas: { vmSlots: metric('vm_slots'), vcpu: metric('vcpu'), memoryMb: metric('memory_mb'), diskGb: metric('disk_gb') },
+    providerPolicyAcceptance: 'not-established',
+  };
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  try { console.log(JSON.stringify(await createReport(await loadConfiguration()), null, 2)); }
+  try {
+    const args = process.argv.slice(2);
+    if (args.some(arg => arg !== '--deployment-checks') || args.length > 1) throw new Error('Unknown cloud diagnostic option.');
+    console.log(JSON.stringify(await createReport({ ...await loadConfiguration(), deploymentChecks: args.includes('--deployment-checks') }), null, 2));
+  }
   catch { console.error('Cloud diagnostics could not load configuration. Check local file access and .env syntax. No paid requests were made.'); process.exitCode = 1; }
 }

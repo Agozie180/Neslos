@@ -76,6 +76,24 @@ beforeEach(async () => {
 });
 afterEach(async () => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.restoreAllMocks(); await rm(directory, { recursive: true, force: true }); });
 describe('encrypted private runtime', () => {
+  it('serves encrypted owner status and audit with inference explicitly disabled, without accepting research or preparation', async () => {
+    const fetcher = vi.fn(); vi.stubGlobal('fetch', fetcher);
+    const runtime = await PrivateRuntime.create({ network: 'testnet', vault: 'vault.testnet', teePolicy, inferenceEnabled: false, ownerToken: token, journalPath: join(directory, 'audit.json') });
+    expect(mocks.verify).toHaveBeenCalledTimes(1);
+    expect((await send(runtime, { type: 'status', id: randomUUID() })).value).toMatchObject({ ready: true, inference: { enabled: false, calls: 0, limits: { totalLimitNanoUsd: '0', maxCalls: 0 } } });
+    const audit = await send(runtime, { type: 'audit-export', id: randomUUID(), offset: 0 });
+    expect(audit.ok).toBe(true);
+    const bundle = JSON.parse(Buffer.from(audit.value.chunk, 'base64').toString('utf8'));
+    expect(verifyAudit(bundle, identity.executorPublicKey).valid).toBe(true);
+    const { amount: _amount, kind: _kind, counterparty: _counterparty, ...research } = command();
+    for (const request of [command(), { ...research, type: 'research' }]) {
+      expect((await send(runtime, request)).error).toContain('PRIVATE_RESEARCH_DISABLED');
+    }
+    await expect(send(runtime, { type: 'status', id: randomUUID() }, 'ff'.repeat(32))).rejects.toThrow('UNAUTHORIZED_PRIVATE_REQUEST');
+    expect(mocks.vault).not.toHaveBeenCalled(); expect(mocks.reports).not.toHaveBeenCalled();
+    expect(mocks.research).not.toHaveBeenCalled(); expect(fetcher).not.toHaveBeenCalled();
+    await expect(PrivateRuntime.create({ network: 'testnet', vault: 'vault.testnet', teePolicy, inferenceEnabled: false, nearAiKey: 'unexpected', ownerToken: token, journalPath: join(directory, 'other.json') })).rejects.toThrow('INFERENCE_DISABLED_CONFIGURATION');
+  });
   const budget: InferenceBudgetPolicy = { ...DISABLED_INFERENCE_BUDGET, totalLimitNanoUsd: '1000', dailyLimitNanoUsd: '1000', maxCalls: 3, inputNanoUsdPerToken: '1', outputNanoUsdPerToken: '1' };
   const reservation = () => ({ id: randomUUID(), modelId: 'fixture', createdAt: new Date().toISOString(), calls: 3, inputTokensBound: 100, outputTokensBound: 200, reservedNanoUsd: '300', requestHash: 'ab'.repeat(32) });
   it('rejects unconfigured confidential preparation before network, research, credit reservation or authorization signing', async () => {

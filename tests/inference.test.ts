@@ -6,7 +6,7 @@ vi.mock('@nearai/inference-sdk/node', async original => ({ ...await original<typ
 } }));
 vi.mock('../src/core/inference-provenance.js', async original => ({ ...await original<typeof import('../src/core/inference-provenance.js')>(), verifyModelBuildProvenance: mocks.modelBuild }));
 import { PrivateResearchers } from '../src/core/inference.js';
-import { composeManagerFixture, inferenceBootFixture, modelDeploymentFixture } from './fixtures/inference.js';
+import { composeManagerFixture, gatewayAppComposeFixture, inferenceBootFixture, modelDeploymentFixture } from './fixtures/inference.js';
 import { checkInferenceBudget, DISABLED_INFERENCE_BUDGET, inferenceUsage, type InferenceReservation } from '../src/core/inference-budget.js';
 import { DEFAULT_POLICY } from '../src/core/policy.js';
 import type { ResearchResult } from '../src/core/types.js';
@@ -91,7 +91,7 @@ describe('NEAR AI researcher orchestration with fixture SDK responses', () => {
     supplied.gateway.osImageHash = 'ee'.repeat(32);
     supplied.model.composeHash = 'ff'.repeat(32);
     supplied.modelId = 'replacement-model';
-    await expect(options.gatewayVerification.verifiers.deployment({ runtimeMeasurements: policy.gateway })).resolves.toBeUndefined();
+    await expect(options.gatewayVerification.verifiers.deployment({ runtimeMeasurements: policy.gateway, appCompose: gatewayAppComposeFixture })).resolves.toBeUndefined();
     expect(() => options.deploymentPolicy({ model: policy.modelId, deployment: { runtimeMeasurements: policy.model, composeManager: composeManagerFixture } })).not.toThrow();
     await expect(options.gatewayVerification.verifiers.deployment({ runtimeMeasurements: supplied.gateway })).rejects.toThrow('INFERENCE_MEASUREMENT');
     expect(() => options.deploymentPolicy({ model: supplied.modelId, deployment: { runtimeMeasurements: supplied.model } })).toThrow('Unapproved');
@@ -118,7 +118,7 @@ describe('NEAR AI researcher orchestration with fixture SDK responses', () => {
     await expect(options.modelVerification.verifiers.deployment(later)).rejects.toThrow('PROVENANCE_COMPOSE_AMBIGUOUS_MUTATION');
     expect(mocks.modelBuild).not.toHaveBeenCalled();
     mocks.gatewayBuild.mockRejectedValue(new Error('invalid build signature'));
-    await expect(options.gatewayVerification.verifiers.deployment({ runtimeMeasurements: policy.gateway })).rejects.toThrow('invalid build signature');
+    await expect(options.gatewayVerification.verifiers.deployment({ runtimeMeasurements: policy.gateway, appCompose: gatewayAppComposeFixture })).rejects.toThrow('invalid build signature');
     mocks.modelBuild.mockRejectedValue(new Error('invalid proxy build'));
     await expect(options.modelVerification.verifiers.deployment(model)).rejects.toThrow('invalid proxy build');
   });
