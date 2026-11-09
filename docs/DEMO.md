@@ -2,7 +2,7 @@
 
 The one sentence to remember: **agents can propose; only the policy can authorize.**
 
-Use the [live Vercel rehearsal](https://neslos.vercel.app) or the local application. The hosted frontend/API and three production browser tests passed on 9 November. Present the retained [testnet commerce proof](VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) and [TDX owner-command proof](TDX-PRIVATE-STAGE-2026-11-09.md) separately from the rehearsal. Private AI research is still awaiting its own live proof.
+Use the [live Vercel rehearsal](https://neslos.vercel.app) or the local application. The hosted frontend/API and three production browser tests passed on 9 November. Present the retained [testnet commerce proof](VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) and [private NEAR AI research proof](NEAR-PRIVATE-RESEARCH-2026-11-09.md) separately from the rehearsal. All three researchers completed inside independently verified TDX; the finite server is now retired.
 
 | Time | Action | Evidence to show |
 | --- | --- | --- |
@@ -12,7 +12,7 @@ Use the [live Vercel rehearsal](https://neslos.vercel.app) or the local applicat
 | 40–58s | Launch a $150 allocation-reserve rehearsal. | Researchers cite Rhea yield components and exit liquidity; the six stages advance. |
 | 58–68s | Inspect the leading opportunity. | Show its source, ranking rule, exclusions and public-position risk. A reserve is not a lending deposit. |
 | 68–83s | Open Audit trail → Verify integrity → Test a tampered copy. | Valid receipts pass in the browser; the altered copy is rejected. |
-| 83–90s | Show testnet enforcement and retained TDX owner-command evidence. | Distinguish these completed proofs from private AI research and funded confidential settlement, which remain unfinished. |
+| 83–90s | Show testnet enforcement and retained private NEAR AI research evidence. | Three signed reports, encrypted audit and restart checks passed in TDX. Disclose provider-administration trust for weights/routing and that funded settlement remains unfinished. |
 
 Use the reproducible reference checkbox for a stable recorded demonstration. Explain that the 1 November data is captured, not current. For a live-data demonstration, refresh and retain the actual source response/time.
 
@@ -20,7 +20,7 @@ Suggested narration:
 
 “Neslos is a private agent treasury on NEAR. Researchers discover opportunities; a strategist proposes; a deterministic guardian checks the owner's rules. The spending contract enforces the shared cap even when multiple agents compete. Sensitive production work belongs in an independently attested TEE, with encrypted, verified NEAR AI inference. And when an action is denied, the denial is just as verifiable as a successful settlement.”
 
-Use the dated hardware and chain receipts for the claims they demonstrate. Label the browser recording as a rehearsal; TDX owner status/audit does not establish encrypted AI research or funded settlement.
+Use the dated hardware, research and chain receipts for the claims they demonstrate. Label the browser recording as a rehearsal. The research archive proves the separate private-client/CLI flow under its declared trust policy; it does not establish a funded settlement or a currently running TDX endpoint.
 
 ## Submission preparation
 
