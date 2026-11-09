@@ -37,6 +37,10 @@ Outputs appear in artifacts: policy_vault.wasm, its ABI, contract-output.log and
 
 ## Hosting the rehearsal
 
+The rehearsal is live at **https://neslos.vercel.app**. Vercel builds the Vite frontend with `npm run build:web`, serves `dist/web`, and rewrites `/api/*` to `api/index.ts`. That entry exports the existing Express application, permits the configured Vercel origins, and registers mission work with `waitUntil` so a 202 response does not suspend execution. The function includes the reference dataset and has a 60-second limit. No TEE or owner signing credentials are required for this public rehearsal.
+
+Production health/session checks and three live browser tests passed on 9 November. In PowerShell, run `$env:NESLOS_E2E_URL='https://neslos.vercel.app'` followed by `npm run test:browser -- tests/e2e/control-room.spec.ts` to check the deployed demo. Rehearsal sessions are memory-only: function replacement or routing to another instance can expire them; they are not durable owner journals.
+
 The Dockerfile builds a standalone Node application. Set HOST=0.0.0.0 and PORT as required by the host. Behind HTTPS, set NODE_ENV=production and NESLOS_PUBLIC_ORIGIN to the exact public HTTPS origin. Production cookies require HTTPS.
 
 The application uses isolated, bounded, memory-only rehearsal sessions. Use a single process or sticky routing for a demo; a restart expires its sessions. Publish only after reviewing the intended host and public URL. Keep it available through judging.
@@ -117,7 +121,7 @@ Keep the same command ID and identical payload when recovering an interrupted re
 
 Authorizations are released only after the encrypted journal is persisted; Linux also syncs its directories after atomic writes. If persistence fails, the process refuses subsequent private commands with `JOURNAL_UNAVAILABLE`. Restore writable durable storage, retain the manifest and complete segment directory, and restart to recover from disk. Do not delete history to bypass recovery or reset inference credit. Immutable segments support bounded rotation up to 128 MB and 10,000 completed/failed commands. See the [backup and recovery procedure](OWNER-WORKSPACE.md#journal-backup-and-recovery). Authenticated requests that expire while queued are rejected before execution starts.
 
-The testnet fixture vault is deployed. A provisioned TEE, independently pinned hardware executor, verified inference, and funded mainnet integration remain unverified; no example measurement is accepted as a real one. The testnet CLI does not connect the rehearsal browser to the private runtime.
+The testnet fixture vault is deployed. Independently pinned TDX hardware and encrypted owner commands passed [live checks on 9 November](TDX-PRIVATE-STAGE-2026-11-09.md); that temporary CVM is retired. Private AI inference and funded mainnet integration remain unverified. The testnet CLI does not connect the rehearsal browser to the private runtime.
 
 ## Dry confidential quote probe
 

@@ -1,0 +1,149 @@
+{
+  "format": "neslos-private-ai-readiness-v1",
+  "recordedAt": "2026-11-09T13:29:39.476Z",
+  "approved": false,
+  "privateResearchEnabled": false,
+  "inferenceCalls": 0,
+  "hostingStarted": false,
+  "applicationCodeChanged": false,
+  "gatewayChecks": [
+    {
+      "modelId": "Qwen/Qwen3.8-27B",
+      "checkedAt": "2026-11-09T13:04:39.427Z",
+      "tcbStatus": "UpToDate",
+      "gpuEvidence": "verified",
+      "actionCount": 125,
+      "selector": {
+        "file": "prod/small-models.yaml",
+        "services": [
+          "proxy-qwen38-27b",
+          "model-sg-qwen38-27b-fp8-tp1-coloc"
+        ]
+      },
+      "selectorResult": {
+        "passed": false,
+        "failure": "PROVENANCE_COMPOSE_AMBIGUOUS_MUTATION"
+      },
+      "evidenceSha256": "24d9157484879f7732914f56c39aa402b733cdf285b876d5a76718c9bf578b56",
+      "evidenceRetainedPrivately": true
+    },
+    {
+      "modelId": "z-ai/glm-5.3-flash",
+      "checkedAt": "2026-11-09T13:11:00.800Z",
+      "tcbStatus": "UpToDate",
+      "gpuEvidence": "verified",
+      "actionCount": 241,
+      "selector": {
+        "file": "prod/GLM-5.3-Flash-SGL-TP2x4-W4AFP8-V12Q8.yaml",
+        "services": [
+          "proxy-glm53"
+        ]
+      },
+      "selectorResult": {
+        "passed": true,
+        "reference": {
+          "referenceKind": "latest-attempted-compose-up",
+          "commit": "4d64477b298038f59e92b268a2a5feb34e597fe0",
+          "file": "prod/GLM-5.3-Flash-SGL-TP2x4-W4AFP8-V12Q8.yaml",
+          "fileSha256": "e88b040e8ecdb7869ac855880719f6d184c035f0199753bef64ed338f8622922",
+          "services": [
+            "proxy-glm53"
+          ],
+          "managerImage": "nearaidev/compose-manager@sha256:a0c073085684e12e19f31bb279fc8da663a374199bfecc47b04167ae79eaa766",
+          "managerDigest": "sha256:a0c073085684e12e19f31bb279fc8da663a374199bfecc47b04167ae79eaa766",
+          "actionsSha256": "285ab71b575e207037c7cb28c8dc4422088a39d3205370b57aff7dd3279a9c22"
+        }
+      },
+      "evidenceSha256": "8ab3e8d4d6eff3e1b239bbad31efd14e7134fb35517f1b551c9dbbfc1616c7da",
+      "evidenceRetainedPrivately": true
+    },
+    {
+      "modelId": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+      "checkedAt": "2026-11-09T13:11:00.814Z",
+      "tcbStatus": "UpToDate",
+      "gpuEvidence": "verified",
+      "actionCount": 210,
+      "selector": {
+        "file": "prod/DeepSeek-V4.1-Flash-1017-vLLM-DEP8-Abliterated.yaml",
+        "services": [
+          "proxy-dsv41"
+        ]
+      },
+      "selectorResult": {
+        "passed": false,
+        "failure": "PROVENANCE_COMPOSE_SCOPE"
+      },
+      "evidenceSha256": "9e4be625d5350c6108081626aee8ffe501ede75a42108645dc4463f720af9404",
+      "evidenceRetainedPrivately": true
+    }
+  ],
+  "directChecks": [
+    {
+      "checkedAt": "2026-11-09T13:17:24.259Z",
+      "endpoint": "https://glm-5-3-flash.completions.near.ai/v1",
+      "tcbStatus": "UpToDate",
+      "gpuEvidence": "verified",
+      "tlsBinding": {
+        "kind": "attested",
+        "spkiFingerprint": "aaf70a60f0e55a3cfcdb3d58142a25e34b620c85e2d796e91edfd9086ca09b27"
+      },
+      "signingKeySha256": "0983b9b02994f83a6db2143de17d1c6fde81c76c5921004b04431efc22521040",
+      "measurements": {
+        "osImageHash": "91fd5d69ccee3e5ea4f2aeb8c9b632c4358c4ecfc29ba1aa6fb1e402af209829",
+        "composeHash": "a0e3c6f4f21a60ea3f5c96bc7ef319b03a184ca2049605399275fbcea74e8c5f"
+      },
+      "actionCount": 243,
+      "pinnedRead": {
+        "tlsConnected": true,
+        "status": 200
+      },
+      "strictSelection": "PROVENANCE_COMPOSE_CONTROL",
+      "evidenceSha256": "b8a7953ea59c585336c24408ea4bf620edc1e5a42b55b66917eed7018d78848b",
+      "evidenceRetainedPrivately": true
+    },
+    {
+      "checkedAt": "2026-11-09T13:22:23.401Z",
+      "endpoint": "https://glm-5-3-flash-long.completions.near.ai/v1",
+      "tcbStatus": "UpToDate",
+      "gpuEvidence": "verified",
+      "tlsBinding": {
+        "kind": "attested",
+        "spkiFingerprint": "50f39268dc89816aa722cb9758da8a6b905013ed788cd46787632996ae2f7ed6"
+      },
+      "signingKeySha256": "0983b9b02994f83a6db2143de17d1c6fde81c76c5921004b04431efc22521040",
+      "measurements": {
+        "osImageHash": "91fd5d69ccee3e5ea4f2aeb8c9b632c4358c4ecfc29ba1aa6fb1e402af209829",
+        "composeHash": "a7de0bba194b6466c5c7b8dcfb907b6b60404ab2ba6de8b5d0cf63c2145d6868"
+      },
+      "actionCount": 237,
+      "pinnedRead": {
+        "tlsConnected": true,
+        "status": 200
+      },
+      "strictSelection": "PROVENANCE_COMPOSE_CONTROL",
+      "evidenceSha256": "2aa58e5a5b481b24633528fccaeb3f81b8908e045efea54723cdd516fa09aba8",
+      "evidenceRetainedPrivately": true
+    }
+  ],
+  "independentReview": {
+    "endpoint": "https://glm-5-3-flash.completions.near.ai/v1",
+    "bootRegistersMatched": true,
+    "rtmr0EventsMatched": 13,
+    "proxyImageBuildVerified": true,
+    "managerImageBuildVerified": true,
+    "fullRuntimeApproval": false,
+    "sourceFileSha256": "e88b040e8ecdb7869ac855880719f6d184c035f0199753bef64ed338f8622922",
+    "reviewSha256": "4f691f230a77c299da815bd1f66329737eea2d8f3f694f8d31535278c9a6337f",
+    "evidenceRetainedPrivately": true
+  },
+  "unresolved": [
+    "The current strict deployment-history policy rejects the returned source/control histories; no exception or weaker policy was installed.",
+    "A TLS-bound endpoint and signed source/build records do not establish the successful current engine/container configuration or its effective deployment environment.",
+    "Public serving-set coverage and canonical model-to-deployment evidence remain open upstream. Direct TLS pinning is a verified candidate transport, not complete runtime approval."
+  ],
+  "upstream": [
+    "https://github.com/nearai/cloud-api/issues/1063",
+    "https://github.com/nearai/cloud-api/issues/1085",
+    "https://github.com/nearai/cloud-api/issues/1087"
+  ]
+}

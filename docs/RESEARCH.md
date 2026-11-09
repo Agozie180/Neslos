@@ -1,6 +1,6 @@
 # Hackathon research
 
-Research refreshed: 6 November 2026. Read the [live brief](https://nearhackathon.com/HACKATHON.md) again before submission; the latest full copy is in [sources](sources/HACKATHON-2026-11-06.md). [Current status](STATUS.md), [inference review](INFERENCE-LIVE-REVIEW-2026-11-06.md) and [testnet/Confidential Intents research](CONFIDENTIAL-TESTNET-RESEARCH-2026-11-06.md) include the latest findings beyond the [foundation audit](AUDIT-2026-11-06.md).
+Project status refreshed: 9 November 2026. Event facts below come from the 6 November research; read the [live brief](https://nearhackathon.com/HACKATHON.md) again before submission. The latest retained full copy is in [sources](sources/HACKATHON-2026-11-06.md). See [current status](STATUS.md), [inference review](INFERENCE-LIVE-REVIEW-2026-11-06.md) and [testnet/Confidential Intents research](CONFIDENTIAL-TESTNET-RESEARCH-2026-11-06.md) for dated evidence.
 
 ## Verified event facts
 
@@ -56,13 +56,13 @@ Q-006 in the event brief quotes 0.2% without a 1Click JWT, while the current API
 
 The Rhea response captured on 1 November contains 18 raw markets; 10 match the supported-token normalizer. It is retained in `fixtures/rhea-2026-11-01.json`. Reference mode labels the capture date and is never accepted to authorize funded private activity.
 
-The live confidential 1Click dry quote probe returned **HTTP 401 without an API JWT**. Ownership authentication, no-spend session refresh and private-balance reads succeeded, but the free partner key for `ONECLICK_JWT` is still missing. Quote and recovery-route viability remain unverified. Preparation now stops before paid research when the partner credential is absent. No successful live quote or funded settlement is claimed. [Authentication and recovery](CONFIDENTIAL-AUTH.md).
+The early confidential 1Click probe returned **HTTP 401 without a partner JWT**. Subsequent credentialed checks verified authentication, private-balance reads, signed 0.001 wNEAR shield/unshield quotes and an unsigned recovery intent. Those 6 November quotes are expired; funded settlement remains unfinished. Preparation stops before paid research if the partner credential is absent. [Dated evidence](TESTNET-TDX-2026-11-07.md) and [authentication and recovery](CONFIDENTIAL-AUTH.md).
 
 Reading and testing official SDK 0.1.26 showed that its signature excludes `confidentiality`, while covering `recipientType`, `recipient` and output minima. The adapter therefore requires signed `CONFIDENTIAL_INTENTS` routing and validates the request echo. [Privacy analysis](PRIVACY.md) describes the remaining provider trust.
 
 The policy vault has passed local sandbox execution and its [upgrade and commerce proof are deployed on testnet](VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md). The [inference review](INFERENCE-LIVE-REVIEW-2026-11-06.md) independently reproduced MRTD/RTMR0–2 for both provider VMs, including all 26 RTMR0 event digests combined. Raw provider VM configuration resolved the earlier SDK-normalization gap. Current model runtime/history approval remains unresolved; the original and current reports share a signer, so selecting it does not uniquely identify a deployment. No paid inference was called.
 
-The [Phala request audit](TDX-DEPLOYMENT-STATUS.md#request-compatibility-audit-addendum) confirmed an oversized inline payload and added local size guards. That client fix does not establish the cause or removal of the provider's terms-of-use denial. Provider review remains necessary; no Neslos TDX instance launched. [Verification record](PROOF.md) separates these results from remaining live claims; [security notes](../SECURITY.md) record the transitive `elliptic` advisory.
+The [Phala request audit](TDX-DEPLOYMENT-STATUS.md#request-compatibility-audit-addendum) confirmed an oversized historical inline payload and added size guards. A standard image subsequently deployed successfully, and [private owner commands passed live TDX tests on 9 November](TDX-PRIVATE-STAGE-2026-11-09.md). The temporary instance is retired. The earlier policy-rejection predicate remains undisclosed; it is not a current claim that hosting has never worked. [Verification record](PROOF.md) separates these results from unfinished inference; [security notes](../SECURITY.md) record the transitive `elliptic` advisory.
 
 ## Product conclusions
 
@@ -70,4 +70,4 @@ The [Phala request audit](TDX-DEPLOYMENT-STATUS.md#request-compatibility-audit-a
 
 Neslos must demonstrate its negative case as clearly as its successful case: an untrusted proposal that cannot spend. A funded reserve is not a DeFi position. A local signed receipt is not a chain transaction. A downloaded quote is not verified hardware.
 
-The deployed testnet proof, provider boot reconstruction, current runtime approval, Neslos TDX hosting, paid inference, confidential settlement and final publication are distinct claims. The first two have evidence; the remaining live private steps are unfinished. A testnet-only submission can accurately present completed work without purchasing a mainnet vault or claiming the missing integrations.
+The deployed testnet proof, provider boot reconstruction, model runtime approval, Neslos TDX hosting, paid inference, confidential settlement and final publication are distinct claims. Testnet enforcement, TDX owner commands and the live Vercel rehearsal have evidence. Model approval, private AI research, funded confidential settlement and final submission remain unfinished. A testnet-only submission can present completed work without purchasing a mainnet vault or claiming missing integrations.

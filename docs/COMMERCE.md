@@ -93,4 +93,4 @@ node --import tsx scripts/upgrade.ts execute --credentials /private/neslos.testn
 
 Retain the plan, exact WASM and transaction journal. Repeating the same approved operation observes the saved hash even when the code is already upgraded. New code without the corresponding journal is refused instead of being deployed again. If the upgrade succeeded but an observation/output step failed, use the same plan and journal; do not initialize the vault or create a new deployment.
 
-Sources: [Rhea SDK](https://github.com/rhea-finance/burrow-sdk-python), [Agent Market protocol](https://docs.market.near.ai/a2a/hire-agent-using-x402.md), [privacy boundaries](PRIVACY.md), [current TDX deployment blocker](TDX-DEPLOYMENT-STATUS.md).
+Sources: [Rhea SDK](https://github.com/rhea-finance/burrow-sdk-python), [Agent Market protocol](https://docs.market.near.ai/a2a/hire-agent-using-x402.md), [privacy boundaries](PRIVACY.md), [TDX deployment status and history](TDX-DEPLOYMENT-STATUS.md).

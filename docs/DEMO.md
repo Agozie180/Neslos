@@ -2,6 +2,8 @@
 
 The one sentence to remember: **agents can propose; only the policy can authorize.**
 
+Use the [live Vercel rehearsal](https://neslos.vercel.app) or the local application. The hosted frontend/API and three production browser tests passed on 9 November. Present the retained [testnet commerce proof](VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) and [TDX owner-command proof](TDX-PRIVATE-STAGE-2026-11-09.md) separately from the rehearsal. Private AI research is still awaiting its own live proof.
+
 | Time | Action | Evidence to show |
 | --- | --- | --- |
 | 0–12s | Open Policy vault: $500/day, $200/action, 50 bps, approved venues and recipients. | State that this session is a rehearsal, and show the separate compiled NEAR contract proof. |
@@ -10,7 +12,7 @@ The one sentence to remember: **agents can propose; only the policy can authoriz
 | 40–58s | Launch a $150 allocation-reserve rehearsal. | Researchers cite Rhea yield components and exit liquidity; the six stages advance. |
 | 58–68s | Inspect the leading opportunity. | Show its source, ranking rule, exclusions and public-position risk. A reserve is not a lending deposit. |
 | 68–83s | Open Audit trail → Verify integrity → Test a tampered copy. | Valid receipts pass in the browser; the altered copy is rejected. |
-| 83–90s | Show the NEAR sandbox result and deployment readiness. | Separate locally demonstrated enforcement from TEE/mainnet work requiring live evidence. |
+| 83–90s | Show testnet enforcement and retained TDX owner-command evidence. | Distinguish these completed proofs from private AI research and funded confidential settlement, which remain unfinished. |
 
 Use the reproducible reference checkbox for a stable recorded demonstration. Explain that the 1 November data is captured, not current. For a live-data demonstration, refresh and retain the actual source response/time.
 
@@ -18,7 +20,7 @@ Suggested narration:
 
 “Neslos is a private agent treasury on NEAR. Researchers discover opportunities; a strategist proposes; a deterministic guardian checks the owner's rules. The spending contract enforces the shared cap even when multiple agents compete. Sensitive production work belongs in an independently attested TEE, with encrypted, verified NEAR AI inference. And when an action is denied, the denial is just as verifiable as a successful settlement.”
 
-Before recording a production privacy claim, replace the pending deployment evidence with real independently verified hardware and chain receipts. A recording of the local rehearsal must identify itself as such.
+Use the dated hardware and chain receipts for the claims they demonstrate. Label the browser recording as a rehearsal; TDX owner status/audit does not establish encrypted AI research or funded settlement.
 
 ## Submission preparation
 

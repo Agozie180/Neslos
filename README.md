@@ -2,6 +2,8 @@
 
 **Agents propose. Your policy decides what can spend.**
 
+**[Open the live rehearsal](https://neslos.vercel.app).** The Vercel frontend and API are deployed. On 9 November, three live desktop/mobile browser tests passed: overspend rejection, a completed mission, policy updates, and audit verification. This demo uses simulated funds and deterministic research.
+
 Neslos is an agent treasury for people who want automated research and payments without giving an agent unrestricted custody. Researchers compare NEAR DeFi opportunities, a strategist proposes an action, and a deterministic guardian checks the owner's rules. A NEAR policy vault enforces a shared spending allowance; the private runtime verifies its TEE before accepting sensitive work.
 
 Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. Target: **$55,000 grand prize** and Security, Privacy, DeFi and Swarms tracks ($15,000 per track). This project has not been submitted or awarded a prize.
@@ -23,7 +25,7 @@ The [Ubuntu foundation audit](docs/TDX-FOUNDATION-AUDIT-2026-11-07.md) independe
 | [TEE runbook and free access](docs/TEE-RUNBOOK.md) | Owner CLI, private research/audit, dstack deployment and verified credit options |
 | [Hackathon research](docs/RESEARCH.md) | Official rules, source links, track fit and deadline |
 
-The public testnet vault is [vault.neslos.testnet](https://testnet.nearblocks.io/address/vault.neslos.testnet). Its [upgrade](deploy/testnet-upgrade-20261106.json) and [commerce proof](deploy/testnet-commerce-proof-20261106.json) use public fixture tokens. The [original deployment](deploy/testnet.json) and [earlier proof](deploy/testnet-proof.json) remain historical evidence. Fresh Neslos hardware evidence is retained in the [live TDX verification](docs/TDX-LIVE-VERIFICATION-2026-11-07.md). Continuous demo hosting and a demo video remain pending.
+The public testnet vault is [vault.neslos.testnet](https://testnet.nearblocks.io/address/vault.neslos.testnet). Its [upgrade](deploy/testnet-upgrade-20261106.json) and [commerce proof](deploy/testnet-commerce-proof-20261106.json) use public fixture tokens. The [original deployment](deploy/testnet.json) and [earlier proof](deploy/testnet-proof.json) remain historical evidence. Fresh Neslos hardware evidence is retained in the [live TDX verification](docs/TDX-LIVE-VERIFICATION-2026-11-07.md). The Vercel rehearsal is live; the demo video and final submission remain pending.
 
 **Testnet-only projects qualify in every hackathon track.** Hosted Confidential Intents is mainnet-only; its integration is optional. The roughly 2.4 NEAR estimate concerns code-storage stake for an optional mainnet Neslos vault, before state and gas costs, not eligibility or a confidential settlement fee. [Supported testing paths and budget limits](docs/CONFIDENTIAL-TESTNET-RESEARCH-2026-11-06.md).
 
@@ -36,7 +38,7 @@ Four connected screens turn the policy into an observable workflow:
 - **Policy vault:** daily and per-action caps in the configured token, approved venues/counterparties, slippage and pause. Editing a policy preserves consumption. The guardian applies research constraints before proposing a spend.
 - **Audit trail:** encrypted payloads, signed hash-chain receipts, browser-side verification, export/import and a tampered-copy test.
 
-The agent roles are lending researcher, liquidity researcher, risk researcher, strategist, guardian, executor and settlement observer. Rehearsal research is deterministic. The separate private runtime runs three verified, encrypted NEAR AI research requests; deterministic code retains spending authority.
+The agent roles are lending researcher, liquidity researcher, risk researcher, strategist, guardian, executor and settlement observer. Rehearsal research is deterministic. The separate private runtime implements three verified, encrypted NEAR AI research requests, gated by deployment approval and an explicit inference budget. That live research proof remains pending; deterministic code retains spending authority.
 
 ## Run locally
 
@@ -112,7 +114,7 @@ The on-chain vault can check private commitment membership, but opening those co
 | NEAR policy vault | Rust/near-sdk WASM executed in a local sandbox and deployed on public testnet; downloaded code hashes, finalized receipts, spending limits and test-token balances verified. |
 | Confidential Intents / 1Click | No-spend authentication, private-balance reads, signed 0.001 wNEAR shield/unshield quotes and unsigned recovery-intent validation have retained evidence. Historical quotes are expired; no funded settlement. [Current review](docs/TESTNET-TDX-2026-11-07.md). |
 | Intel TDX / dstack | Live private owner controls verified on 9 November: DCAP `UpToDate`, independent boot reconstruction, reviewed RTMR3, encrypted status and signed audit export/open. Inference disabled; temporary instance retired. [Evidence](docs/TDX-PRIVATE-STAGE-2026-11-09.md). |
-| NEAR AI | Genuine gateway/model/GPU evidence and independent MRTD/RTMR0–2 reconstruction passed. Current model runtime/history approval remains unresolved; a shared signer filters reports but does not uniquely identify a deployment. No paid inference call. [Review](docs/INFERENCE-LIVE-REVIEW-2026-11-06.md). |
+| NEAR AI | Gateway/model/GPU evidence, independent boot reconstruction and a direct GLM TLS experiment passed. Full current-runtime approval remains unresolved; private research is disabled and no paid inference call is claimed. [Latest review](docs/PRIVATE-AI-REVIEW-2026-11-09.md). |
 | Owner commerce | Public payments and fixed Rhea supply/withdrawal use the vault's shared on-chain limits. Testnet payment and rejection receipts are verified; no funded Rhea position is claimed. [Scope](docs/COMMERCE.md). |
 | External paid agents | The marketplace's wallet-delegate rail would bypass the vault. New payment is disabled; historical recovery remains available. No paid job is claimed. |
 

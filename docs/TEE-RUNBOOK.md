@@ -1,5 +1,7 @@
 # Running Neslos in a TEE
 
+The [latest private AI review](PRIVATE-AI-REVIEW-2026-11-09.md) verifies direct model TLS as a candidate transport, while retaining the runtime/history approval gate. It did not enable research or start another CVM.
+
 The private owner CLI, local owner browser and dstack container package are implemented. [Live verification on 9 November](TDX-PRIVATE-STAGE-2026-11-09.md) independently reproduced the Neslos boot measurements and enabled encrypted owner status/audit on real TDX. AI research remains disabled pending inference deployment/routing approval. The temporary CVM was retired after its 09:26 Lagos deletion deadline on 9 November; no instance is currently running. The [owner guide](OWNER-WORKSPACE.md) covers finite schedules, credit caps and journal recovery. Local Docker tests use fake hardware and are separate packaging checks.
 
 An earlier package was rebuilt and smoke-tested on **6 November 2026** as `neslos-tee:readiness-20261106`, local image ID `sha256:b764b71ace136929ee8611409b1b9f87c853fa534816ffef3c3966b3c1f89a9c`. In a read-only, capability-dropped, network-disabled container it rejects fake evidence and reports `genuineHardwareVerified:false`, running as UID 1000. That local image was not published or deployed; the separate 9 November image and live checks are recorded above. [Current deployment limits](TDX-DEPLOYMENT-STATUS.md).
