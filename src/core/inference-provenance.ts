@@ -53,7 +53,11 @@ export type InferenceBootPolicy = z.infer<typeof inferenceBootPolicySchema>;
 const composeFile = z.string().regex(/^[a-zA-Z0-9_.\/-]+$/).refine(path => path.split('/').every(part => part !== '' && part !== '.' && part !== '..'));
 const composeServices = z.array(z.string().min(1).max(200)).min(1).max(1000).refine(services => new Set(services).size === services.length);
 /** The enclosing inference policy binds this owner-selected scope to its modelId. */
-export const modelDeploymentSelectorSchema = z.object({ file: composeFile, services: composeServices });
+export const modelDeploymentSelectorSchema = z.object({ file: composeFile, services: composeServices,
+  // Exact, individually reviewed maintenance after the selected source attempt.
+  // This is administrative trust, not proof of current container/weight state.
+  reviewedTrailingActions: z.array(z.object({ index: z.number().int().nonnegative(), sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).max(100).optional(),
+});
 export type ModelDeploymentSelector = z.infer<typeof modelDeploymentSelectorSchema>;
 export const modelDeploymentPolicySchema = modelDeploymentSelectorSchema.extend({
   commit: z.string().regex(/^[a-f0-9]{40}$/),
@@ -67,7 +71,7 @@ export function checkModelDeploymentReference(deployment: MeasuredDeployment, ap
   for (const field of ['commit', 'file', 'fileSha256', 'managerImage', 'actionsSha256'] as const) if (actual[field] !== approved[field]) throw new Error('INFERENCE_MODEL_DEPLOYMENT');
 }
 
-/** SDK 0.2.1 authenticates the quote but does not allowlist its boot registers. */
+/** The SDK authenticates the quote but does not allowlist its boot registers. */
 export function createBootPinnedTdxQuoteVerifier(approved: InferenceBootPolicy, verify: TdxQuoteVerifier = createTdxQuoteVerifier()): TdxQuoteVerifier {
   const pins = inferenceBootPolicySchema.parse(approved);
   return async quote => {
@@ -94,7 +98,17 @@ export function modelDeploymentReference(deployment: MeasuredDeployment, selecto
   const manager = deployment.composeManager;
   if (!manager) throw new Error('PROVENANCE_MANAGER_MISSING');
   const entries = [...manager.actions].reverse();
-  const action = entries.find(entry => {
+  const reviews = selected.reviewedTrailingActions ?? [];
+  if (new Set(reviews.map(r => r.index)).size !== reviews.length) throw new Error('PROVENANCE_ACTION_REVIEW');
+  let usedReviews = 0;
+  const action = entries.find((entry, reversedIndex) => {
+    const review = reviews.find(r => r.index === manager.actions.length - 1 - reversedIndex);
+    if (review) {
+      const disjointUp = entry.action === 'compose_up' && composeServices.safeParse(entry.services).success && !entry.services!.some(s => selected.services.includes(s));
+      if (review.sha256 !== sha256(canonical(entry)) || !(entry.action === 'docker_restart' || disjointUp)) throw new Error('PROVENANCE_ACTION_REVIEW');
+      usedReviews++;
+      return false;
+    }
     if (entry.action === 'compose_stage' || entry.action === 'compose_manager_started') return false;
     // Unrecognized controls (including container-only restarts) cannot safely be
     // scoped to compose services. Do not select an older attempted launch.
@@ -112,6 +126,7 @@ export function modelDeploymentReference(deployment: MeasuredDeployment, selecto
     if (!selected.services.every(service => services.data.includes(service))) throw new Error('PROVENANCE_COMPOSE_SPLIT_REFERENCE');
     return true;
   });
+  if (usedReviews !== reviews.length) throw new Error('PROVENANCE_ACTION_REVIEW');
   const started = entries.find(e => e.action === 'compose_manager_started');
   if (!action?.commit || !/^[a-f0-9]{40}$/.test(action.commit) || !action.file || !/^[a-zA-Z0-9_.\/-]+$/.test(action.file) || action.file.split('/').some(s => !s || s === '.' || s === '..') || !/^[a-f0-9]{64}$/.test(action.file_sha256 ?? '')) throw new Error('PROVENANCE_COMPOSE_REFERENCE');
   const digest = /^nearaidev\/compose-manager@(sha256:[a-f0-9]{64})$/.exec(started?.image?.replace(/^docker\.io\//, '') ?? '')?.[1];

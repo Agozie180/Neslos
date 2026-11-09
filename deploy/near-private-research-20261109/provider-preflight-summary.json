@@ -1,0 +1,8 @@
+{
+  "checkedAt": "2026-11-09T16:07:27.926Z",
+  "modelId": "z-ai/glm-5.3-flash",
+  "transport": "direct-e2ee-ohttp-pinned-tls",
+  "policySha256": "57e5e49b7c54ba36e68175e889f62d07d8e130ef43859ed100acd78e39d4bdc8",
+  "inferenceCalls": 0,
+  "approvedPreflightPassed": true
+}

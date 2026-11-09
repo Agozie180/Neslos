@@ -1,0 +1,291 @@
+{
+  "format": "neslos-model-deployment-audit-v1",
+  "checkedAt": "2026-11-09T14:54:55.077Z",
+  "applicationCommit": "ad0e639d3e0cf1db90e81d8928291caca071faef",
+  "approved": false,
+  "privateResearchEnabled": false,
+  "inferenceCalls": 0,
+  "additionalSpendUsd": 0,
+  "newDeployments": 0,
+  "applicationChanges": false,
+  "policyChanges": false,
+  "verification": {
+    "liveDemo": {
+      "healthStatus": 200,
+      "stateStatus": 200,
+      "checkedOn": "2026-11-09"
+    },
+    "focusedTests": {
+      "command": "node node_modules/vitest/vitest.mjs run tests/inference-provenance.test.ts tests/inference.test.ts",
+      "passed": 45,
+      "failed": 0
+    },
+    "directTls": [
+      {
+        "name": "standard with own pin",
+        "accepted": true,
+        "status": 200
+      },
+      {
+        "name": "long with own pin",
+        "accepted": true,
+        "status": 200
+      },
+      {
+        "name": "standard with long pin",
+        "accepted": false,
+        "code": "binding.spki_fingerprint_mismatch"
+      },
+      {
+        "name": "long with standard pin",
+        "accepted": false,
+        "code": "binding.spki_fingerprint_mismatch"
+      }
+    ],
+    "retainedCaptures": [
+      {
+        "sha256": "b8a7953ea59c585336c24408ea4bf620edc1e5a42b55b66917eed7018d78848b",
+        "endpoint": "https://glm-5-3-flash.completions.near.ai/v1",
+        "tlsSpki": "aaf70a60f0e55a3cfcdb3d58142a25e34b620c85e2d796e91edfd9086ca09b27",
+        "actions": 243,
+        "actionTypes": {
+          "compose_manager_started": 9,
+          "compose_up": 164,
+          "compose_stage": 7,
+          "compose_down": 58,
+          "docker_clean": 1,
+          "docker_restart": 4
+        },
+        "sameQuotedNonce": true,
+        "registersEqual": {
+          "mrTd": true,
+          "rtMr0": true,
+          "rtMr1": true,
+          "rtMr2": true,
+          "rtMr3": true,
+          "mrConfigId": true
+        },
+        "replicaReportKeyEvents": 7
+      },
+      {
+        "sha256": "2aa58e5a5b481b24633528fccaeb3f81b8908e045efea54723cdd516fa09aba8",
+        "endpoint": "https://glm-5-3-flash-long.completions.near.ai/v1",
+        "tlsSpki": "50f39268dc89816aa722cb9758da8a6b905013ed788cd46787632996ae2f7ed6",
+        "actions": 237,
+        "actionTypes": {
+          "compose_manager_started": 15,
+          "compose_stage": 9,
+          "compose_up": 138,
+          "compose_down": 68,
+          "dstack_agent_restart": 1,
+          "docker_restart": 6
+        },
+        "sameQuotedNonce": true,
+        "registersEqual": {
+          "mrTd": true,
+          "rtMr0": true,
+          "rtMr1": true,
+          "rtMr2": true,
+          "rtMr3": true,
+          "mrConfigId": true
+        },
+        "replicaReportKeyEvents": 2
+      }
+    ],
+    "sourceHistory": {
+      "strictResult": "PROVENANCE_COMPOSE_CONTROL",
+      "historySha256": "1fe7dd55ad79eb59741dd82cd482e4d3b6c8cd947b846176a872dfbcf22542d9",
+      "latestRestartMatchesDeclaredContainer": true,
+      "latestStageHasBuild": false,
+      "serviceComparisons": [
+        {
+          "service": "proxy-glm53",
+          "actionIndex": 241,
+          "source": "4d64477b298038f59e92b268a2a5feb34e597fe0/prod/GLM-5.3-Flash-SGL-TP2x4-W4AFP8-V12Q8.yaml",
+          "sourceHash": "e88b040e8ecdb7869ac855880719f6d184c035f0199753bef64ed338f8622922",
+          "image": "nearaidev/vllm-proxy-rs@sha256:7a295d6f746e7434c6f05a02a68fed171f320a3d57cbaedef38d1a9465bb327e",
+          "latestProxySourceImage": "nearaidev/vllm-proxy-rs@sha256:7a295d6f746e7434c6f05a02a68fed171f320a3d57cbaedef38d1a9465bb327e",
+          "identicalDeclaredService": true,
+          "changedFields": []
+        },
+        {
+          "service": "model-sg-glm53-w4afp8-tp2-r1",
+          "actionIndex": 217,
+          "source": "7ee4a4c741259d0c69a81e5cda22c3dfce21cbc2/prod/GLM-5.3-Flash-SGL-TP2x4-W4AFP8-V12Q8.yaml",
+          "sourceHash": "904054f502ccdb2f913d6b80f156ea658b8bc5cb6f8af06082723581d62a45c0",
+          "image": "docker.io/nearaidev/sglang@sha256:da8d4e4b5ec667499b58a21e56050aae9bcfc4df9669b3ac27e2e20af033d681",
+          "latestProxySourceImage": "docker.io/nearaidev/sglang@sha256:da8d4e4b5ec667499b58a21e56050aae9bcfc4df9669b3ac27e2e20af033d681",
+          "identicalDeclaredService": true,
+          "changedFields": []
+        },
+        {
+          "service": "model-sg-glm53-w4afp8-tp2-r2",
+          "actionIndex": 218,
+          "source": "7ee4a4c741259d0c69a81e5cda22c3dfce21cbc2/prod/GLM-5.3-Flash-SGL-TP2x4-W4AFP8-V12Q8.yaml",
+          "sourceHash": "904054f502ccdb2f913d6b80f156ea658b8bc5cb6f8af06082723581d62a45c0",
+          "image": "docker.io/nearaidev/sglang@sha256:da8d4e4b5ec667499b58a21e56050aae9bcfc4df9669b3ac27e2e20af033d681",
+          "latestProxySourceImage": "docker.io/nearaidev/sglang@sha256:da8d4e4b5ec667499b58a21e56050aae9bcfc4df9669b3ac27e2e20af033d681",
+          "identicalDeclaredService": true,
+          "changedFields": []
+        },
+        {
+          "service": "model-sg-glm53-w4afp8-tp2-r3",
+          "actionIndex": 219,
+          "source": "7ee4a4c741259d0c69a81e5cda22c3dfce21cbc2/prod/GLM-5.3-Flash-SGL-TP2x4-W4AFP8-V12Q8.yaml",
+          "sourceHash": "904054f502ccdb2f913d6b80f156ea658b8bc5cb6f8af06082723581d62a45c0",
+          "image": "docker.io/nearaidev/sglang@sha256:da8d4e4b5ec667499b58a21e56050aae9bcfc4df9669b3ac27e2e20af033d681",
+          "latestProxySourceImage": "docker.io/nearaidev/sglang@sha256:da8d4e4b5ec667499b58a21e56050aae9bcfc4df9669b3ac27e2e20af033d681",
+          "identicalDeclaredService": true,
+          "changedFields": []
+        },
+        {
+          "service": "model-sg-glm53-w4afp8-tp2-r4",
+          "actionIndex": 221,
+          "source": "7ee4a4c741259d0c69a81e5cda22c3dfce21cbc2/prod/GLM-5.3-Flash-SGL-TP2x4-W4AFP8-V12Q8.yaml",
+          "sourceHash": "904054f502ccdb2f913d6b80f156ea658b8bc5cb6f8af06082723581d62a45c0",
+          "image": "docker.io/nearaidev/sglang@sha256:da8d4e4b5ec667499b58a21e56050aae9bcfc4df9669b3ac27e2e20af033d681",
+          "latestProxySourceImage": "docker.io/nearaidev/sglang@sha256:da8d4e4b5ec667499b58a21e56050aae9bcfc4df9669b3ac27e2e20af033d681",
+          "identicalDeclaredService": true,
+          "changedFields": []
+        },
+        {
+          "service": "nginx",
+          "actionIndex": 231,
+          "source": "5a5119f799409672cfd101429b01dcd6db30188e/prod/GLM-5.3-Flash-SGL-TP2x4-W4AFP8-V12Q8.yaml",
+          "sourceHash": "309c07af98ff96349716dde078158ee021cf0eed33cd8690aa638f2e61546dd1",
+          "image": "nginx@sha256:1d13701a5f9f3fb01aaa88cef2344d65b6b5bf6b7d9fa4cf0dca557a8d7702ba",
+          "latestProxySourceImage": "nginx@sha256:1d13701a5f9f3fb01aaa88cef2344d65b6b5bf6b7d9fa4cf0dca557a8d7702ba",
+          "identicalDeclaredService": true,
+          "changedFields": []
+        },
+        {
+          "service": "model-downloader",
+          "actionIndex": 232,
+          "source": "5a5119f799409672cfd101429b01dcd6db30188e/prod/GLM-5.3-Flash-SGL-TP2x4-W4AFP8-V12Q8.yaml",
+          "sourceHash": "309c07af98ff96349716dde078158ee021cf0eed33cd8690aa638f2e61546dd1",
+          "image": "ghcr.io/astral-sh/uv:python3.11-bookworm-slim@sha256:4f5d923c9dcea037f57bda425dd209f3ec643da2f0b74227f68d09dab0b3bb36",
+          "latestProxySourceImage": "ghcr.io/astral-sh/uv:python3.11-bookworm-slim@sha256:4f5d923c9dcea037f57bda425dd209f3ec643da2f0b74227f68d09dab0b3bb36",
+          "identicalDeclaredService": true,
+          "changedFields": []
+        }
+      ]
+    },
+    "proxyBuild": {
+      "digest": "sha256:7a295d6f746e7434c6f05a02a68fed171f320a3d57cbaedef38d1a9465bb327e",
+      "repository": "nearai/inference-proxy",
+      "workflow": ".github/workflows/build.yml",
+      "ref": "refs/heads/main",
+      "commit": "7924418b5eacb396a12ada208b0f2f0c82ec6d1d",
+      "certificateIdentity": "https://github.com/nearai/inference-proxy/.github/workflows/build.yml@refs/heads/main",
+      "issuer": "https://token.actions.githubusercontent.com",
+      "predicateType": "https://slsa.dev/provenance/v1"
+    },
+    "managerBuild": {
+      "digest": "sha256:a0c073085684e12e19f31bb279fc8da663a374199bfecc47b04167ae79eaa766",
+      "repository": "nearai/compose-manager",
+      "workflow": ".github/workflows/build.yml",
+      "commit": "cba8833b36244dc2fdc51cbf9c7c3e5e7e56033a",
+      "previousReviewDelta": {
+        "commit": "c7fbaaf5f8a993c6a3c53ac3748ed3b28bafcea3",
+        "files": [
+          "dashboard/index.html",
+          "dashboard/src/main.rs"
+        ]
+      }
+    },
+    "engineBuilds": [
+      {
+        "digest": "sha256:da8d4e4b5ec667499b58a21e56050aae9bcfc4df9669b3ac27e2e20af033d681",
+        "repository": "nearai/cvm-compose-files",
+        "workflow": ".github/workflows/publish-glm53-admission-reserve.yaml",
+        "ref": "refs/heads/main",
+        "commit": "79de066bbdce973b442242d44d3046791a059f2e",
+        "certificateIdentity": "https://github.com/nearai/cvm-compose-files/.github/workflows/publish-glm53-admission-reserve.yaml@refs/heads/main",
+        "issuer": "https://token.actions.githubusercontent.com",
+        "predicateType": "https://slsa.dev/provenance/v1"
+      },
+      {
+        "digest": "sha256:3eccc30709f5719c81084d1264f03ca5354b3059ec4cff62f0c5ff88c309680c",
+        "repository": "nearai/cvm-compose-files",
+        "workflow": ".github/workflows/publish-glm53-admission-reserve.yaml",
+        "ref": "refs/heads/main",
+        "commit": "0244bab81cc0ec42f0aa24d5de57b804650c9cfa",
+        "certificateIdentity": "https://github.com/nearai/cvm-compose-files/.github/workflows/publish-glm53-admission-reserve.yaml@refs/heads/main",
+        "issuer": "https://token.actions.githubusercontent.com",
+        "predicateType": "https://slsa.dev/provenance/v1"
+      }
+    ],
+    "engineMetadata": {
+      "image": "nearaidev/sglang@sha256:da8d4e4b5ec667499b58a21e56050aae9bcfc4df9669b3ac27e2e20af033d681",
+      "metadataChainVerified": true,
+      "platformDigest": "sha256:f8f6fcb41659bc0339794e286e4cd255c6274498c190c020ca8730c6978e1dbc",
+      "configDigest": "sha256:e2d5a44902df4b4fe7f08c542c5d2a85e6acf47c139638ad3b8fbeaab3ed7301",
+      "provenanceDigest": "sha256:da16142614e9af73a831fa8b17fc2978830e9a9fcec74c22587acf36f0c51210",
+      "sourceRevision": "79de066bbdce973b442242d44d3046791a059f2e",
+      "recipe": "docker/sglang-glm53-hicache-w4afp8/Dockerfile",
+      "sglangRevision": "fc91d2403cc210a86bd5fc715c6609f58c932e5a",
+      "immediateBaseDigest": "sha256:3eccc30709f5719c81084d1264f03ca5354b3059ec4cff62f0c5ff88c309680c"
+    }
+  },
+  "limitations": [
+    "NEAR attestation captures were retained from the earlier same-day verification; this audit did not refresh their quotes.",
+    "Build provenance verifies publisher/workflow claims and immutable artifact identity, not a reproducible build or current running state.",
+    "Historical service equality compares authenticated YAML definitions before runtime environment interpolation.",
+    "SDK does not enforce unique-instance association between proxy and manager reports; retained pairs have matching nonce, boot registers, MRCONFIGID and RTMR3.",
+    "Signed replica-report keys are present; live private Valkey frames were not accessed, and their schema omits model/weight/image bindings.",
+    "Tinfoil live follow-up is recorded separately in tinfoil.json; Phala ACI received documentation/source review only. No paid inference was performed.",
+    "No encrypted completion or complete private research mission has been proved."
+  ],
+  "alternativesReviewed": {
+    "tinfoil": {
+      "sdkSource": "f052c4cc7372d7e31f9ce86f2d0e7462939c09a3",
+      "routerSource": "ab9edf30832416d2f14bbf70f3e1879383cc11c4",
+      "modelwrapSource": "e61ae5118436cd5c9d2d261ede3130b68e108d38",
+      "npmLatestObserved": {
+        "tinfoil": "1.4.0",
+        "@tinfoilsh/verifier": "1.4.0"
+      },
+      "mainSourceMayDifferFromPublished": true,
+      "liveFollowupRecord": "tinfoil.json"
+    },
+    "phalaAci": {
+      "source": "f1aac39cdf0229ecb22d169ce4b2b7f03dd41755",
+      "nearAdapterScope": "router",
+      "nearAdapterModelInstanceBinding": false
+    }
+  },
+  "evidence": [
+    {
+      "name": "probes.json",
+      "sha256": "7b9efd8643151a294946b48ce87aa273ca984825aa296a25a4eebd09560f4fa1"
+    },
+    {
+      "name": "history-classification.json",
+      "sha256": "e1c52df67550a5b8186294910e768379423fa8e187025eb4b8a1c64b94fa96b0"
+    },
+    {
+      "name": "source-comparison.json",
+      "sha256": "eb2e5f020971522200ae65ee4d922796e7573ec9932d0eb230792b0a9fb14644"
+    },
+    {
+      "name": "engine-provenance.json",
+      "sha256": "50b5f782231c092fdb13b4c7eab480deece62dcf384284b3424bf9390c480424"
+    },
+    {
+      "name": "engine-oci.json",
+      "sha256": "4a36eda05b0a85eefaa730f0ef607d95dc9b8dc2794415c3b86d2ed09bc690b2"
+    },
+    {
+      "name": "manager-main.rs",
+      "sha256": "aa9801e25b1b65ae4607e16b980c728f2cd149ab6db89ee1944001e36f92f97f"
+    },
+    {
+      "name": "proxy-src-replica_state-report.rs",
+      "sha256": "7845b520933583bbd61d0edc0f9072c71a86f51d02c5da1d37d7bd34d44be4e0"
+    },
+    {
+      "name": "sdk-js-src-core-compose-manager-attestation.ts",
+      "sha256": "e094e91f8ad492004e3622da75ae6ecb7802b0f9389a0e81d7e34800d6227041"
+    }
+  ]
+}

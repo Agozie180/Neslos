@@ -1,0 +1,26 @@
+{
+  "at": "2026-11-09T16:21:21.892Z",
+  "network": "testnet",
+  "vault": "vault.neslos.testnet",
+  "restored": true,
+  "policyVersion": "13",
+  "balancesUnchanged": true,
+  "nonceAndConsumptionUnchanged": true,
+  "paused": true,
+  "restorationTransactions": [
+    {
+      "name": "restore-policy",
+      "hash": "83msgnW2NRCj5w76Y3QpY1CbMe3JnsM8QgqxaCofajs2"
+    },
+    {
+      "name": "restore-executor",
+      "hash": "3GRe7o7kce8WHyKMM4YSXDNheNYE6srebFsoGEpKHQsh"
+    }
+  ],
+  "configurationTransactions": [
+    "G5Dp5raZyrLkRufVuUPgo8L8SGR5dEqBzTYmxHqyymhL",
+    "6pK8ANxkbMXJDwGhvBzZ2mwhfmLdVENpWtK51zFAePVq"
+  ],
+  "ownerSigningKeyStayedLocal": true,
+  "fundedSettlement": false
+}

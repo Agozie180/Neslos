@@ -1,0 +1,59 @@
+{
+  "at": "2026-11-09T16:15:54.354Z",
+  "passed": true,
+  "endpoint": "https://afa01c25cd37738c4da699cad631cccc004b620b-8443.dstack-pha1-prod5.phala.network",
+  "jobId": "bbcb3b3b-8eff-4d79-beac-26fb171ad44d",
+  "sourceMode": "live",
+  "researchers": [
+    {
+      "agent": "lending",
+      "inference": "verified-near-ai",
+      "assessments": 2,
+      "findings": 6
+    },
+    {
+      "agent": "liquidity",
+      "inference": "verified-near-ai",
+      "assessments": 2,
+      "findings": 6
+    },
+    {
+      "agent": "risk",
+      "inference": "verified-near-ai",
+      "assessments": 2,
+      "findings": 6
+    }
+  ],
+  "auditCheckpoint": "f38fcb74a3f8cd0a1953eabac3f6cf4510fac56fe14c98b9b619c796d17a8b45",
+  "auditEntries": 5,
+  "signedOpeningVerified": true,
+  "wrongOwnerRejected": true,
+  "replayUnchanged": true,
+  "resultSha256": "bb101e8984df9316dd1cfeee68f042ce0705fd69776027354d21195adbc0c837",
+  "inference": {
+    "calls": 6,
+    "day": "2026-11-09",
+    "dayNanoUsd": "8472480",
+    "enabled": true,
+    "limits": {
+      "dailyLimitNanoUsd": "247876240",
+      "inputNanoUsdPerToken": "80",
+      "maxCalls": 6,
+      "maxInputBytes": 24000,
+      "maxOutputTokens": 1600,
+      "outputNanoUsdPerToken": "500",
+      "totalLimitNanoUsd": "247876240"
+    },
+    "totalNanoUsd": "8472480"
+  },
+  "reservation": {
+    "calls": 3,
+    "createdAt": "2026-11-09T16:15:13.512Z",
+    "id": "1e2fcea3-4c8d-4cdf-b1ed-6c85f433e1e6",
+    "inputTokensBound": 24198,
+    "modelId": "z-ai/glm-5.3-flash",
+    "outputTokensBound": 4800,
+    "requestHash": "ad1415d00ab3b4bb38abd9acee63e26d55cd4be5272bd40fad29ae2f14c1e3c3",
+    "reservedNanoUsd": "4335840"
+  }
+}

@@ -1,5 +1,7 @@
 # TDX private owner commands — 9 November 2026
 
+> Historical snapshot, retained below. Later on 9 November, [private NEAR AI research passed inside independently verified TDX](NEAR-PRIVATE-RESEARCH-2026-11-09.md), including signed reports, audit opening, restart persistence and exhausted-budget rejection. The scoped direct policy explicitly trusts provider deployment/weight administration; it does not independently prove loaded weights. The finite CVM is retired and the testnet vault restored paused. Earlier statements about disabled research, zero calls, unchanged code or unfinished restart checks apply only to this snapshot.
+
 **Private owner commands passed live verification on Phala TDX at 07:59 UTC.** Encrypted status, owner authentication, audit export and signed receipt opening worked against independently approved hardware measurements. AI research and preparation remained explicitly disabled. The temporary CVM was scheduled for deletion at **08:26:46 UTC / 09:26:46 Lagos**; HTTP 404 and an empty CVM inventory confirmed its retirement at 11:54 UTC. There is no currently running deployment.
 
 The [permanent record](../deploy/tdx-20261109/record.json) indexes 17 evidence files with SHA-256 checksums. The earlier [7 November deployment](TDX-LIVE-VERIFICATION-2026-11-07.md) and its [original evidence](../deploy/tdx-20261107/record.json) remain preserved separately.

@@ -6,3 +6,5 @@
 
 # Deployment records checksum the original evidence bytes, including line endings.
 deploy/tdx-*/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+deploy/near-private-research-*/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+deploy/model-deployment-audit-*/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

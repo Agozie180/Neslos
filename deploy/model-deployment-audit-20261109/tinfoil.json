@@ -1,0 +1,202 @@
+{
+  "format": "neslos-tinfoil-alternative-audit-v1",
+  "checkedAt": "2026-11-09T14:54:54.951Z",
+  "applicationCommit": "ad0e639d3e0cf1db90e81d8928291caca071faef",
+  "approved": false,
+  "privateResearchEnabled": false,
+  "inferenceCalls": 0,
+  "credentialsSent": false,
+  "additionalSpendUsd": 0,
+  "applicationChanges": false,
+  "publishedSdkVersion": "1.4.0",
+  "sdkSourceCommit": "e1d5d7da1b9da2dfd463379dd22339afa1b5f37e",
+  "sdkPackageLockSha256": "985dc97c0bdcc5170e61cad056522c8b3e81800a93fbf1dc23a74bdde81f667c",
+  "router": {
+    "checkedAt": "2026-11-09T14:49:01.655Z",
+    "sdkVersion": "1.4.0",
+    "runtimeApproved": false,
+    "inferenceCalls": 0,
+    "credentialsSent": false,
+    "endpoint": "https://router-0.tinfoil.sh",
+    "privateCaptureSha256": "a6bfb9ba0bd92fe6aeff322a8c67da7f44b955b60b938c9debc5624a6a2b543f",
+    "releaseTag": "v0.0.171",
+    "releaseDigest": "95e49018369d59594468ed5af698631ba011937d3859fcbad21207eb0b0f9007",
+    "tlsSpki": "ebf43329625ba002112dd549048d6370649e0afee20de3d44c88cc322c1d2992",
+    "codeMeasurement": {
+      "type": "https://tinfoil.sh/predicate/snp-tdx-multiplatform/v1",
+      "registers": [
+        "f5bcc220a94d5c34c5c80db9593dcc88d7d1a19b43796c05ec4b6cdcf921c8176a56cb3d0224650b1250ee892a0ec438"
+      ]
+    },
+    "enclaveMeasurement": {
+      "type": "https://tinfoil.sh/predicate/sev-snp-guest/v2",
+      "registers": [
+        "f5bcc220a94d5c34c5c80db9593dcc88d7d1a19b43796c05ec4b6cdcf921c8176a56cb3d0224650b1250ee892a0ec438"
+      ]
+    },
+    "securityVerified": true,
+    "steps": {
+      "fetchDigest": {
+        "status": "success"
+      },
+      "verifyCode": {
+        "status": "success"
+      },
+      "verifyEnclave": {
+        "status": "success"
+      },
+      "compareMeasurements": {
+        "status": "success"
+      },
+      "verifyCertificate": {
+        "status": "success"
+      }
+    },
+    "checks": [
+      {
+        "name": "own TLS pin",
+        "accepted": true,
+        "status": 200
+      },
+      {
+        "name": "wrong TLS pin",
+        "accepted": false,
+        "code": "binding.spki_fingerprint_mismatch"
+      },
+      {
+        "name": "wrong repository",
+        "accepted": false,
+        "message": "Sigstore code bundle verification failed"
+      },
+      {
+        "name": "altered release digest",
+        "accepted": false,
+        "message": "Release digest mismatch: The release digest from GitHub (05e49018369d59594468ed5af698631ba011937d3859fcbad21207eb0b0f9007) does not match the digest in the sigstore bundle (95e49018369d59594468ed5af698631ba011937d3859fcbad21207eb0b0f9007)"
+      },
+      {
+        "name": "altered quote",
+        "accepted": false,
+        "message": "Attestation report signature is invalid: The report was not signed by the expected VCEK key"
+      }
+    ],
+    "admissionsKeys": [
+      "attempted",
+      "errors",
+      "models",
+      "observed_at",
+      "updated",
+      "version"
+    ],
+    "admissionsSha256": "9ca55d5139c20434f1e6a30cf6b7d50032f787d19ffb5d454188c4953b88db5c",
+    "limitations": [
+      "SDK trust roots and policy used; not independent boot reproduction.",
+      "No client nonce was passed by this released bundle API.",
+      "No paid completion or research job was run."
+    ]
+  },
+  "routerSourceCommit": "7bfc9306cddee725343fb5f0951ba2376ace1e3f",
+  "routerVerifierDependency": "github.com/tinfoilsh/tinfoil-go v0.17.0-rc.4",
+  "selectedModelRelease": {
+    "checkedAt": "2026-11-09T14:52:13.700Z",
+    "repository": "tinfoilsh/confidential-gpt-oss-120b",
+    "tag": "v0.0.29",
+    "releaseDigest": "03becbb2f6d3fe129d7605e3ffd1d653706786b1f67bce46406bc852eda60ebe",
+    "releaseSignatureVerified": true,
+    "releaseArtifactDigestVerified": true,
+    "expectedMeasurementsMatchRouter": true,
+    "configDigest": "d3dbbb0449a1f8252349e08ce052a4f64ca38d1963c3f1365b39ef380d55c1ec",
+    "configHashBoundInCmdline": true,
+    "runtimeApproved": false,
+    "modelQuoteIndependentlyVerified": false,
+    "runtimeVersion": "0.14.17",
+    "model": {
+      "name": "gpt-oss-120b",
+      "repo": "openai/gpt-oss-120b@b5c939de8f754692c1647ca79fbf85e8c1e70f8a",
+      "mpk": "db5daddec41a3be3b51d1f4d009fb0e9b1243c2765e2bc5121acac79ab070a72_195764056064_0eefa619-50b7-588f-a072-d405fb439d36"
+    },
+    "containerImage": "ghcr.io/tinfoilsh/confidential-gpt-oss-120b@sha256:020264e6f71b4f3f03eb80b4b94014ea20c8c7dad0baca7ac71ee5ced5b98ecc",
+    "modelPathBoundToWeightRoot": true,
+    "configured": 3,
+    "verifiedByRouter": 3,
+    "healthyByRouter": 3,
+    "routerRelease": "v0.0.171",
+    "routerObservedAt": "2026-11-09T14:48:59.137265389Z",
+    "limits": [
+      "Router-reported current admissions, not an independently fetched model quote.",
+      "No independent reconstruction of the published modelpack root or boot registers.",
+      "No inference request or model quality test."
+    ]
+  },
+  "directModelProbe": {
+    "checkedAt": "2026-11-09T14:48:47.319Z",
+    "model": "gpt-oss-120b",
+    "host": "gpt-oss-120b-inf7-0.tinfoil.containers.tinfoil.dev",
+    "independentlyVerified": false,
+    "error": "ABORT_ERR"
+  },
+  "selectedAvailability": {
+    "glm-5-3-flash": {
+      "repository": "tinfoilsh/confidential-glm5-3-flash",
+      "tag": "",
+      "configured": 0,
+      "verifiedByRouter": 0,
+      "healthyByRouter": 0
+    },
+    "gpt-oss-120b": {
+      "repository": "tinfoilsh/confidential-gpt-oss-120b",
+      "tag": "v0.0.29",
+      "configured": 3,
+      "verifiedByRouter": 3,
+      "healthyByRouter": 3
+    },
+    "gemma4-31b": {
+      "repository": "tinfoilsh/confidential-gemma4-31b",
+      "tag": "v0.0.30",
+      "configured": 37,
+      "verifiedByRouter": 37,
+      "healthyByRouter": 37
+    }
+  },
+  "limitations": [
+    "The JavaScript 1.4.0 attestation verifier accepts SNP Guest V2, not the TDX format used by the selected model hosts.",
+    "The released bundle API does not issue a client nonce or expose the newer config/freshness policy API seen on main.",
+    "The direct model request timed out after 20 seconds; no direct model quote was independently verified.",
+    "Model host status is a statement read over the hardware/provenance-verified router TLS channel.",
+    "Published model commitments and expected measurements were authenticated, not independently rebuilt from all OS/model bytes.",
+    "No provider account/API credential, encrypted completion or Neslos TDX integration was tested."
+  ],
+  "evidence": [
+    {
+      "name": "tinfoil-live.json",
+      "sha256": "b8f4019af6b0091866a529e16988ab8b2c82e201e1433496c3f3445c29b922e2"
+    },
+    {
+      "name": "tinfoil-admissions.json",
+      "sha256": "9ca55d5139c20434f1e6a30cf6b7d50032f787d19ffb5d454188c4953b88db5c"
+    },
+    {
+      "name": "tinfoil-release-review.json",
+      "sha256": "37e69617c465679ad83d48d3467f27f2658123c857fd332d6f64e4e4ef696a38"
+    },
+    {
+      "name": "tinfoil-model-probe.json",
+      "sha256": "9cec3441f44ccaf24ca30343ce2d1ec9c1d09298f26f5f7d3d59959ac082655c"
+    },
+    {
+      "name": "tinfoil-gptoss-sigstore.json",
+      "sha256": "f19da02aef33a2d92a4e3b8d99fe5ba130d52cbe0a0efae6eec0533498b33252"
+    },
+    {
+      "name": "tinfoil-gptoss-tinfoil-deployment.json",
+      "sha256": "03becbb2f6d3fe129d7605e3ffd1d653706786b1f67bce46406bc852eda60ebe"
+    },
+    {
+      "name": "tinfoil-live-manager-manager.go",
+      "sha256": "8e323d28f6dfcd1cb2caed40c6c035072e8a12f5bcb28ee2694b41fa9f883de3"
+    },
+    {
+      "name": "tinfoil-live-manager-verification.go",
+      "sha256": "e78e7887c1110f5f36413c6a6c84d8127fd2b6da488551d6128a6badcfce818a"
+    }
+  ]
+}

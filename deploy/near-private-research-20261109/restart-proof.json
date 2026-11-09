@@ -1,0 +1,35 @@
+{
+  "at": "2026-11-09T16:20:35.365Z",
+  "passed": true,
+  "freshHardwareAndKeysVerified": true,
+  "researchResultPreserved": true,
+  "receiptDecryptionAfterRestart": true,
+  "priorAuditUnchanged": true,
+  "retainedCheckpoint": "f38fcb74a3f8cd0a1953eabac3f6cf4510fac56fe14c98b9b619c796d17a8b45",
+  "checkpoint": "b4bf54e05d1ebabdacdb6f96927ecd2ef53e40d46f6613e05d042e4275236519",
+  "entries": 6,
+  "budgetPreserved": true,
+  "extraJobRejectedBeforeInference": true,
+  "status": {
+    "commandLimit": 10000,
+    "completedCommands": 1,
+    "inference": {
+      "calls": 6,
+      "day": "2026-11-09",
+      "dayNanoUsd": "8472480",
+      "enabled": true,
+      "limits": {
+        "dailyLimitNanoUsd": "247876240",
+        "inputNanoUsdPerToken": "80",
+        "maxCalls": 6,
+        "maxInputBytes": 24000,
+        "maxOutputTokens": 1600,
+        "outputNanoUsdPerToken": "500",
+        "totalLimitNanoUsd": "247876240"
+      },
+      "totalNanoUsd": "8472480"
+    },
+    "journalLimitBytes": 128000000,
+    "ready": true
+  }
+}

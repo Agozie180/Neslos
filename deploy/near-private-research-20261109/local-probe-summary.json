@@ -1,0 +1,88 @@
+[
+  {
+    "name": "near-direct-completion-20261109.json",
+    "callerExecution": "local-unattested",
+    "retainedEvidenceSha256": "c697d07ae1429a77adb3f1fff7cc8cfbe55daa6217890d3fa501e71ab6b54643",
+    "inferenceCalls": 1,
+    "reservation": {
+      "id": "6b606c65-7642-4d2b-8ad0-1023e80efb99",
+      "modelId": "z-ai/glm-5.3-flash",
+      "createdAt": "2026-11-09T15:32:21.544Z",
+      "calls": 1,
+      "inputTokensBound": 4293,
+      "outputTokensBound": 128,
+      "reservedNanoUsd": "407440",
+      "requestHash": "76146aa7f38897ccd68fb33c78f9065968cbd9fd4a660a783d855a086f360058"
+    },
+    "responseVerified": true,
+    "signatureKind": "provider_tee",
+    "completionId": "6a2482e721514eb885d9119bc732d642",
+    "usage": {
+      "prompt_tokens": 30,
+      "total_tokens": 158,
+      "completion_tokens": 128,
+      "prompt_tokens_details": null,
+      "reasoning_tokens": 128,
+      "completion_tokens_details": {
+        "reasoning_tokens": 128
+      }
+    }
+  },
+  {
+    "name": "near-json-canary-20261109.json",
+    "callerExecution": "local-unattested",
+    "retainedEvidenceSha256": "d637f0c3edaeb6db2c5dac51cd9c88a4a8e22b93b926e859e93ef1892ec2bcde",
+    "inferenceCalls": 1,
+    "reservation": {
+      "id": "d94ab9b4-f967-4f6a-93f8-8796e0def650",
+      "modelId": "z-ai/glm-5.3-flash",
+      "createdAt": "2026-11-09T15:36:20.614Z",
+      "calls": 1,
+      "inputTokensBound": 4442,
+      "outputTokensBound": 1000,
+      "reservedNanoUsd": "855360",
+      "requestHash": "53a75c79e086e671eac90067ec8f0955c363f5498667dcffbcb6296e0716d48d"
+    },
+    "responseVerified": false,
+    "completionId": "d4260f06fded4fefaf314a29bbb1ff9b",
+    "usage": {
+      "prompt_tokens": 53,
+      "total_tokens": 135,
+      "completion_tokens": 82,
+      "prompt_tokens_details": null,
+      "reasoning_tokens": 1,
+      "completion_tokens_details": {
+        "reasoning_tokens": 1
+      }
+    }
+  },
+  {
+    "name": "near-json-structured-20261109.json",
+    "callerExecution": "local-unattested",
+    "retainedEvidenceSha256": "83a1938cb1aa698277326cff30bc588ca7bea3897fa32034ec50a4fe91eabbe2",
+    "inferenceCalls": 1,
+    "reservation": {
+      "id": "fd94a3c7-5132-45d7-9a08-3bde78219f4f",
+      "modelId": "z-ai/glm-5.3-flash",
+      "createdAt": "2026-11-09T15:42:53.329Z",
+      "calls": 1,
+      "inputTokensBound": 4512,
+      "outputTokensBound": 1000,
+      "reservedNanoUsd": "860960",
+      "requestHash": "5d7b3c8ea5e281a575fe318315af24253f6ed3d7cfcbdbc721a52a87ad7301b2"
+    },
+    "responseVerified": true,
+    "signatureKind": "provider_tee",
+    "completionId": "e271dddf679840e48c8d359925df04da",
+    "usage": {
+      "prompt_tokens": 53,
+      "total_tokens": 86,
+      "completion_tokens": 33,
+      "prompt_tokens_details": null,
+      "reasoning_tokens": 0,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    }
+  }
+]

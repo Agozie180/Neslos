@@ -1,0 +1,159 @@
+{
+  "format": "neslos-private-research-record-v1",
+  "recordedAt": "2026-11-09T16:29:12.013Z",
+  "researchVerifiedAt": "2026-11-09T16:15:54.354Z",
+  "vmUuid": "372acf7c-e25a-45b7-8ee1-fd85ff0508a3",
+  "appId": "afa01c25cd37738c4da699cad631cccc004b620b",
+  "instanceId": "b18a48f65a03129395beaf38524a3d6cd1d9d57e",
+  "endpoint": "https://afa01c25cd37738c4da699cad631cccc004b620b-8443.dstack-pha1-prod5.phala.network",
+  "status": "verified-private-near-research-retired",
+  "activeCvmsAtCheck": 0,
+  "deletedAt": "2026-11-09T16:22:52.230Z",
+  "independentBootApproval": true,
+  "privateResearchVerified": true,
+  "researchers": 3,
+  "liveMarkets": 2,
+  "inferenceModel": "z-ai/glm-5.3-flash",
+  "trust": "reviewed-provider-administration",
+  "loadedWeightBytesIndependentlyVerified": false,
+  "restartPersistenceVerified": true,
+  "exhaustedBudgetRejected": true,
+  "paidInferenceCalls": 9,
+  "localDiagnosticCalls": 3,
+  "tdxInferenceCalls": 6,
+  "testnetGovernanceTransactions": 4,
+  "vaultRestoredPaused": true,
+  "fundedSettlement": false,
+  "files": [
+    {
+      "name": "research-proof.json",
+      "bytes": 1663,
+      "sha256": "a61fc0c472bd41e28ddeff29a7bf10e7646ac9596bf44abc96e855b71e23a00c"
+    },
+    {
+      "name": "restart-proof.json",
+      "bytes": 1026,
+      "sha256": "1c780a5aca70edf81a41a02f884245124f00ec1ab971e634ee1792d872bbab73"
+    },
+    {
+      "name": "first-research-failure.json",
+      "bytes": 1520,
+      "sha256": "016837dacac6fa88a78cda4eb9c3d4460d476a2e442bc176d5b41dc8746ef58d"
+    },
+    {
+      "name": "attestation.json",
+      "bytes": 17022,
+      "sha256": "0ae7b2519f3765a7adcb4176ed98adc1e622472c181f9f0d6718225dbf709995"
+    },
+    {
+      "name": "verification.json",
+      "bytes": 4301,
+      "sha256": "ca6eea46f82ca8cf246734aa4eef9c90b26a99be453edabefc2a471e91482038"
+    },
+    {
+      "name": "pre-enable-attestation.json",
+      "bytes": 17022,
+      "sha256": "3d5b66a5f18d515a0fc64c571f6728c617564ba990af127d37c116f1e5380c7a"
+    },
+    {
+      "name": "pre-enable-verification.json",
+      "bytes": 4288,
+      "sha256": "5315f4084c4bfe309ff1ee33a1a49a07e1803150e692b1862e97718ea1dbdcbf"
+    },
+    {
+      "name": "app-compose.json",
+      "bytes": 21204,
+      "sha256": "bf4b0dbf137ba91f68a99931c6a3e56f9cebaf8a76b9f9d7c121a93051da0c57"
+    },
+    {
+      "name": "boot-calculation.json",
+      "bytes": 5943,
+      "sha256": "d9ee9a918f364615b5b1e1422fb8921f2bccef69c25cce32e9ac4b8dd8b5eefa"
+    },
+    {
+      "name": "boot-comparison.json",
+      "bytes": 1073,
+      "sha256": "0b5b4da2606e82624981926b12993ef4fa6153e57a74d752e3e9780dea7231e9"
+    },
+    {
+      "name": "vm-config.json",
+      "bytes": 2396,
+      "sha256": "f3c5de190525fb8ef2849c27024a2487fbb117134104522569de95c919823ad5"
+    },
+    {
+      "name": "approved-tee-policy.json",
+      "bytes": 592,
+      "sha256": "766852a3a3f83e3fdd8cb4bd30ffb8f7707a82460bcb2c813d25fa42b89ce31b"
+    },
+    {
+      "name": "image-publication.json",
+      "bytes": 574,
+      "sha256": "7d37455dc7de8de507860c60954a057efdca9b08fccf4e498867e88887e111e0"
+    },
+    {
+      "name": "initial-image-publication.json",
+      "bytes": 574,
+      "sha256": "1332c2d67b2d31071dfc4638403d531219ae980c85b49770c92433c44bfe4426"
+    },
+    {
+      "name": "source-receipt.json",
+      "bytes": 10072,
+      "sha256": "c0f83d1f6c1b4fbbe60c2b6c501219de3b8f36ef08816daccfc260081d3e558a"
+    },
+    {
+      "name": "approval-review.json",
+      "bytes": 3730,
+      "sha256": "cfbc06adb41dea7644df57144d38252934640c34d88628926325cde3c7eb211c"
+    },
+    {
+      "name": "retirement.json",
+      "bytes": 249,
+      "sha256": "2aad3e28fe6c02cb5f17871a8e23883937627f7725fb6bedda5cb5c88901b1f4"
+    },
+    {
+      "name": "budget-summary.json",
+      "bytes": 459,
+      "sha256": "3d21e1730da77fbf829bb04c1d0f29fe3ca5cc5b15d9e0829afa632910e93092"
+    },
+    {
+      "name": "app-verification.json",
+      "bytes": 428,
+      "sha256": "f3819171198722250f0b3fe06f0a6037baacd4c66ee339417f98fc5e943f8740"
+    },
+    {
+      "name": "test-source-receipt.json",
+      "bytes": 22192,
+      "sha256": "a45d9078f68cebaadd181bd8d75315b979d7ccb9954c1152d2b71a71fa431e75"
+    },
+    {
+      "name": "reviewed-inference-policy.json",
+      "bytes": 2244,
+      "sha256": "dd0d07a8cc792d450c617c4030b083de5d3119f98152dcdc38972951a9548c13"
+    },
+    {
+      "name": "local-checks.json",
+      "bytes": 481,
+      "sha256": "f66cf470049ad4ff4978d47d6342935f7561c5491901b1901fb4fdba4ca8c6c8"
+    },
+    {
+      "name": "provider-preflight-summary.json",
+      "bytes": 272,
+      "sha256": "da30e968a233cdcbd9eb26c93da48504b7bb2cb455e9a1cdc98476eefae97d38"
+    },
+    {
+      "name": "local-probe-summary.json",
+      "bytes": 2869,
+      "sha256": "914cee4ff33d6faa518b8f0cf6ebd5fddf14ec5ea3eed0240c0ac0947a6d2e18"
+    },
+    {
+      "name": "vault-restoration.json",
+      "bytes": 687,
+      "sha256": "8bc7e64c02338d2c7561af68db7f390340b066126068400a26ff449df216626c"
+    },
+    {
+      "name": "private-evidence-commitments.json",
+      "bytes": 1137,
+      "sha256": "d3685b933bc76bfeee6c1af1026b93f658256dfb8f7381349bd83379cfe4bb46"
+    }
+  ]
+}

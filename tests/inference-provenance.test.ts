@@ -87,6 +87,21 @@ describe('model deployment references', () => {
   const selector = { file: action.file, services: action.services };
   const deployment = (actions: unknown[]) => ({ appCompose: '{}', runtimeMeasurements: {}, composeManager: { actions, tcbStatus: 'UpToDate', advisoryIds: [], runtimeMeasurements: {} } }) as MeasuredDeployment;
   const started = { timestamp: '2026-11-06T00:01:00Z', action: 'compose_manager_started', image: `nearaidev/compose-manager@sha256:${'c'.repeat(64)}` };
+  it('requires exact indexed approval for trailing maintenance and still binds the full history', () => {
+    const maintenance = [{ action: 'docker_restart', container: 'nginx' }, { ...action, services: ['registrar'] }];
+    const actions = [started, action, ...maintenance];
+    const reviewed = { ...selector, reviewedTrailingActions: maintenance.map((entry, index) => ({ index: index + 2, sha256: sha256(canonical(entry)) })) };
+    const d = deployment(actions);
+    const ref = modelDeploymentReference(d, reviewed);
+    expect(ref.actionsSha256).toBe(sha256(canonical(actions)));
+    expect(ref.commit).toBe(action.commit);
+    expect(() => modelDeploymentReference(d, selector)).toThrow();
+    expect(() => modelDeploymentReference(deployment([...actions, { action: 'docker_restart', container: 'nginx' }]), reviewed)).toThrow('PROVENANCE_COMPOSE_CONTROL');
+    expect(() => modelDeploymentReference(deployment([started, action, { ...maintenance[0], container: 'engine' }, maintenance[1]]), reviewed)).toThrow('PROVENANCE_ACTION_REVIEW');
+    expect(() => modelDeploymentReference(d, { ...reviewed, reviewedTrailingActions: [...reviewed.reviewedTrailingActions, { index: 0, sha256: sha256(canonical(started)) }] })).toThrow('PROVENANCE_ACTION_REVIEW');
+    const approved = { ...ref, ...reviewed };
+    expect(() => checkModelDeploymentReference(deployment([{ ...started, timestamp: 'changed' }, ...actions.slice(1)]), approved)).toThrow('INFERENCE_MODEL_DEPLOYMENT');
+  });
   it('labels attempted source references and ignores manager starts and staged-only actions', () => {
     expect(modelDeploymentReference(deployment([action, { ...action, action: 'compose_stage', commit: 'd'.repeat(40) }, started]), selector)).toMatchObject({ referenceKind: 'latest-attempted-compose-up', commit: action.commit, fileSha256: action.file_sha256, services: action.services, managerImage: started.image });
   });

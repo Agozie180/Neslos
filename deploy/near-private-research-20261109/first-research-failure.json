@@ -1,0 +1,50 @@
+{
+  "at": "2026-11-09T16:01:55.622Z",
+  "entries": [
+    {
+      "type": "inference.reserved",
+      "value": {
+        "fingerprint": "3b3445998f25abb23a34a376a12ffca5c41037ec7b541155ad8d69cbc63fa425",
+        "reservation": {
+          "calls": 3,
+          "createdAt": "2026-11-09T15:59:44.172Z",
+          "id": "87d36b27-8256-46df-a87d-007a6d0ad0a5",
+          "inputTokensBound": 21708,
+          "modelId": "z-ai/glm-5.3-flash",
+          "outputTokensBound": 4800,
+          "requestHash": "18835074931a168ee000a3199b8ca0e180ae73977341086e5c71b8585e997b79",
+          "reservedNanoUsd": "4136640"
+        }
+      }
+    },
+    {
+      "type": "command.failed",
+      "value": {
+        "fingerprint": "3b3445998f25abb23a34a376a12ffca5c41037ec7b541155ad8d69cbc63fa425",
+        "reason": "PRIVATE_RESEARCH_FAILED: liquidity: RESPONSE_SCHEMA; risk: RESPONSE_SCHEMA. Reserved credit is retained; diagnose before starting another job."
+      }
+    }
+  ],
+  "status": {
+    "commandLimit": 10000,
+    "completedCommands": 0,
+    "inference": {
+      "calls": 3,
+      "day": "2026-11-09",
+      "dayNanoUsd": "4136640",
+      "enabled": true,
+      "limits": {
+        "dailyLimitNanoUsd": "247876240",
+        "inputNanoUsdPerToken": "80",
+        "maxCalls": 3,
+        "maxInputBytes": 24000,
+        "maxOutputTokens": 1600,
+        "outputNanoUsdPerToken": "500",
+        "totalLimitNanoUsd": "247876240"
+      },
+      "totalNanoUsd": "4136640"
+    },
+    "journalLimitBytes": 128000000,
+    "ready": true
+  }
+}

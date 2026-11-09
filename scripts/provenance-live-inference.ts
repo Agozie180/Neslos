@@ -29,7 +29,7 @@ async function main(args: string[]) {
   const request = { model: policy.modelId, temperature: 0, max_tokens: 128, messages: [{ role: 'user' as const, content: 'This is a public verification test. Reply with exactly the words: Neslos verified inference.' }] };
   const client = createVerifiedInferenceClient(policy, apiKey);
   const preflight = await client.verify(policy.modelId);
-  if (preflight.models.length === 0) throw new Error('MODEL_TEE_REQUIRED');
+  if (('models' in preflight ? preflight.models : preflight.attestations).length === 0) throw new Error('MODEL_TEE_REQUIRED');
   const price = z.object({ amount: z.number().int().nonnegative().safe(), scale: z.literal(9), currency: z.literal('USD') });
   const catalogue = z.object({ models: z.array(z.object({ modelId: z.string(), inputCostPerToken: price, outputCostPerToken: price, metadata: z.object({ verifiable: z.boolean(), attestationSupported: z.boolean(), providerType: z.string() }) })) }).parse(await (await fetch('https://cloud-api.near.ai/v1/model/list', { signal: AbortSignal.timeout(30000) })).json());
   const model = catalogue.models.find(m => m.modelId === policy.modelId);
@@ -53,7 +53,7 @@ async function main(args: string[]) {
     const directory = await open(dirname(reservationPath), 'r');
     try { await directory.sync(); } finally { await directory.close(); }
   }
-  // SDK 0.2.1 sets maxRetries:0. Never repeat inference after an unknown outcome.
+  // The SDK sets maxRetries:0. Never repeat inference after an unknown outcome.
   const completion = await client.chat.completions.create(request, { signal: AbortSignal.timeout(120000) });
   await writeFile(outputPath, JSON.stringify({ callerExecution: 'local-unattested', inferenceCalls: 1, reservation, completion, responseVerified: false }, null, 2) + '\n', { mode: 0o600 });
   let receipt: Awaited<ReturnType<typeof client.verifyResponse>> | undefined;
