@@ -6,11 +6,20 @@ Neslos is an agent treasury for people who want help researching opportunities a
 
 **Agents propose. Your policy decides.**
 
-[Try the live demo](https://neslos.vercel.app) · [Run locally](#run-locally) · [Inspect the evidence](#what-has-been-verified) · [Read the architecture](docs/ARCHITECTURE.md)
+[Try the live demo](https://neslos.vercel.app) · [Track fit](#hackathon-tracks) · [Run locally](#run-locally) · [Inspect the evidence](#what-has-been-verified) · [Read the architecture](docs/ARCHITECTURE.md)
 
 ![Neslos control room showing a blocked overspend, a completed 150-token rehearsal and 350 tokens of remaining allowance](docs/images/control-room.png)
 
 *The public demo is a rehearsal: simulated funds, deterministic research and real cryptographic audit receipts. This screenshot uses the labelled reference dataset. Public testnet enforcement and private AI research have separate verification records below.*
+
+## Hackathon tracks
+
+| Track | How Neslos fits | Evidence |
+| --- | --- | --- |
+| **Security** | Neslos constrains agent spending with on-chain budget enforcement, signed authorizations and replay protection in its NEAR vault. | [Testnet enforcement and adversarial proof](docs/VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) |
+| **Privacy** | Neslos protects research with attested TDX and encrypted inference, and separately demonstrates an owner-wallet Confidential Intents round trip. | [Private research](docs/NEAR-PRIVATE-RESEARCH-2026-11-09.md) · [Settlement with fee-cap failure disclosed](docs/CONFIDENTIAL-SETTLEMENT-2026-11-09.md) |
+| **DeFi** | Neslos analyzes live Rhea lending markets for yield, liquidity and risk to produce allocation proposals governed by the owner's treasury policy. | [Live market research](docs/NEAR-PRIVATE-RESEARCH-2026-11-09.md) · [Ranking and eligibility rules](src/core/research.ts); funded lending remains unproved |
+| **Swarms** | Neslos coordinates three specialist researchers, a strategist and a deterministic guardian under one shared treasury policy, with research findings able to veto or narrow a proposal. | [Three signed researcher reports](docs/NEAR-PRIVATE-RESEARCH-2026-11-09.md) · [Strategy constraints](src/core/strategy.ts) |
 
 ## Try it in 90 seconds
 
@@ -33,6 +42,7 @@ Results below are dated **9 November 2026**, with the contract's public commerce
 | The browser workflow runs and rejects policy violations | [Browser tests](tests/e2e/control-room.spec.ts), three passing production tests and retained [verification record](docs/PROOF.md) | Desktop/mobile rehearsal, policy changes, successful mission and audit tamper detection; simulated funds |
 | Spending rules execute on NEAR | [Public vault](https://testnet.nearblocks.io/address/vault.neslos.testnet), [commerce proof](docs/VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) and [transaction record](deploy/testnet-commerce-proof-20261106.json) | Real testnet receipts, fixture-token balances, limit/replay rejection and preserved state across upgrades |
 | Three private AI researchers completed inside verified Intel TDX | [Research report](docs/NEAR-PRIVATE-RESEARCH-2026-11-09.md), [result](deploy/near-private-research-20261109/research-proof.json) and [checksum index](deploy/near-private-research-20261109/record.json) | Signed NEAR AI reports covering two live markets; encrypted audit, wrong-owner rejection, replay, restart persistence and exhausted-budget rejection |
+| A funded Confidential Intents round trip returned its full principal | [Settlement report](docs/CONFIDENTIAL-SETTLEMENT-2026-11-09.md) and [evidence](deploy/confidential-settlement-20261109/record.json) | 0.001 native NEAR entered an owner-controlled private balance and returned to the same wallet; finalized return receipt verified. Native charges were 0.0071149895375 NEAR, exceeding the stated 0.004 NEAR cap |
 | Application, contract and container checks pass | [CI run for `e5629ba`](https://github.com/Agozie180/Neslos/actions/runs/42657642156), [workflow](.github/workflows/verify.yml) and [retained Linux checks](deploy/near-private-research-20261109/local-checks.json) | 638 application tests across 46 files in Ubuntu WSL with zero failures/skips; TypeScript and web/server builds; 25 Rust unit tests and two sandbox suites; six CI browser tests and restricted container smoke |
 
 The private research run used encrypted NEAR AI inference, fresh Intel/NVIDIA verification, independently reproduced boot measurements and exact TLS/signer/instance pins. Its reviewed policy explicitly trusts NEAR's administration of routing, runtime and model weights. Loaded weight bytes are not independently proved. The [public archive](deploy/near-private-research-20261109/record.json) contains hardware/build evidence and sanitized results; private prompts and receipt openings remain with the owner. Their hashes identify retained bytes but do not disclose or independently verify the private contents.
@@ -56,7 +66,7 @@ flowchart TD
   S --> A
 ```
 
-This is the implemented execution design. The public demo rehearses its stages. Public testnet transfers and private TDX research are verified separately; a funded Confidential Intents settlement remains future validation.
+This is the implemented execution design. The public demo rehearses its stages. Public testnet transfers, private TDX research and the owner-wallet Confidential Intents round trip have separate evidence. A funded payment through the complete TDX-to-mainnet-vault path remains unproved.
 
 | Attempt | Enforced behavior | Inspect |
 | --- | --- | --- |
@@ -132,7 +142,7 @@ The local [owner workspace](docs/OWNER-WORKSPACE.md) provides policy review, fun
 
 ## Scope and next steps
 
-- **Funded integrations:** credentialed Confidential Intents quotes and private-balance reads have evidence; funded settlement and a funded Rhea lending position remain unproved. Historical quotes are expired. Hosted Intents is mainnet-only; testnet-only projects are eligible in every hackathon track.
+- **Funded integrations:** the owner-wallet Confidential Intents round trip completed with full principal returned, but failed its native fee cap. A funded settlement through the Neslos mainnet vault and a funded Rhea lending position remain unproved. The settlement run used no TDX hosting or paid inference. Hosted Intents is mainnet-only; testnet-only projects are eligible in every hackathon track.
 - **Owner browser:** automated fixture tests cover the UI. The verified private research run used the private client/CLI; a live owner-browser session has separate validation remaining.
 - **Agent Market:** new paid jobs are disabled because its wallet-delegate payment rail would bypass the vault. A compatible payment integration is required before claiming agent commerce.
 - **Privacy and accounting:** public deposits, amounts, policy fields and timing remain visible. The TEE binds private commitment openings to routes; provider status is an observation rather than an independent destination-chain proof. Slippage is bounded against the signed quote. Principal limits cover one fixed token; gas/storage, inference and hosting have separate budgets.
@@ -148,6 +158,6 @@ The local [owner workspace](docs/OWNER-WORKSPACE.md) provides policy review, fun
 | [Deployment](docs/DEPLOYMENT.md) · [TEE runbook](docs/TEE-RUNBOOK.md) | Reproduction, optional private sessions and budget controls |
 | [Demo script](docs/DEMO.md) · [Hackathon research](docs/RESEARCH.md) | Walkthrough, official requirements and submission preparation |
 
-Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026, with work spanning Security, Privacy, DeFi and Swarms. Publication, the human's demo post and final submission are tracked in the [submission checklist](docs/DEMO.md#submission-preparation).
+Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. The [four track statements](#hackathon-tracks) link each claim to evidence; publication, the human's demo post and final submission are tracked in the [submission checklist](docs/DEMO.md#submission-preparation).
 
 Neslos is an AI-assisted implementation built from the official NEAR contract scaffold and the libraries pinned in its npm/Cargo lockfiles. Project code is [MIT licensed](LICENSE); the bundled Inter font retains its OFL license. [Source acknowledgements](docs/RESEARCH.md#sources-studied)

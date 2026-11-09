@@ -72,8 +72,33 @@ describe('no-spend confidential recipient authentication', () => {
     await authenticateConfidentialOwner(key, id, file, readyFetch().mockResolvedValueOnce(authResponse()));
     const read = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ balances: [{ tokenId: 'nep141:wrap.near', available: '0', source: 'private' }] })));
     expect(await readConfidentialOwnerBalances(file, id, read)).toEqual({ recipient: id, balances: [{ tokenId: 'nep141:wrap.near', available: '0', source: 'private' }] });
+    expect(read.mock.calls[0]![0]).toBe('https://1click.chaindefuser.com/v0/account/balances');
     expect(read.mock.calls[0]![1]?.headers).toEqual({ authorization: 'Bearer fixture-sensitive-access-token', accept: 'application/json' });
     await expect(readConfidentialOwnerBalances(file, 'f'.repeat(64), read)).rejects.toThrow('CONFIDENTIAL_AUTH_IDENTITY'); expect(read).toHaveBeenCalledTimes(1);
+  });
+  it('finds funded wNEAR through the unfiltered route and excludes unrelated balances', async () => {
+    const key = KeyPair.fromRandom('ed25519'), id = confidentialImplicitId(key.getPublicKey().toString()), file = await sessionFile();
+    await authenticateConfidentialOwner(key, id, file, readyFetch().mockResolvedValueOnce(authResponse()));
+    const principal = { tokenId: 'nep141:wrap.near', available: '1000000000000000000000', source: 'private' };
+    const read = vi.fn<typeof fetch>().mockImplementation(async url => Response.json({ balances: String(url).includes('?') ? [] : [{ tokenId: 'nep141:other.near', available: '7', source: 'private' }, principal] }));
+    expect(await readConfidentialOwnerBalances(file, id, read)).toEqual({ recipient: id, balances: [principal] });
+    expect(read).toHaveBeenCalledTimes(1);
+    const empty = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ balances: [{ tokenId: 'nep141:other.near', available: '7', source: 'private' }] }));
+    expect(await readConfidentialOwnerBalances(file, id, empty)).toEqual({ recipient: id, balances: [] });
+  });
+  it.each(['duplicate', 'public', 'negative', 'extra-field', 'oversized'])('rejects ambiguous or malformed private balances: %s', async failure => {
+    const key = KeyPair.fromRandom('ed25519'), id = confidentialImplicitId(key.getPublicKey().toString()), file = await sessionFile();
+    await authenticateConfidentialOwner(key, id, file, readyFetch().mockResolvedValueOnce(authResponse()));
+    const principal = { tokenId: 'nep141:wrap.near', available: '1000000000000000000000', source: 'private' };
+    let balances: unknown[] = [principal];
+    if (failure === 'duplicate') balances = [principal, principal];
+    if (failure === 'public') balances = [{ ...principal, source: 'public' }];
+    if (failure === 'negative') balances = [{ ...principal, available: '-1' }];
+    if (failure === 'extra-field') balances = [{ ...principal, secret: 'fixture-sensitive' }];
+    if (failure === 'oversized') balances = Array.from({ length: 1025 }, (_, index) => ({ ...principal, tokenId: 'nep141:token-' + index + '.near' }));
+    const read = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ balances }));
+    await expect(readConfidentialOwnerBalances(file, id, read)).rejects.toThrow(/^CONFIDENTIAL_BALANCE_INVALID_RESPONSE$/);
+    expect(read).toHaveBeenCalledTimes(1);
   });
   it('does not echo upstream token-bearing error text or retry authentication', async () => {
     const key = KeyPair.fromRandom('ed25519'), id = confidentialImplicitId(key.getPublicKey().toString()), fetchImpl = readyFetch().mockResolvedValueOnce(new Response('fixture-sensitive-token', { status: 401 }));

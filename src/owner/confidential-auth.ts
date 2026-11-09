@@ -205,10 +205,15 @@ export async function readConfidentialOwnerBalances(sessionFile: string, expecte
   if (session.recipient !== implicitId.parse(expectedRecipient) || confidentialImplicitId(session.publicKey) !== expectedRecipient) throw new Error('CONFIDENTIAL_AUTH_IDENTITY');
   if (Date.parse(session.accessExpiresAt) <= Date.now()) throw new Error('CONFIDENTIAL_AUTH_SESSION_EXPIRED');
   let response: Response;
-  try { response = await fetchImpl(API + '/account/balances?tokenIds=nep141%3Awrap.near', { method: 'GET', redirect: 'error', signal: AbortSignal.timeout(30000), headers: { authorization: 'Bearer ' + session.accessToken, accept: 'application/json' } }); }
+  // The live singleton tokenIds filter omitted a funded balance. Use the
+  // documented unfiltered read and select this proof's asset locally.
+  try { response = await fetchImpl(API + '/account/balances', { method: 'GET', redirect: 'error', signal: AbortSignal.timeout(30000), headers: { authorization: 'Bearer ' + session.accessToken, accept: 'application/json' } }); }
   catch { throw new Error('CONFIDENTIAL_BALANCE_UNAVAILABLE'); }
   if (response.status !== 200) { await response.body?.cancel(); throw new Error('CONFIDENTIAL_BALANCE_HTTP_' + response.status); }
-  const balance = z.object({ tokenId: z.literal('nep141:wrap.near'), available: z.string().refine(v => { try { units(v); return true; } catch { return false; } }), source: z.literal('private') }).strict();
-  try { return { recipient: expectedRecipient, ...z.object({ balances: z.array(balance).max(1) }).strict().parse(await boundedJson(response)) }; }
+  const balance = z.object({ tokenId: z.string().min(1).max(1024), available: z.string().refine(v => { try { units(v); return true; } catch { return false; } }), source: z.literal('private') }).strict();
+  try {
+    const result = z.object({ balances: z.array(balance).max(1024).refine(entries => new Set(entries.map(entry => entry.tokenId)).size === entries.length) }).strict().parse(await boundedJson(response));
+    return { recipient: expectedRecipient, balances: result.balances.filter(entry => entry.tokenId === 'nep141:wrap.near') };
+  }
   catch { throw new Error('CONFIDENTIAL_BALANCE_INVALID_RESPONSE'); }
 }

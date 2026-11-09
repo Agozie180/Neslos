@@ -21,7 +21,7 @@ flowchart TD
   S --> A
 ```
 
-The diagram describes the implemented private payment design. The public demo rehearses its stages using simulated funds. Public testnet commerce and private TDX research have separate successful proofs; funded Confidential Intents settlement remains unproved. An allocation reserve does not open a lending position. Public DeFi positions stay public; a strict confidential policy refuses public lending actions.
+The diagram describes the implemented private payment design. The public demo rehearses its stages using simulated funds. Public testnet commerce, private TDX research and a funded owner-wallet Confidential Intents round trip have separate evidence. The [round trip](CONFIDENTIAL-SETTLEMENT-2026-11-09.md) returned full principal but failed its native fee cap; it did not use the Neslos vault or TDX. The complete funded private-vault path remains unproved. An allocation reserve does not open a lending position. Public DeFi positions stay public; a strict confidential policy refuses public lending actions.
 
 ## Trust boundaries
 
@@ -57,7 +57,7 @@ React + Vite control room; TypeScript policy/research/orchestration/API; Rust ne
 | [NEAR vault](../contracts/policy-vault) | Fixed-token custody, shared allowance, exact authorization and constrained dispatch | 25 Rust unit tests, two local sandbox suites and public testnet commerce receipts |
 | [Private runtime](../src/tee/runtime.ts) and [inference](../src/core/inference.ts) | Attested encrypted commands, independent researchers and signed audit | Three signed NEAR AI reports inside verified TDX; audit, replay, restart and exhausted-budget checks |
 | [Owner workspace](../src/owner/workspace.ts) | Local keys, exact transaction review, funding, recovery and finite schedules | Client/CLI live proof and automated owner-browser fixture tests |
-| [Intents adapter](../src/core/intents.ts) | Signed confidential quotes and settlement observation | Credentialed no-spend quotes/private-balance evidence; funded settlement remains separate validation |
+| [Intents adapter](../src/core/intents.ts) | Signed confidential quotes and settlement observation | Credentialed quotes plus a separate funded owner-wallet provider proof; integrated TDX/vault settlement remains separate validation |
 
 Finite research and settlement-observation schedules are implemented in the local owner server. They retain request IDs, pause on failure, share the runtime inference allowance and never submit transactions. [Owner architecture and operation](OWNER-WORKSPACE.md).
 

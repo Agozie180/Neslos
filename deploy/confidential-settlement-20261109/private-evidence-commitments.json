@@ -1,0 +1,61 @@
+{
+  "format": "neslos-private-evidence-commitments-v1",
+  "note": "Exact-byte commitments identify retained private evidence. They do not disclose or independently verify its contents. Credentials and session tokens are excluded.",
+  "evidence": [
+    {
+      "label": "baseline.json",
+      "bytes": 1371,
+      "sha256": "f0e5544c70d48086b334b86746896a1810b1e30855d65c1d24867ee2ac6045f2"
+    },
+    {
+      "label": "shield-plan.json",
+      "bytes": 4089,
+      "sha256": "a45ea0b32300cdd3fbad731d361f8c4c77f7fb1526164b6feb9a979637e3df36"
+    },
+    {
+      "label": "shield-tx.json",
+      "bytes": 3520,
+      "sha256": "3fe4c9ee10d16f5b3c00bb8cd74fd61000e831c06cbdbfefa0a2c08e621462e3"
+    },
+    {
+      "label": "shield-observation.json",
+      "bytes": 3860,
+      "sha256": "ade09d42eab88cc6626f98ae1f0f648e93f094bbe68185849d397a146fefcf19"
+    },
+    {
+      "label": "withdrawal.json",
+      "bytes": 6548,
+      "sha256": "f131e46a6a4e9a97470e4028189c67b60f5d12cfa82bd26388b3a91955846ddc"
+    },
+    {
+      "label": "settlement-result.json",
+      "bytes": 3911,
+      "sha256": "de814e6f975a61615a2e6f19038bad4335696f42712bcd2c0664477beba81574"
+    },
+    {
+      "label": "chain-verification.json",
+      "bytes": 666,
+      "sha256": "c83fa29b2aa47180a1644d146a3d1b77f77f8e2096280a3e133353bf0cc51f86"
+    },
+    {
+      "label": "native-fee-overrun.json",
+      "bytes": 548,
+      "sha256": "7919f6ca35d8d56d839f45bc3d507dbf8482ea6b598c9cfe7e1311a7834d3aae"
+    },
+    {
+      "label": "funding-checks.json",
+      "bytes": 5872,
+      "sha256": "c7becca3d74d9e5d0d1fa9abc8347b057eb384fd454b2522e1adbf8fde550153"
+    },
+    {
+      "label": "recovery-checks.json",
+      "bytes": 2041,
+      "sha256": "d102b6b57a73f362dbd035d92a7aedfcb21708fe6f9a84834273b89bb868e835"
+    },
+    {
+      "label": "recovery-tests.json",
+      "bytes": 89200,
+      "sha256": "2f5d2ef2da9d58f8d5ab660a9f21a7667824b1222ace2a92ab187d26ef0a7b92"
+    }
+  ]
+}

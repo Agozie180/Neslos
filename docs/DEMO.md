@@ -12,7 +12,7 @@ Use the [live Vercel rehearsal](https://neslos.vercel.app) or the local applicat
 | 40–58s | Launch a $150 allocation-reserve rehearsal. | Researchers cite Rhea yield components and exit liquidity; the six stages advance. |
 | 58–68s | Inspect the leading opportunity. | Show its source, ranking rule, exclusions and public-position risk. A reserve is not a lending deposit. |
 | 68–83s | Open Audit trail → Verify integrity → Test a tampered copy. | Valid receipts pass in the browser; the altered copy is rejected. |
-| 83–90s | Show testnet enforcement and retained private NEAR AI research evidence. | Three signed reports, encrypted audit and restart checks passed in TDX. Disclose provider-administration trust for weights/routing and that funded settlement remains unfinished. |
+| 83–90s | Show testnet enforcement and retained private research/settlement evidence. | Three signed reports, encrypted audit and restart checks passed in TDX. The separate owner-wallet round trip returned full principal but exceeded its native fee cap; integrated private-vault settlement remains unproved. |
 
 Use the reproducible reference checkbox for a stable recorded demonstration. Explain that the 1 November data is captured, not current. For a live-data demonstration, refresh and retain the actual source response/time.
 
@@ -22,6 +22,8 @@ Suggested narration:
 
 Use the dated hardware, research and chain receipts for the claims they demonstrate. Label the browser recording as a rehearsal. The research archive proves the separate private-client/CLI flow under its declared trust policy; it does not establish a funded settlement or a currently running TDX endpoint.
 
+The [9 November settlement report](CONFIDENTIAL-SETTLEMENT-2026-11-09.md) adds a funded owner-wallet provider round trip with full principal recovery and an independently checked return receipt. Keep its failed native fee cap visible. It used no TDX or Neslos vault and does not establish a single research-to-vault-to-settlement execution.
+
 ## Evidence for review
 
 | Review step | Expected result | Source |
@@ -30,12 +32,13 @@ Use the dated hardware, research and chain receipts for the claims they demonstr
 | Run local checks | Application/build and browser checks pass; Linux covers platform-specific checks | [Reproduction commands](../README.md#reproduce-the-checks) |
 | Inspect chain enforcement | Finalized public testnet transactions and fixture-token balances support payment/limit/replay claims | [Commerce proof](VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) |
 | Inspect private research | Three signed researchers, verified hardware/build inputs, restart and budget rejection; provider-administration trust disclosed | [Research proof](NEAR-PRIVATE-RESEARCH-2026-11-09.md) · [Evidence index](../deploy/near-private-research-20261109/record.json) |
+| Inspect the owner-wallet settlement | Full 0.001 NEAR principal returned with a finalized receipt; native fee-cap failure disclosed | [Settlement proof](CONFIDENTIAL-SETTLEMENT-2026-11-09.md) · [Evidence index](../deploy/confidential-settlement-20261109/record.json) |
 
 The archive contains public hardware/build evidence and sanitized results. Private prompts and receipt openings remain with the owner. Reviewers can inspect the committed evidence without cloud credentials or renting a new TDX instance; repeating a live hardware/inference session is a separate optional paid operation.
 
 ## Submission preparation
 
-The deadline is 14 November 2026 at 23:59 UTC (15 November at 00:59 in Lagos). Target security, privacy, defi and swarms only to the extent supported by the finished evidence. Add agents only after a real paid agent job exists.
+The deadline is 14 November 2026 at 23:59 UTC (15 November at 00:59 in Lagos). The [README explains the fit for Security, Privacy, DeFi and Swarms in one sentence each](../README.md#hackathon-tracks), with evidence links; the [research guide](RESEARCH.md#track-fit-and-evidence) records their scope and submission IDs. Add the Agents track only after a compatible paid-job integration is demonstrated.
 
 Track the remaining publication work here:
 

@@ -1,0 +1,132 @@
+{
+  "fundingBaseRevision": "461375a369dcea1a5a251d8bca1af5441713149b",
+  "node": "24.22.2",
+  "platform": "Windows",
+  "beforeFunding": {
+    "testsPassed": 226,
+    "testsFailed": 0,
+    "testsSkipped": 0,
+    "testFiles": 5,
+    "offlineAssertionsPassed": 46,
+    "runnerTypeCheck": "passed",
+    "sources": [
+      {
+        "path": ".local/confidential-settlement-20261109/run.ts",
+        "sha256": "57cbd18d4c466f7bf16a7fea913dbef589d3f78ef4dea54cd72eb6bfefcc1f47"
+      },
+      {
+        "path": ".local/confidential-settlement-20261109/inspect.ts",
+        "sha256": "a1f4eadecd1dec070ffac2322ebbf3b87be162d0c1957a6b0ac890c98f52e513"
+      },
+      {
+        "path": "src/owner/account.ts",
+        "sha256": "23e713e2e3934be8e9a2c15ee846621d210c730fff1ddc634da09efec4ffc690"
+      },
+      {
+        "path": "src/owner/confidential-auth.ts",
+        "sha256": "2f328c69a67a87bc7f5b0e8c78ac06b16d47e86b03122e2493cfd81df169b0a2"
+      },
+      {
+        "path": "src/owner/confidential-intent.ts",
+        "sha256": "cdc93752a8764e12167e37e078290d77915e0a7aa2e3975a1a59d145a4f29b57"
+      },
+      {
+        "path": "src/owner/confidential-quote.ts",
+        "sha256": "3073e0850dc3f548a906dc3b1e0ea4e9b81c4ec22c8075aab44a2a71e35b377c"
+      },
+      {
+        "path": "src/owner/confidential-preflight.ts",
+        "sha256": "354d655c01120593611ece94b9a8e5d71280959684f9b459620e00f5bc53e33f"
+      },
+      {
+        "path": "src/core/near.ts",
+        "sha256": "1fc5f5c2ad082681b25b90b216127e4cd62ffc88535b26729d22f215b4e2d589"
+      },
+      {
+        "path": "package-lock.json",
+        "sha256": "3eece3f4001b10d9e088e64e510d3c87d7a222a6f7aa3e5017f1e0746cb95e6d"
+      }
+    ]
+  },
+  "beforeRecovery": {
+    "testsPassed": 232,
+    "testsFailed": 0,
+    "testsSkipped": 0,
+    "testFiles": 5,
+    "runnerTypeCheck": "passed",
+    "testReportSha256": "2f5d2ef2da9d58f8d5ab660a9f21a7667824b1222ace2a92ab187d26ef0a7b92",
+    "sources": [
+      {
+        "path": ".local/confidential-settlement-20261109/run.ts",
+        "sha256": "b7918cad465b12ee2c3af3e842b99c8c7bde8b8b7c6dffb537053273517901a2"
+      },
+      {
+        "path": ".local/confidential-settlement-20261109/inspect.ts",
+        "sha256": "a1f4eadecd1dec070ffac2322ebbf3b87be162d0c1957a6b0ac890c98f52e513"
+      },
+      {
+        "path": "src/owner/account.ts",
+        "sha256": "23e713e2e3934be8e9a2c15ee846621d210c730fff1ddc634da09efec4ffc690"
+      },
+      {
+        "path": "src/owner/confidential-auth.ts",
+        "sha256": "5f3f0ba830ea226e1a9591933d2b3df9234c7f2e69795768ac3cbc4c065aaa5e"
+      },
+      {
+        "path": "src/owner/confidential-intent.ts",
+        "sha256": "cdc93752a8764e12167e37e078290d77915e0a7aa2e3975a1a59d145a4f29b57"
+      },
+      {
+        "path": "src/owner/confidential-quote.ts",
+        "sha256": "3073e0850dc3f548a906dc3b1e0ea4e9b81c4ec22c8075aab44a2a71e35b377c"
+      },
+      {
+        "path": "src/owner/confidential-preflight.ts",
+        "sha256": "354d655c01120593611ece94b9a8e5d71280959684f9b459620e00f5bc53e33f"
+      },
+      {
+        "path": "src/core/near.ts",
+        "sha256": "1fc5f5c2ad082681b25b90b216127e4cd62ffc88535b26729d22f215b4e2d589"
+      },
+      {
+        "path": "package-lock.json",
+        "sha256": "3eece3f4001b10d9e088e64e510d3c87d7a222a6f7aa3e5017f1e0746cb95e6d"
+      },
+      {
+        "path": ".local/confidential-settlement-20261109/offline-checks.ts",
+        "sha256": "7929c7998d2534d23029bee5f147cafe92fe964009d366856fe961de585186f9"
+      },
+      {
+        "path": "tests/confidential-auth.test.ts",
+        "sha256": "869c14eea60d3d02af6d15d92d8bf13f49160f686c556eb8728888b11c54e4d5"
+      }
+    ]
+  },
+  "afterRecovery": {
+    "projectTypeScript": "passed",
+    "projectTypeScriptCommand": "node node_modules/typescript/bin/tsc --noEmit",
+    "exactNativeReturnReceiptVerified": true
+  },
+  "regressionCommand": "npm test -- tests/confidential-quote.test.ts tests/confidential-intent.test.ts tests/confidential-auth.test.ts tests/owner.test.ts tests/private-transactions.test.ts",
+  "providerNativeFundingReference": {
+    "retrievedAt": "2026-11-09T17:58:13.979Z",
+    "repository": "near-examples/near-intents-examples",
+    "revision": "32247f923f1bed9a21b4ffdd98b7ce3541a58688",
+    "sources": [
+      {
+        "path": "1click-example/3-send-deposit.ts",
+        "url": "https://raw.githubusercontent.com/near-examples/near-intents-examples/32247f923f1bed9a21b4ffdd98b7ce3541a58688/1click-example/3-send-deposit.ts",
+        "capture": ".local/confidential-settlement-20261109/official-3-send-deposit.ts.txt",
+        "sha256": "9573b69d63d3e5d108c7aa0a68055c6d34a05c93870b2c25fd1ad754f4ca71fb",
+        "nativeNearTransferConfirmed": true
+      },
+      {
+        "path": "1click-example/6-full-swap.ts",
+        "url": "https://raw.githubusercontent.com/near-examples/near-intents-examples/32247f923f1bed9a21b4ffdd98b7ce3541a58688/1click-example/6-full-swap.ts",
+        "capture": ".local/confidential-settlement-20261109/official-6-full-swap.ts.txt",
+        "sha256": "b9741b9d502d4edbda51bf36e024a6509b502f53a2bc74f7a8aa84c67ac800ed",
+        "nativeNearTransferConfirmed": true
+      }
+    ]
+  }
+}

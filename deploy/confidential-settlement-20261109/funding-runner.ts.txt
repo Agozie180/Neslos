@@ -1,0 +1,250 @@
+// Fixed owner-wallet proof. No TDX, inference, exchange trade or mainnet vault deployment.
+// Funding and withdrawal are separate explicit commands; durable journals prevent new retries.
+import { access, open, readFile, unlink } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { actions, baseEncode, KeyPair, type KeyPairString } from 'near-api-js';
+import { verifyQuoteSignature } from '@defuse-protocol/one-click-sdk-typescript';
+import { canonical, sha256 } from '../../src/core/crypto.js';
+import { connectOwner, submitOnce, transactionOutcome, writePrivateJson } from '../../src/owner/account.js';
+import { confidentialImplicitId, readConfidentialOwnerBalances, refreshConfidentialOwnerSession } from '../../src/owner/confidential-auth.js';
+import { runConfidentialPreflight } from '../../src/owner/confidential-preflight.js';
+import { makeConfidentialQuoteRequest, validateConfidentialQuote, type ConfidentialProofQuote } from '../../src/owner/confidential-quote.js';
+import { validateConfidentialWithdrawalIntent } from '../../src/owner/confidential-intent.js';
+import { retryNearRead, viewNear } from '../../src/core/near.js';
+
+const ROOT = '.private/confidential-settlement-20261109';
+const CREDENTIALS = '.private/near/mainnet/settlement.json';
+const SESSION = '.private/confidential-user-session.json';
+const API = 'https://1click.chaindefuser.com/v0';
+const AMOUNT = '1000000000000000000000'; // 0.001 NEAR; the provider's internal asset ID is nep141:wrap.near.
+const GAS = 30000000000000n; // Conservative native-transfer gas bound, not attached function-call gas.
+const MAX_NATIVE = 4000000000000000000000n; // 0.004 NEAR, including transaction overhead.
+const TERMINAL = new Set(['SUCCESS', 'REFUNDED', 'FAILED']);
+const STATUSES = new Set(['PENDING_DEPOSIT', 'KNOWN_DEPOSIT_TX', 'PROCESSING', 'INCOMPLETE_DEPOSIT', ...TERMINAL]);
+const load = async (name: string) => JSON.parse(await readFile(ROOT + '/' + name, 'utf8'));
+const exists = async (name: string) => { try { await access(ROOT + '/' + name); return true; } catch (e) { if ((e as NodeJS.ErrnoException).code === 'ENOENT') return false; throw e; } };
+const save = (name: string, data: unknown, exclusive = true) => writePrivateJson(ROOT + '/' + name, data, exclusive);
+const privateAmount = (value: { balances: Array<{ available: string }> }) => BigInt(value.balances[0]?.available ?? '0');
+
+async function partner(path: string, body: unknown | undefined, label: string) {
+  if (!process.env.ONECLICK_JWT || !/^\/(quote|generate-intent|submit-intent|status\?depositAddress=)/.test(path)) throw new Error('PARTNER_REQUEST_CONFIG');
+  let response: Response;
+  try {
+    response = await fetch(API + path, { method: body === undefined ? 'GET' : 'POST', redirect: 'error', signal: AbortSignal.timeout(30000), headers: { accept: 'application/json', 'content-type': 'application/json', 'X-API-Key': process.env.ONECLICK_JWT }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+  } catch { throw new Error('PARTNER_TRANSPORT_UNKNOWN'); }
+  if (!response.body) throw new Error('PARTNER_EMPTY_RESPONSE');
+  const reader = response.body.getReader(), chunks: Uint8Array[] = [];
+  let size = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.length;
+      if (size > 262144) { await reader.cancel(); throw new Error('PARTNER_RESPONSE_TOO_LARGE'); }
+      chunks.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  const text = Buffer.concat(chunks).toString('utf8');
+  await save(`http/${label}-${Date.now()}.json`, { at: new Date().toISOString(), path, httpStatus: response.status, responseText: text });
+  if (response.status !== 200 && response.status !== 201) throw new Error('PARTNER_HTTP_' + response.status);
+  try { return JSON.parse(text); } catch { throw new Error('PARTNER_JSON'); }
+}
+
+async function ownerAndBaseline() {
+  const baseline = await load('baseline.json');
+  const owner = await connectOwner('mainnet', CREDENTIALS);
+  if (baseline.network !== 'mainnet' || baseline.amount !== AMOUNT || owner.account.accountId !== baseline.ownerAccount || owner.publicKey.toString() !== baseline.publicKey || confidentialImplicitId(baseline.publicKey) !== baseline.confidentialId) throw new Error('BASELINE_IDENTITY');
+  const session = JSON.parse(await readFile(SESSION, 'utf8'));
+  if (session.publicKey !== baseline.publicKey || session.recipient !== baseline.confidentialId) throw new Error('SESSION_IDENTITY');
+  if (Date.parse(session.accessExpiresAt) < Date.now() + 120000) await refreshConfidentialOwnerSession(SESSION, baseline.confidentialId);
+  return { owner, baseline };
+}
+
+async function balances(owner: Awaited<ReturnType<typeof connectOwner>>, baseline: any) {
+  const results = await Promise.allSettled([
+    retryNearRead(() => owner.account.getState()),
+    viewNear('wrap.near', 'ft_balance_of', { account_id: baseline.ownerAccount }, 'mainnet'),
+    readConfidentialOwnerBalances(SESSION, baseline.confidentialId),
+  ]);
+  for (const result of results) if (result.status !== 'fulfilled') throw result.reason;
+  const [state, token, confidential] = results.map(result => (result as PromiseFulfilledResult<any>).value);
+  return { at: new Date().toISOString(), state, token, confidential };
+}
+
+function context(baseline: any, direction: 'shield' | 'unshield') {
+  return { direction, ownerAccount: baseline.ownerAccount, confidentialId: baseline.confidentialId, amount: AMOUNT, maxLossBps: 0, dry: false } as const;
+}
+async function newQuote(baseline: any, direction: 'shield' | 'unshield') {
+  const input = context(baseline, direction), request = makeConfidentialQuoteRequest(input);
+  return validateConfidentialQuote(await partner('/quote', request, direction + '-quote'), request, input);
+}
+async function status(quote: ConfidentialProofQuote, label: string) {
+  if (quote.dry || !quote.execution) throw new Error('STATUS_DRY');
+  const result = await partner('/status?depositAddress=' + encodeURIComponent(quote.execution.depositAddress), undefined, label);
+  if (!STATUSES.has(result.status) || !statusQuoteVerified(quote, result)) throw new Error('STATUS_QUOTE_BINDING');
+  if (result.status === 'SUCCESS' && (result.swapDetails?.amountIn !== AMOUNT || result.swapDetails?.amountOut !== AMOUNT)) throw new Error('STATUS_SETTLED_AMOUNT');
+  return result;
+}
+
+/** Compare the original quote with the provider's persisted status representation.
+ * Correlation IDs trace individual HTTP requests. The status endpoint omits two
+ * harmless request defaults and emits three unused optional fields as null.
+ * Every other field, including signature, timestamp, amount, fee, recipient,
+ * refund destination, deadline and confidentiality, must remain identical.
+ */
+export function statusQuoteVerified(quote: Pick<ConfidentialProofQuote, 'response' | 'hash'>, result: any) {
+  try {
+    if (sha256(canonical(quote.response)) !== quote.hash || !verifyQuoteSignature(quote.response) || !verifyQuoteSignature(result.quoteResponse)) return false;
+    const comparable = (source: any) => {
+      const value = structuredClone(source);
+      if (Object.hasOwn(value, 'correlationId') && typeof value.correlationId !== 'string') throw new Error('STATUS_TRACE_FORMAT');
+      delete value.correlationId;
+      for (const field of ['virtualChainRecipient', 'virtualChainRefundRecipient', 'referral']) {
+        if (value.quoteRequest[field] === null) delete value.quoteRequest[field];
+      }
+      if (!Object.hasOwn(value.quoteRequest, 'quoteWaitingTimeMs')) value.quoteRequest.quoteWaitingTimeMs = 0;
+      if (!Object.hasOwn(value.quoteRequest, 'insured')) value.quoteRequest.insured = false;
+      return value;
+    };
+    return canonical(comparable(quote.response)) === canonical(comparable(result.quoteResponse));
+  } catch { return false; }
+}
+
+export function nativeTransferVerified(outcome: any, sender: string, recipient: string) {
+  const transaction = outcome?.transaction;
+  return transactionOutcome(outcome).success && transaction?.signer_id === sender && transaction?.receiver_id === recipient
+    && Array.isArray(transaction.actions) && transaction.actions.length === 1 && transaction.actions[0]?.Transfer?.deposit === AMOUNT
+    && Array.isArray(outcome.receipts_outcome) && outcome.receipts_outcome.length > 0
+    && outcome.receipts_outcome.every((receipt: any) => receipt.outcome?.status && !('Failure' in receipt.outcome.status));
+}
+
+export function returnedPrincipal(before: any, after: any) {
+  const nativeDelta = BigInt(after.state.balance.total) - BigInt(before.state.balance.total);
+  const wrappedDelta = BigInt(after.token.value) - BigInt(before.token.value);
+  return {
+    verified: (nativeDelta === BigInt(AMOUNT) && wrappedDelta === 0n) || (nativeDelta === 0n && wrappedDelta === BigInt(AMOUNT)),
+    nativeDelta: nativeDelta.toString(), wrappedDelta: wrappedDelta.toString(),
+    returnedAsset: nativeDelta === BigInt(AMOUNT) && wrappedDelta === 0n ? 'native-near' : nativeDelta === 0n && wrappedDelta === BigInt(AMOUNT) ? 'wrap.near' : 'unverified',
+  };
+}
+
+async function fund() {
+  if (await exists('shield-tx.json')) throw new Error('SHIELD_ALREADY_ATTEMPTED_OBSERVE_SAVED_HASH');
+  if (await exists('withdrawal.json')) throw new Error('WITHDRAWAL_ALREADY_EXISTS');
+  const { owner, baseline } = await ownerAndBaseline();
+  const before = await balances(owner, baseline);
+  if (BigInt(before.token.value) !== BigInt(baseline.token.value) || BigInt(before.state.balance.total) !== BigInt(baseline.state.balance.total) || privateAmount(before.confidential) !== privateAmount(baseline.privateBalance)) throw new Error('BASELINE_CHANGED');
+  if (BigInt(before.state.balance.available) < MAX_NATIVE + BigInt(AMOUNT)) throw new Error('PROOF_FUNDS_INSUFFICIENT');
+  const ready = ROOT + '/execution-preflight-' + Date.now() + '.json';
+  await runConfidentialPreflight({ ownerAccount: baseline.ownerAccount, publicKey: baseline.publicKey, mode: 'live', maxLossBps: 0, out: ready });
+  const quote = await newQuote(baseline, 'shield');
+  if (quote.dry || !quote.execution) throw new Error('SHIELD_NOT_EXECUTABLE');
+  // Official near-examples/near-intents-examples 1click-example/3-send-deposit.ts
+  // funds nep141:wrap.near ORIGIN_CHAIN quotes with native NEAR, not ft_transfer.
+  const gasResponse = await fetch('https://rpc.fastnear.com', { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(25000), headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 'neslos-proof-gas', method: 'gas_price', params: [before.token.blockHash] }) });
+  const gas = await gasResponse.json();
+  if (!gasResponse.ok || gas.error || gas.id !== 'neslos-proof-gas' || !/^[0-9]+$/.test(gas.result?.gas_price)) throw new Error('GAS_PRICE_UNVERIFIED');
+  if ((GAS + 5000000000000n) * BigInt(gas.result.gas_price) + 1n > MAX_NATIVE) throw new Error('GAS_BUDGET_EXCEEDED');
+  const current = await status(quote, 'shield-before');
+  if (current.status !== 'PENDING_DEPOSIT') throw new Error('SHIELD_ADDRESS_ALREADY_ACTIVE');
+  validateConfidentialQuote(quote.response, quote.request, context(baseline, 'shield'));
+  if (Date.parse(quote.execution.deadline) - Date.now() < 15000) throw new Error('SHIELD_WINDOW_TOO_SHORT');
+  const plan = { at: new Date().toISOString(), proof: 'owner-wallet-mainnet-confidential-round-trip', fundingAsset: 'native-near', providerAsset: 'nep141:wrap.near', amount: AMOUNT, maxLossBps: 0, maxNativeYocto: MAX_NATIVE.toString(), quote, before, gasPrice: gas.result.gas_price, maxFundingTransactions: 1, maxSpendingIntents: 1, authorization: 'User requested to run the confidential settlement proof on 9 November 2026.' };
+  await save('shield-plan.json', plan);
+  console.log(JSON.stringify({ phase: 'shield', fundingAsset: 'native-near', amountNear: '0.001', maxProviderLossBps: 0, maxNativeFeeNear: '0.004', sendingOneJournaledTransaction: true }));
+  const guardedAccount = {
+    accountId: owner.account.accountId,
+    provider: owner.provider,
+    createSignedTransaction: async (input: Parameters<typeof owner.account.createSignedTransaction>[0]) => {
+      const signed = await owner.account.createSignedTransaction(input);
+      validateConfidentialQuote(quote.response, quote.request, context(baseline, 'shield'));
+      if (Date.parse(quote.execution!.deadline) <= Date.now() + 5000) throw new Error('SHIELD_WINDOW_EXPIRED');
+      return signed;
+    },
+  };
+  const record = await submitOnce(guardedAccount, 'mainnet', ROOT + '/shield-tx.json', quote.execution.depositAddress, [actions.transfer(BigInt(AMOUNT))]);
+  if (!nativeTransferVerified(record.outcome, baseline.ownerAccount, quote.execution.depositAddress)) throw new Error('SHIELD_TRANSFER_NOT_VERIFIED');
+  await save('shield-transfer-verified.json', { at: new Date().toISOString(), hash: record.hash, nativeTransferVerified: true, amount: AMOUNT });
+  console.log(JSON.stringify({ phase: 'shield', transactionFinal: true, nativeTransferVerified: true, transactionHash: record.hash, amountNear: '0.001' }));
+}
+
+async function observeShield() {
+  const { owner, baseline } = await ownerAndBaseline(), plan = await load('shield-plan.json');
+  const transaction = await load('shield-tx.json');
+  if (transaction.state !== 'final') {
+    const observed = await retryNearRead(() => owner.provider.viewTransactionStatus({ txHash: transaction.hash, accountId: owner.account.accountId, waitUntil: 'FINAL' }));
+    if (observed.transaction?.hash !== transaction.hash || !nativeTransferVerified(observed, baseline.ownerAccount, plan.quote.execution.depositAddress)) throw new Error('SHIELD_OUTCOME_UNKNOWN');
+    transaction.state = 'final'; transaction.outcome = observed; await save('shield-tx.json', transaction, false);
+  }
+  if (!nativeTransferVerified(transaction.outcome, baseline.ownerAccount, plan.quote.execution.depositAddress)) throw new Error('SHIELD_TRANSFER_NOT_VERIFIED');
+  const provider = await status(plan.quote, 'shield-observe'), observed = await balances(owner, baseline);
+  const nativeSpent = BigInt(baseline.state.balance.total) - BigInt(observed.state.balance.total);
+  const verified = provider.status === 'SUCCESS' && privateAmount(observed.confidential) === privateAmount(baseline.privateBalance) + BigInt(AMOUNT) && BigInt(observed.token.value) === BigInt(baseline.token.value) && nativeSpent >= BigInt(AMOUNT) && nativeSpent <= BigInt(AMOUNT) + MAX_NATIVE;
+  const observation = { at: new Date().toISOString(), provider, observed, privateCreditVerified: verified, nativeSpentYocto: nativeSpent.toString(), nativeFeeYocto: (nativeSpent - BigInt(AMOUNT)).toString() };
+  await save('observations/shield-' + Date.now() + '.json', observation);
+  if (verified && !await exists('shield-observation.json')) await save('shield-observation.json', observation);
+  console.log(JSON.stringify({ phase: 'shield', providerStatus: provider.status, privateCreditVerified: verified, amountWnear: '0.001', fundingTransactions: 1 }));
+  if (TERMINAL.has(provider.status) && !verified) throw new Error('SHIELD_TERMINAL_STATE_REQUIRES_REVIEW');
+}
+
+async function withdraw() {
+  if (await exists('withdrawal.json')) throw new Error('WITHDRAWAL_ALREADY_SIGNED_OBSERVE_SAVED_QUOTE');
+  const { owner, baseline } = await ownerAndBaseline();
+  const shieldObservation = await load('shield-observation.json');
+  if (!shieldObservation.privateCreditVerified) throw new Error('PRIVATE_CREDIT_NOT_VERIFIED');
+  const before = await balances(owner, baseline);
+  if (privateAmount(before.confidential) !== privateAmount(baseline.privateBalance) + BigInt(AMOUNT) || BigInt(before.token.value) !== BigInt(baseline.token.value) || BigInt(before.state.balance.total) !== BigInt(shieldObservation.observed.state.balance.total)) throw new Error('WITHDRAWAL_BALANCE_CHANGED');
+  const quote = await newQuote(baseline, 'unshield');
+  if (quote.dry || !quote.execution) throw new Error('WITHDRAWAL_QUOTE_INVALID');
+  const generated = await partner('/generate-intent', { type: 'swap_transfer', standard: 'raw_ed25519', signerId: baseline.confidentialId, depositAddress: quote.execution.depositAddress }, 'generate');
+  const intent = validateConfidentialWithdrawalIntent(generated, quote, { ownerAccount: baseline.ownerAccount, confidentialId: baseline.confidentialId, publicKey: baseline.publicKey, amount: AMOUNT, maxLossBps: 0 });
+  const providerBefore = await status(quote, 'withdrawal-before');
+  if (providerBefore.status !== 'PENDING_DEPOSIT') throw new Error('WITHDRAWAL_ADDRESS_ALREADY_ACTIVE');
+  validateConfidentialWithdrawalIntent(generated, quote, { ownerAccount: baseline.ownerAccount, confidentialId: baseline.confidentialId, publicKey: baseline.publicKey, amount: AMOUNT, maxLossBps: 0 });
+  if (Date.parse(intent.signingDeadline) - Date.now() < 15000) throw new Error('WITHDRAWAL_WINDOW_TOO_SHORT');
+  const credentials = JSON.parse(await readFile(CREDENTIALS, 'utf8'));
+  const key = KeyPair.fromString(credentials.private_key as KeyPairString);
+  if (credentials.account_id !== baseline.ownerAccount || key.getPublicKey().toString() !== baseline.publicKey) throw new Error('WITHDRAWAL_SIGNER_MISMATCH');
+  const bytes = Buffer.from(intent.intent.payload, 'utf8'), signed = key.sign(bytes);
+  if (signed.publicKey.toString() !== baseline.publicKey || !key.verify(bytes, signed.signature)) throw new Error('WITHDRAWAL_SIGNATURE_INVALID');
+  const request = { type: 'swap_transfer', signedData: { standard: 'raw_ed25519', payload: intent.intent.payload, public_key: baseline.publicKey, signature: 'ed25519:' + baseEncode(signed.signature) } };
+  const record: any = { at: new Date().toISOString(), state: 'signed', quote, intent, generated, before, request, signatureVerifiedLocally: true };
+  await save('withdrawal.json', record);
+  if (Date.parse(intent.signingDeadline) <= Date.now()) throw new Error('WITHDRAWAL_SUBMISSION_WINDOW_EXPIRED');
+  record.state = 'submission-started'; await save('withdrawal.json', record, false);
+  const response = await partner('/submit-intent', request, 'submit-intent');
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,64}$/.test(response.intentHash) || typeof response.correlationId !== 'string') throw new Error('WITHDRAWAL_RESPONSE_UNKNOWN');
+  record.state = 'submitted'; record.response = response; record.submittedAt = new Date().toISOString(); await save('withdrawal.json', record, false);
+  console.log(JSON.stringify({ phase: 'withdrawal', submitted: true, spendingIntents: 1, intentHash: response.intentHash, amountWnear: '0.001', providerFee: '0', destinationIsOriginalOwner: true }));
+}
+
+async function observeWithdrawal() {
+  const { owner, baseline } = await ownerAndBaseline(), withdrawal = await load('withdrawal.json');
+  const provider = await status(withdrawal.quote, 'withdrawal-observe'), observed = await balances(owner, baseline);
+  const returned = returnedPrincipal(withdrawal.before, observed);
+  const nativeCost = BigInt(baseline.state.balance.total) + BigInt(baseline.token.value) - BigInt(observed.state.balance.total) - BigInt(observed.token.value);
+  const verified = provider.status === 'SUCCESS' && privateAmount(observed.confidential) === privateAmount(baseline.privateBalance) && returned.verified;
+  const observation = { at: new Date().toISOString(), provider, observed, returned, principalRestored: verified, nativeCostYocto: nativeCost.toString(), nativeCostWithinCap: nativeCost >= 0n && nativeCost <= MAX_NATIVE, amount: AMOUNT };
+  await save('observations/withdrawal-' + Date.now() + '.json', observation);
+  if (verified && observation.nativeCostWithinCap && !await exists('result.json')) await save('result.json', observation);
+  console.log(JSON.stringify({ phase: 'withdrawal', providerStatus: provider.status, principalRestored: verified, returnedAsset: returned.returnedAsset, privateBalanceRestored: privateAmount(observed.confidential) === privateAmount(baseline.privateBalance), amountNearEquivalent: '0.001', nativeCostYocto: nativeCost.toString(), nativeCostWithinCap: observation.nativeCostWithinCap, destinationTransactions: provider.swapDetails?.destinationChainTxHashes?.map((tx: any) => tx.hash) ?? [] }));
+  if (TERMINAL.has(provider.status) && (!verified || !observation.nativeCostWithinCap)) throw new Error('WITHDRAWAL_TERMINAL_STATE_REQUIRES_REVIEW');
+}
+
+async function main() {
+  const mode = process.argv[2];
+  if (!['fund', 'observe-shield', 'withdraw', 'observe-withdrawal'].includes(mode ?? '') || process.argv.length !== 3) throw new Error('EXPLICIT_PROOF_STAGE_REQUIRED');
+  if (mode === 'observe-shield') return observeShield();
+  if (mode === 'observe-withdrawal') return observeWithdrawal();
+  const lock = await open(ROOT + '/execution.lock', 'wx', 0o600);
+  try { if (mode === 'fund') await fund(); else await withdraw(); }
+  finally { await lock.close(); await unlink(ROOT + '/execution.lock'); }
+}
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch(async error => {
+  const message = error instanceof Error ? error.message : String(error);
+  const code = /^[A-Z][A-Z0-9_]+/.exec(message)?.[0] ?? 'PROOF_STAGE_FAILED';
+  await save('errors/' + Date.now() + '.json', { at: new Date().toISOString(), mode: process.argv[2], message }).catch(() => {});
+  console.error(JSON.stringify({ failure: code, stage: process.argv[2], journalsRetained: true, retryPolicy: 'Observe saved transactions and quotes; never replace a signed operation.' }));
+  process.exitCode = 1;
+});

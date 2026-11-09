@@ -1,6 +1,6 @@
 # Hackathon research
 
-Project status and the live event's deadline, publication and eligibility requirements were checked on 9 November 2026. Read the [live brief](https://nearhackathon.com/HACKATHON.md) again before submission; the latest retained full copy is in [sources](sources/HACKATHON-2026-11-06.md). See [current status](STATUS.md), [private research proof](NEAR-PRIVATE-RESEARCH-2026-11-09.md) and [testnet/Confidential Intents research](CONFIDENTIAL-TESTNET-RESEARCH-2026-11-06.md) for dated evidence.
+Project status and the live event's deadline, publication and eligibility requirements were checked on 9 November 2026. Read the [live brief](https://nearhackathon.com/HACKATHON.md) again before submission; the latest retained full copy is in [sources](sources/HACKATHON-2026-11-06.md). See [current status](STATUS.md), [private research proof](NEAR-PRIVATE-RESEARCH-2026-11-09.md), [funded owner-wallet settlement](CONFIDENTIAL-SETTLEMENT-2026-11-09.md) and [testnet/Confidential Intents research](CONFIDENTIAL-TESTNET-RESEARCH-2026-11-06.md) for dated evidence.
 
 ## Verified event facts
 
@@ -20,15 +20,16 @@ The roughly **2.4 NEAR** estimate concerns code-storage stake for an optional ma
 
 All track IDs: defi, thesis, privacy, business, swarms, security, agents, realworld, games, nfts, memecoins, social, open.
 
-## Proposed track fit
+## Track fit and evidence
 
-| Track | Official direction | Current Neslos evidence and scope |
+| Track | How Neslos fits | Current evidence and scope |
 | --- | --- | --- |
-| security | Spending limits, policy engines, sandboxed wallets | Public testnet enforcement, adversarial tests and exact transaction recovery |
-| privacy | Confidential computation, private finance, protected AI | Completed TDX research with encrypted NEAR AI inference and signed audit; provider-administration trust explicitly disclosed |
-| defi | Vaults and trading agents settling through NEAR Intents | Live Rhea research, enforced vault rules and credentialed dry quotes; funded settlement/lending remains unproved |
-| swarms | Coordination and economies between agents | Three signed researcher reports, shared market evidence and deterministic selection/budget controls |
-| agents | Agents hiring, earning and spending | Excluded from the proposed selection until a compatible paid-job integration is demonstrated |
+| **Security** (`security`) | Neslos constrains agent spending with on-chain budget enforcement, signed authorizations and replay protection in its NEAR vault. | [Public testnet enforcement](VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md), adversarial tests and retained-transaction recovery |
+| **Privacy** (`privacy`) | Neslos protects research with attested TDX and encrypted inference, and separately demonstrates an owner-wallet Confidential Intents round trip. | [TDX research](NEAR-PRIVATE-RESEARCH-2026-11-09.md) under disclosed provider-administration trust; [full principal return](CONFIDENTIAL-SETTLEMENT-2026-11-09.md) with a failed native fee cap; integrated TDX/vault settlement remains unproved |
+| **DeFi** (`defi`) | Neslos analyzes live Rhea lending markets for yield, liquidity and risk to produce allocation proposals governed by the owner's treasury policy. | [Live market research](NEAR-PRIVATE-RESEARCH-2026-11-09.md) and [deterministic eligibility/ranking](../src/core/research.ts); funded lending remains unproved |
+| **Swarms** (`swarms`) | Neslos coordinates three specialist researchers, a strategist and a deterministic guardian under one shared treasury policy, with research findings able to veto or narrow a proposal. | [Three signed researcher reports](NEAR-PRIVATE-RESEARCH-2026-11-09.md) and [strategy constraints](../src/core/strategy.ts); the guardian retains deterministic control |
+
+The **Agents** (`agents`) track is excluded until a compatible paid-job integration is demonstrated. The [README track summary](../README.md#hackathon-tracks) presents the four claimed tracks for judges.
 
 ## Sources studied
 
@@ -43,7 +44,7 @@ All track IDs: defi, thesis, privacy, business, swarms, security, agents, realwo
 | [Live Rhea feed](https://lendingsdk.rhea.finance/list_token_data) | Successfully returned 18 markets during research. Fetch time does not establish upstream observation time. |
 | [Confidential swaps](https://docs.near-intents.org/integration/distribution-channels/1click-api/quickstart/confidential-swaps.md) | Standard quote confidentiality is basic or advanced. Embedded private balances need signed intents. Entry/exit transactions remain public. |
 | [Hosted service versus independent verifier research](CONFIDENTIAL-TESTNET-RESEARCH-2026-11-06.md) | Official docs explicitly exclude a hosted testnet; source contracts support independent testing. Testnet RPC options and generic deployer instances do not establish a FAR testnet. |
-| [1Click integration](https://docs.near-intents.org/integration/distribution-channels/1click-api/quickstart/making-a-request.md) | Discover asset IDs from /v0/tokens. Bind refund address and privacy, validate minima, monitor all terminal statuses. NEAR deposits use ft_transfer. |
+| [1Click integration](https://docs.near-intents.org/integration/distribution-channels/1click-api/quickstart/making-a-request.md) and [pinned native-deposit example](https://github.com/near-examples/near-intents-examples/blob/32247f923f1bed9a21b4ffdd98b7ce3541a58688/1click-example/3-send-deposit.ts) | Discover asset IDs, bind the refund destination and route, validate minima and observe terminal status. The tested `ORIGIN_CHAIN` route for `nep141:wrap.near` takes native NEAR; its asset identifier does not imply an `ft_transfer` deposit. |
 | [NEAR AI SDK](https://docs.near.ai/cloud/inference-sdk/javascript.md) | E2EE is opt-in; verifyResponse is explicit; both gateway and model need strict TCB policies. Published 0.2.1 requires Node >=24.22.1. |
 | [NEAR AI verification](https://docs.near.ai/cloud/verification/index.md) | Merely fetching a report is not verifying nonce, hardware chain, measurements, signer and exact response bytes. |
 | [OutLayer](https://github.com/out-layer/outlayer) and [custody skill](https://skills.outlayer.ai/agent-custody/SKILL.md) | TDX custody/compute, separate mainnet/testnet API hosts. Hosted Intents remains mainnet-only. Its wallet policy is not automatically a Neslos on-chain cap. |
@@ -56,13 +57,13 @@ Q-006 in the event brief quotes 0.2% without a 1Click JWT, while the current API
 
 The Rhea response captured on 1 November contains 18 raw markets; 10 match the supported-token normalizer. It is retained in `fixtures/rhea-2026-11-01.json`. Reference mode labels the capture date and is never accepted to authorize funded private activity.
 
-The early confidential 1Click probe returned **HTTP 401 without a partner JWT**. Subsequent credentialed checks verified authentication, private-balance reads, signed 0.001 wNEAR shield/unshield quotes and an unsigned recovery intent. Those 6 November quotes are expired; funded settlement remains unfinished. Preparation stops before paid research if the partner credential is absent. [Dated evidence](TESTNET-TDX-2026-11-07.md) and [authentication and recovery](CONFIDENTIAL-AUTH.md).
+The early confidential 1Click probe returned **HTTP 401 without a partner JWT**. Subsequent credentialed checks verified authentication, private-balance reads, signed 0.001 wNEAR shield/unshield quotes and an unsigned recovery intent. Those 6 November quotes are historical. On 9 November, fresh quotes supported a [funded owner-wallet round trip](CONFIDENTIAL-SETTLEMENT-2026-11-09.md): 0.001 native NEAR entered the private balance and returned in full, with a finalized return receipt checked. Native charges of 0.0071149895375 NEAR exceeded the stated 0.004 NEAR cap; that failure remains in the evidence. Preparation stops before paid research if the partner credential is absent. [Earlier evidence](TESTNET-TDX-2026-11-07.md) · [Authentication and recovery](CONFIDENTIAL-AUTH.md).
 
 Reading and testing official SDK 0.1.26 showed that its signature excludes `confidentiality`, while covering `recipientType`, `recipient` and output minima. The adapter therefore requires signed `CONFIDENTIAL_INTENTS` routing and validates the request echo. [Privacy analysis](PRIVACY.md) describes the remaining provider trust.
 
 The policy vault has passed local sandbox execution and its [upgrade and commerce proof are deployed on testnet](VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md). The earlier [inference review](INFERENCE-LIVE-REVIEW-2026-11-06.md) independently reproduced provider boot measurements and identified shared-signer routing. The [9 November private research proof](NEAR-PRIVATE-RESEARCH-2026-11-09.md) adds exact direct TLS/signer/instance pins, fresh TDX/GPU verification, reviewed history and explicit provider-administration trust. Three signed researchers completed inside Neslos TDX. This establishes the encrypted exchange under that policy, not independently measured loaded weights.
 
-The [Phala request audit](TDX-DEPLOYMENT-STATUS.md#request-compatibility-audit-addendum) confirmed an oversized historical inline payload and added size guards. Standard images subsequently deployed successfully; [private research, owner controls and restart persistence passed on 9 November](NEAR-PRIVATE-RESEARCH-2026-11-09.md). The finite CVM is retired and the testnet vault restored paused. The earlier policy-rejection predicate remains undisclosed. The [verification record](PROOF.md) separates these results from unfinished funded settlement; [security notes](../SECURITY.md) record the transitive `elliptic` advisory.
+The [Phala request audit](TDX-DEPLOYMENT-STATUS.md#request-compatibility-audit-addendum) confirmed an oversized historical inline payload and added size guards. Standard images subsequently deployed successfully; [private research, owner controls and restart persistence passed on 9 November](NEAR-PRIVATE-RESEARCH-2026-11-09.md). The finite CVM is retired and the testnet vault restored paused. The earlier policy-rejection predicate remains undisclosed. The [verification record](PROOF.md) distinguishes those results, the owner-wallet settlement and the remaining integrated TDX/vault payment path; [security notes](../SECURITY.md) record the transitive `elliptic` advisory.
 
 ## Product conclusions
 
@@ -70,4 +71,4 @@ The [Phala request audit](TDX-DEPLOYMENT-STATUS.md#request-compatibility-audit-a
 
 Neslos must demonstrate its negative case as clearly as its successful case: an untrusted proposal that cannot spend. A funded reserve is not a DeFi position. A local signed receipt is not a chain transaction. A downloaded quote is not verified hardware.
 
-The deployed testnet proof, provider boot reconstruction, model runtime approval, Neslos TDX hosting, paid inference, confidential settlement and final publication are distinct claims. Testnet enforcement, private NEAR AI research in TDX and the live Vercel rehearsal have evidence. Independently measured model weights, funded confidential settlement and final submission remain unfinished. The scoped inference policy explicitly trusts provider deployment administration. A testnet-only submission can present completed work without purchasing a mainnet vault or claiming missing integrations.
+The deployed testnet proof, provider boot reconstruction, model runtime approval, Neslos TDX hosting, paid inference, confidential settlement and final publication are distinct claims. Testnet enforcement, private NEAR AI research in TDX, the owner-wallet Confidential Intents round trip and the live Vercel rehearsal have evidence. Independently measured model weights, funded TDX/vault settlement, funded lending and final submission remain unfinished. The scoped inference policy explicitly trusts provider deployment administration, and the settlement proof retains its native fee-cap failure. A testnet-only submission can present completed work without purchasing a mainnet vault or claiming missing integrations.

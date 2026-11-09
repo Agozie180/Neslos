@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-11-09T18:28:52.701Z",
+  "source": "https://rpc.mainnet.near.org",
+  "transactionHash": "C4o7c1XW35uHmrSmffYGMHaEfxyJEFZ6qdAspqQmipJB",
+  "final": true,
+  "success": true,
+  "exactNativeReturnReceiptVerified": true,
+  "ownerReturnTransfers": [
+    {
+      "receiptId": "3pvivhtJYB777jgyqjYToyHoNGRh2Le79wM1VAeEJxQ6",
+      "amount": "1000000000000000000000",
+      "success": true
+    }
+  ],
+  "nativePrincipalYocto": "1000000000000000000000",
+  "privateRpcOutcomeCanonicalSha256": "5802f8bffc7fa74e4a13de26ee2fb3ce508539d040cee894d7dc12d432f65905"
+}
