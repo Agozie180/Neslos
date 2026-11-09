@@ -1,5 +1,7 @@
 # TDX foundation audit — Ubuntu WSL, 7 November 2026
 
+> Historical snapshot. Later standard-image deployments succeeded, and [private NEAR AI research, audit and restart verification passed on 9 November](NEAR-PRIVATE-RESEARCH-2026-11-09.md). Those temporary CVMs are retired. Earlier deployment, publication, inference and submission statements below describe this stage; see [current status](STATUS.md) for remaining work.
+
 **Subsequent deployment result, 21:18 UTC:** this audit's verified V3 Compose was submitted once using the official Phala CLI after successful device login. Phala returned the same HTTP 400 terms-of-use denial, request ID `3e5a68141d5de59ce8d42e86e70bda6c`; the following inventory check returned zero CVMs. Evidence is retained in `.local/tdx-cli-20261107/`. Statements below about no submission describe the earlier local audit, before this deployment attempt.
 
 The inspected requests used the intended inline TDX application. A fresh Linux build matches the previously prepared runtime, and a new production install reproduces the previous dependency-tree hash. This audit found and repaired build provenance and Linux mirror defects. Those defects are not demonstrated causes of Phala's HTTP 400 policy response. **The provider rejection remains unresolved; no CVM has been launched.**

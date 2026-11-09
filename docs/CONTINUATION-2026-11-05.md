@@ -1,5 +1,7 @@
 # Foundation continuation — 5 November 2026
 
+> Historical snapshot. Later standard-image deployments succeeded, and [private NEAR AI research, audit and restart verification passed on 9 November](NEAR-PRIVATE-RESEARCH-2026-11-09.md). Those temporary CVMs are retired. Earlier deployment, publication, inference and submission statements below describe this stage; see [current status](STATUS.md) for remaining work.
+
 The original objective remains: researched proposals, private computation, on-chain spending limits, settlement and verifiable receipts. A local wallet budget is not a substitute for the vault; public lending is not confidential execution.
 
 ## Priority and acceptance criteria

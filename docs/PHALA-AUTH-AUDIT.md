@@ -1,5 +1,7 @@
 # Phala credential scope audit — 4 November 2026
 
+> Historical snapshot. The balances, zero-spend totals and remaining deployment work below describe 4 November. [Private research later passed inside verified TDX](NEAR-PRIVATE-RESEARCH-2026-11-09.md); those temporary CVMs are retired. See [current status](STATUS.md) for retained costs and remaining work.
+
 The Phala blocker was a valid **Private AI credential stored as `PHALA_CLOUD_API_KEY`**. The diagnostic sent it to Cloud management's `/auth/me` endpoint and interpreted HTTP 401 as an invalid credential. That conclusion was incomplete: it established only that Cloud management did not accept the key.
 
 ## Evidence

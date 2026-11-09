@@ -2,7 +2,7 @@
 
 **Funded owner-wallet Confidential Intents settlement, 9 November:** one 0.001 NEAR native deposit, one signed off-chain withdrawal and the finalized native return receipt completed the round trip. The private balance read was repaired after the provider's single-token query incorrectly returned empty; unfiltered reads verified the credit and final empty wNEAR balance. **The native fee cap failed:** 0.0071149895375 NEAR charged against 0.004 NEAR stated. Funding source, recovery source, costs and raw-evidence commitments are retained without relabelling this as a complete pass. The repair passed 232 tests across five files and project TypeScript checks. No TDX or paid inference was used. [Report](CONFIDENTIAL-SETTLEMENT-2026-11-09.md) · [Archive](../deploy/confidential-settlement-20261109/record.json).
 
-**Latest completed application revision:** both application and contract jobs passed for `e5629baa8206d2808e1a0feeebda8dfbbc014dae` in [CI run 42657642156](https://github.com/Agozie180/Neslos/actions/runs/42657642156) on 9 November. The [workflow](../.github/workflows/verify.yml) runs application/build, browser, contract and restricted-container checks. The public demo and archived private proof below can be reviewed without starting a paid TDX instance.
+**Latest completed application revision:** both application and contract jobs passed for `3aadd7ec82479dbed8b398a9ac3759d868395e81` in [CI run 42678794686](https://github.com/Agozie180/Neslos/actions/runs/42678794686) on 9 November. That run passed **644 application tests across 46 files with zero failures/skips**, TypeScript and web/server builds, **six browser tests**, **25 Rust unit tests**, **two NEAR sandbox suites**, and the restricted-container build/smoke check. The [workflow](../.github/workflows/verify.yml) defines those checks. The public demo and archived private proof below can be reviewed without starting a paid TDX instance.
 
 **Vercel deployment verified on 9 November:** commit `7e0598491f6632c7193f8275ab76efd2c3ece2c4` serves the frontend and `/api/*` through one rehearsal function. `/api/health` and `/api/state` returned HTTP 200, and all three production browser tests passed (desktop rehearsal/policy/audit, mobile research/navigation, and reference-source selection). Local verification passed 593 tests with five Linux-only skips and successful TypeScript/web/server builds. Both application and contract jobs passed in [CI run 42620261987](https://github.com/Agozie180/Neslos/actions/runs/42620261987). Operator reports and screenshots are retained in `.local/vercel-backend-20261109/`. Reproduce the public browser checks with `NESLOS_E2E_URL=https://neslos.vercel.app npm run test:browser -- tests/e2e/control-room.spec.ts` (set the environment variable separately in PowerShell).
 
@@ -104,6 +104,8 @@ The attestation binding fixture is **not a genuine Intel quote**. Passing those 
 
 ## Live integration observations
 
+These are historical observations from 6 November. The completed 9 November research and owner-wallet settlement proofs are recorded above; [current status](STATUS.md) tracks remaining work.
+
 - The Rhea feed was queried successfully. The retained 1 November response contains 18 raw markets; 10 pass the supported-token normalizer. Rhea does not provide an upstream observation timestamp.
 - The 1Click confidential dry quote probe returned **HTTP 401 without `ONECLICK_JWT`**. No-spend ownership authentication, session refresh and private-balance reads succeeded. The free partner key remains missing; a verified live quote and viable recovery route have not been established. [Authentication](CONFIDENTIAL-AUTH.md).
 - Official 1Click SDK 0.1.26 excludes `confidentiality` from its signed subset. Neslos requires the signed `CONFIDENTIAL_INTENTS` recipient type. [Regression tests](../tests/intents.test.ts) reproduce that distinction.
@@ -112,6 +114,8 @@ The attestation binding fixture is **not a genuine Intel quote**. Passing those 
 - The live npm production audit reports three low-severity package entries stemming from one transitive `elliptic` advisory. See [security notes](../SECURITY.md).
 
 ## Evidence still required for live claims
+
+The following requirements describe the 6 November snapshot. Subsequent proofs have closed its TDX, private-research and owner-wallet settlement gaps, with the settlement fee-cap failure retained. Use [current status](STATUS.md) for the remaining integrated-vault and lending work.
 
 The testnet owner vault and fixture-token proof are deployed, and provider boot measurements are independently reproduced. There is still no approved current model runtime/deployment history, provisioned Neslos TDX instance, verified live NEAR AI response, funded Intents deposit or mainnet settlement receipt. The TEE process prepares calls; the private owner CLI can submit an explicitly reviewed plan. Both the earlier rehearsal Docker build and the new TEE image build passed. Its negative hardware test must report `genuineHardwareVerified:false`. GitHub CI status is tracked in [STATUS](STATUS.md).
 

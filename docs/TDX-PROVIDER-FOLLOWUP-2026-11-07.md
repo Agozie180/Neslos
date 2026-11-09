@@ -1,5 +1,7 @@
 # Phala response and corrected request — 7 November 2026
 
+> Historical snapshot. Later standard-image deployments succeeded, and [private NEAR AI research, audit and restart verification passed on 9 November](NEAR-PRIVATE-RESEARCH-2026-11-09.md). Those temporary CVMs are retired. Earlier deployment, publication, inference and submission statements below describe this stage; see [current status](STATUS.md) for remaining work.
+
 **The size-corrected attestation-only request was rejected with the same HTTP 400 policy message. No Neslos CVM was committed.** The owner's earlier browser/device-code login succeeded; the deployment helper used its saved official profile. The account still authenticates, reports the owner's $5 hackathon testing credit and returns zero CVMs. This follow-up supersedes the earlier requirement to wait for provider pre-approval and the assumption that a new registry login is necessary.
 
 **Later local repair:** the [startup integrity audit](TDX-STARTUP-AUDIT-2026-11-07.md) replaces the candidate with V3, which checks installed dependency bytes and rejects extra application paths before import. Its Compose is 150,387 bytes. The V2 submission evidence below remains historical; V3 has not been submitted.

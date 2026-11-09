@@ -6,7 +6,7 @@ Neslos is an agent treasury for people who want help researching opportunities a
 
 **Agents propose. Your policy decides.**
 
-[Try the live demo](https://neslos.vercel.app) · [Track fit](#hackathon-tracks) · [Run locally](#run-locally) · [Inspect the evidence](#what-has-been-verified) · [Read the architecture](docs/ARCHITECTURE.md)
+[Try the live demo](https://neslos.vercel.app) · [Track fit](#hackathon-tracks) · [Run locally](#run-locally) · [Inspect the evidence](#what-has-been-verified) · [Roadmap](roadmap.md) · [Read the architecture](docs/ARCHITECTURE.md)
 
 ![Neslos control room showing a blocked overspend, a completed 150-token rehearsal and 350 tokens of remaining allowance](docs/images/control-room.png)
 
@@ -43,7 +43,7 @@ Results below are dated **9 November 2026**, with the contract's public commerce
 | Spending rules execute on NEAR | [Public vault](https://testnet.nearblocks.io/address/vault.neslos.testnet), [commerce proof](docs/VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) and [transaction record](deploy/testnet-commerce-proof-20261106.json) | Real testnet receipts, fixture-token balances, limit/replay rejection and preserved state across upgrades |
 | Three private AI researchers completed inside verified Intel TDX | [Research report](docs/NEAR-PRIVATE-RESEARCH-2026-11-09.md), [result](deploy/near-private-research-20261109/research-proof.json) and [checksum index](deploy/near-private-research-20261109/record.json) | Signed NEAR AI reports covering two live markets; encrypted audit, wrong-owner rejection, replay, restart persistence and exhausted-budget rejection |
 | A funded Confidential Intents round trip returned its full principal | [Settlement report](docs/CONFIDENTIAL-SETTLEMENT-2026-11-09.md) and [evidence](deploy/confidential-settlement-20261109/record.json) | 0.001 native NEAR entered an owner-controlled private balance and returned to the same wallet; finalized return receipt verified. Native charges were 0.0071149895375 NEAR, exceeding the stated 0.004 NEAR cap |
-| Application, contract and container checks pass | [CI run for `e5629ba`](https://github.com/Agozie180/Neslos/actions/runs/42657642156), [workflow](.github/workflows/verify.yml) and [retained Linux checks](deploy/near-private-research-20261109/local-checks.json) | 638 application tests across 46 files in Ubuntu WSL with zero failures/skips; TypeScript and web/server builds; 25 Rust unit tests and two sandbox suites; six CI browser tests and restricted container smoke |
+| Application, contract and container checks pass | [CI run for `3aadd7e`](https://github.com/Agozie180/Neslos/actions/runs/42678794686), [workflow](.github/workflows/verify.yml) and [retained Linux checks](deploy/near-private-research-20261109/local-checks.json) | 644 application tests across 46 files in Ubuntu CI with zero failures/skips; TypeScript and web/server builds; 25 Rust unit tests and two sandbox suites; six CI browser tests and restricted container smoke |
 
 The private research run used encrypted NEAR AI inference, fresh Intel/NVIDIA verification, independently reproduced boot measurements and exact TLS/signer/instance pins. Its reviewed policy explicitly trusts NEAR's administration of routing, runtime and model weights. Loaded weight bytes are not independently proved. The [public archive](deploy/near-private-research-20261109/record.json) contains hardware/build evidence and sanitized results; private prompts and receipt openings remain with the owner. Their hashes identify retained bytes but do not disclose or independently verify the private contents.
 
@@ -114,7 +114,7 @@ npm run test:browser
 npm run research -- --reference
 ```
 
-`verify` runs the application tests, TypeScript checks and production web/server builds. The browser suite covers the public rehearsal and the local owner UI with labelled fixtures. On Linux, install Chromium's system dependencies with `npx playwright install --with-deps chromium` if needed. Linux-specific SDK/tooling tests run in Ubuntu CI; Windows skips those checks. Test counts above identify their recorded run, not every platform or future revision.
+`verify` runs the application tests, TypeScript checks and production web/server builds. The browser suite covers the public rehearsal and the local owner UI with labelled fixtures. On Linux, install Chromium's system dependencies with `npx playwright install --with-deps chromium` if needed. Linux-specific SDK/tooling tests run in Ubuntu CI; Windows skips those checks. The table above cites CI for `3aadd7e`; the retained private-research archive separately records 638 tests at its earlier revision. Test counts identify their recorded run, not every platform or future revision.
 
 Contract checks require **Rust 1.93.0**, the **wasm32-unknown-unknown** target and **cargo-near 0.22.0**. Use Linux or Ubuntu WSL on Windows; [setup instructions](docs/DEPLOYMENT.md#local-near-proof) include system dependencies.
 
@@ -152,6 +152,7 @@ The local [owner workspace](docs/OWNER-WORKSPACE.md) provides policy review, fun
 
 | Guide | Purpose |
 | --- | --- |
+| [Roadmap](roadmap.md) | Planned milestones, dependencies and evidence required for completion |
 | [Current status](docs/STATUS.md) · [Verification record](docs/PROOF.md) | Completed work, exact evidence and remaining scope |
 | [Architecture](docs/ARCHITECTURE.md) · [Vault specification](contracts/policy-vault/README.md) | Components, trust boundaries and contract invariants |
 | [Owner workspace](docs/OWNER-WORKSPACE.md) · [Commerce](docs/COMMERCE.md) | Local controls, funding, schedules and transaction recovery |

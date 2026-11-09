@@ -1,5 +1,7 @@
 # Phala rejection audit — 7 November 2026
 
+> Historical snapshot. Later standard-image deployments succeeded, and [private NEAR AI research, audit and restart verification passed on 9 November](NEAR-PRIVATE-RESEARCH-2026-11-09.md). Those temporary CVMs are retired. Earlier deployment, publication, inference and submission statements below describe this stage; see [current status](STATUS.md) for remaining work.
+
 **Live verification, 7 November at 22:13–22:14 UTC:** Neslos is running on Phala in attestation-only mode. HTTPS health and fresh nonce evidence pass; private commands return 503. Intel/DCAP verifies TCB `UpToDate`, debug disabled, and both application keys bound to the challenge. All 11 RTMR3 runtime events replay to the verified quote and bind the deployed Compose. Complete independent boot-measurement approval and private execution remain unfinished. See [live deployment evidence](TDX-LIVE-VERIFICATION-2026-11-07.md).
 
 The earlier rejection investigation below is historical. A standard image and compatible production OS were subsequently accepted; registry startup defects were then repaired. The precise earlier policy predicate remains unconfirmed.

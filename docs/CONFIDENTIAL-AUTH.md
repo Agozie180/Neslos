@@ -43,7 +43,7 @@ Refresh returns `{ accessToken, expiresIn }`. The refresh token does **not** rot
 
 Withdrawing an embedded confidential balance requires a viable quote with `depositType: CONFIDENTIAL_INTENTS`, generation of a spending intent, owner validation/signing of that exact intent, and submission through the partner-authenticated API. There is no public NEAR RPC path for spending the private balance. A working User-Session does not replace that recovery path. Establish route availability, minimum amounts, fees, refund destination and any required NEP-141 storage registration before depositing.
 
-The saved owner session was successfully refreshed on 6 November 2026 and then used for a private-balance read. That live check used zero signatures and zero transactions. No funded withdrawal or settlement was performed.
+The saved owner session was successfully refreshed on 6 November 2026 and then used for a private-balance read. That 6 November check used zero signatures and zero transactions; no funded withdrawal or settlement was performed during it. The separate 9 November funded follow-up is recorded above.
 
 ## Official sources
 

@@ -10,7 +10,7 @@ Tests cover integer enforcement, concurrency, replay, scope and signature bindin
 
 ## Known dependency advisory
 
-On 1 November 2026, a live `npm audit --omit=dev --json` reported **three low-severity package entries arising from one advisory**, [GHSA-848j-6mx2-7j84](https://github.com/advisories/GHSA-848j-6mx2-7j84), in transitive `elliptic`. npm also marks `@phala/dcap-qvl` and `@nearai/inference-sdk` through that dependency chain. The installed versions have no automated fix available.
+Rechecked on 9 November 2026 against the dependencies at `3aadd7e`: live `npm audit --omit=dev --json` still reports **three low-severity package entries arising from one advisory**, [GHSA-848j-6mx2-7j84](https://github.com/advisories/GHSA-848j-6mx2-7j84), in transitive `elliptic`. npm also marks `@phala/dcap-qvl` and `@nearai/inference-sdk` through that dependency chain. The installed versions have no automated fix available.
 
 This is not a clean production dependency audit. The pinned attestation SDKs remain in place; replacing their cryptography with an unreviewed implementation would not establish safety. Review the advisory against the deployed verification path and adopt a tested upstream fix before using this as a custody product. Run the live audit again when preparing a deployment. An offline install or lockfile update that says “0 vulnerabilities” is not a substitute.
 
