@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/run.mjs build",
+    "build:web": "node scripts/run.mjs web",
     "start": "node scripts/run.mjs start",
     "test": "node scripts/run.mjs test",
     "verify": "node scripts/run.mjs verify",

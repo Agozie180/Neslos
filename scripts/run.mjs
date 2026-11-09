@@ -18,10 +18,12 @@ function run(args) {
   }
 }
 const tests = () => run(['node_modules/vitest/vitest.mjs', 'run', '--reporter=default', '--reporter=json', '--outputFile=artifacts/unit-results.json', ...extra]);
-const build = () => { run(['node_modules/typescript/bin/tsc', '--noEmit']); run(['node_modules/vite/bin/vite.js', 'build']); run(['scripts/tee-build.mjs']); };
+const buildWeb = () => { run(['node_modules/typescript/bin/tsc', '--noEmit']); run(['node_modules/vite/bin/vite.js', 'build']); };
+const build = () => { buildWeb(); run(['scripts/tee-build.mjs']); };
 switch (process.argv[2]) {
   case 'test': tests(); break;
   case 'build': build(); break;
+  case 'web': buildWeb(); break;
   case 'verify':
     tests(); build();
     const results = JSON.parse(readFileSync(resolve(root, 'artifacts/unit-results.json'), 'utf8'));
