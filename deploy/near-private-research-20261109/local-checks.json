@@ -1,0 +1,19 @@
+{
+  "at": "2026-11-09T16:02:38.152Z",
+  "passed": 638,
+  "failed": 0,
+  "skipped": 0,
+  "testFiles": 46,
+  "testSuitesIncludingNested": 104,
+  "platform": "Ubuntu WSL, Node 24.22.2",
+  "typeScriptAndWebServerBuilds": "passed",
+  "command": "npm run verify",
+  "containerSmoke": {
+    "containerChecks": "passed",
+    "bootstrapPrivateEndpoint": 503,
+    "fakeQuoteRejected": true,
+    "ownerOnlyFakeQuoteRejected": true,
+    "genuineHardwareVerified": false,
+    "uid": 1000
+  }
+}

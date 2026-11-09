@@ -1,6 +1,6 @@
 # Live inference provenance review — 2026-11-06
 
-Historical review. The [9 November follow-up](PRIVATE-AI-REVIEW-2026-11-09.md) records newer Qwen/GLM/DeepSeek captures and verified direct TLS connections. Hardware and selected build checks pass; full runtime approval and private AI research remain unfinished.
+Historical review. The [9 November follow-up](PRIVATE-AI-REVIEW-2026-11-09.md) records newer Qwen/GLM/DeepSeek captures and direct TLS checks. The later [private NEAR AI research proof](NEAR-PRIVATE-RESEARCH-2026-11-09.md) completed all three researchers inside independently verified TDX, including audit and restart checks. Its scoped direct policy explicitly trusts provider runtime/weight administration; loaded weight bytes remain independently unproved. Earlier unfinished-work statements below describe this historical snapshot.
 
 Neslos successfully verified live NEAR AI gateway, model TDX, and NVIDIA GPU attestation evidence for `Qwen/Qwen3.8-27B`. Independent calculations reproduced **MRTD and RTMR0–2 for both provider VMs**, including every RTMR0 event. The missing configuration was present in the provider's raw response and omitted by SDK normalization. **The deployment remains unapproved in this review:** deployment selection and the scope of administrative trust require separate treatment from boot reproduction.
 

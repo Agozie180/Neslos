@@ -1,0 +1,35 @@
+{
+  "note": "Hashes commit to retained owner evidence. They do not let a third party verify private report contents or signatures without the corresponding bytes.",
+  "files": [
+    {
+      "name": "research-job-v2.json",
+      "bytes": 33840,
+      "sha256": "ced1a4e2bbb875fe14b6d294d8896672b7db2a2d7f87bd669fd8bfb059ff56f2",
+      "retainedPrivately": true
+    },
+    {
+      "name": "research-audit.json",
+      "bytes": 103349,
+      "sha256": "c6015ff03a008e2b3ce0ffd5a52b1783060a4c89564822a62abcd64a2c3ea63d",
+      "retainedPrivately": true
+    },
+    {
+      "name": "research-opening.json",
+      "bytes": 35264,
+      "sha256": "e46dcbde1c3da03dd64aac70735a2a8074418869a1701173c405cbd8e754138d",
+      "retainedPrivately": true
+    },
+    {
+      "name": "reservation-opening.json",
+      "bytes": 1033,
+      "sha256": "069aa90df9776740cedfe5cc683e1d45e49ab36bffdb216fe4488b5eefb5f6c8",
+      "retainedPrivately": true
+    },
+    {
+      "name": "audit-after-restart.json",
+      "bytes": 104391,
+      "sha256": "fc6757c16f48f95e205a9e68735099709b3da1f8c3d397defea47e3524363355",
+      "retainedPrivately": true
+    }
+  ]
+}

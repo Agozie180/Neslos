@@ -1,0 +1,15 @@
+{
+  "at": "2026-11-09T16:22:52.230Z",
+  "authorizedMaximumUsd": "3.00",
+  "hostingAllocationUsd": "2.75",
+  "inferenceAllocationUsd": "0.25",
+  "conservativeHostingReservedUsd": "0.243120",
+  "inferenceReservedNanoUsd": "10596240",
+  "combinedConservativeReservedUsd": "0.25371624",
+  "actualBillReconciled": false,
+  "activeInstances": 0,
+  "paidInferenceCalls": 9,
+  "localDiagnosticCalls": 3,
+  "tdxCalls": 6,
+  "failedResearchReservationsRetained": true
+}

@@ -1,0 +1,53 @@
+{
+  "model": {
+    "osImageHash": "91fd5d69ccee3e5ea4f2aeb8c9b632c4358c4ecfc29ba1aa6fb1e402af209829",
+    "composeHash": "a0e3c6f4f21a60ea3f5c96bc7ef319b03a184ca2049605399275fbcea74e8c5f",
+    "boot": {
+      "mrTd": "df4d77c857de652bd0fafa343a2026b51071ee03773d076d283abf1a7d36ff91ffa279ee4a617ac664f7e2a2c8d5891b",
+      "rtMr0": "bc122d143ab768565ba5c3774ff5f03a63c89a4df7c1f5ea38d3bd173409d14f8cbdcc36d40e703cccb996a9d9687590",
+      "rtMr1": "4ae609807c765916a31d724786ed74bcb97e168a9d937b04936aeef2015c907eba5ac352c6bcd749c246fd62ffb659ec",
+      "rtMr2": "bd67ab7554dc27ab03a077bc1447a1a67d0624ff547c4c809a8626f12d6a89712f8ec60e781e99b98208574065d21a71"
+    }
+  },
+  "modelId": "z-ai/glm-5.3-flash",
+  "modelDeployment": {
+    "file": "prod/GLM-5.3-Flash-SGL-TP2x4-W4AFP8-V12Q8.yaml",
+    "services": [
+      "proxy-glm53"
+    ],
+    "reviewedTrailingActions": [
+      {
+        "index": 248,
+        "sha256": "4fa478ef21b5d51215a9137b22bf9a7ab20a1d82f2c2aa508aa2e2f9e5485b87"
+      },
+      {
+        "index": 249,
+        "sha256": "5ef6beb0af986c6ef069f270cd5be703b54aace2bf0393fd0646c9b5d76f6739"
+      }
+    ],
+    "commit": "4d64477b298038f59e92b268a2a5feb34e597fe0",
+    "fileSha256": "e88b040e8ecdb7869ac855880719f6d184c035f0199753bef64ed338f8622922",
+    "actionsSha256": "8090b6ea45ed06a21a38ddd17ff27533c6631bcec916e529d3593236bc5e3d9c",
+    "managerImage": "nearaidev/compose-manager@sha256:a0c073085684e12e19f31bb279fc8da663a374199bfecc47b04167ae79eaa766"
+  },
+  "budget": {
+    "totalLimitNanoUsd": "247876240",
+    "dailyLimitNanoUsd": "247876240",
+    "maxCalls": 6,
+    "maxInputBytes": 24000,
+    "maxOutputTokens": 1600,
+    "inputNanoUsdPerToken": "80",
+    "outputNanoUsdPerToken": "500"
+  },
+  "direct": {
+    "baseUrl": "https://glm-5-3-flash.completions.near.ai/v1",
+    "spkiFingerprint": "aaf70a60f0e55a3cfcdb3d58142a25e34b620c85e2d796e91edfd9086ca09b27",
+    "connectAddress": "160.72.54.150",
+    "signingAddress": "5a0210f2442c79355784f9de021985429561da5bacc3a4424b01ac52b7e0caff",
+    "instanceId": "19aea1693533dc2d529db03e3f725f20bde8d66d",
+    "approvedUntil": "2026-11-10T00:00:00Z",
+    "trust": "reviewed-provider-administration",
+    "thinkingTokenBudget": null,
+    "reasoningEffort": "none"
+  }
+}

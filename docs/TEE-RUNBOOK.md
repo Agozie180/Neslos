@@ -1,8 +1,8 @@
 # Running Neslos in a TEE
 
-The [latest private AI review](PRIVATE-AI-REVIEW-2026-11-09.md) verifies direct model TLS as a candidate transport, while retaining the runtime/history approval gate. It did not enable research or start another CVM.
+The [NEAR private research report](NEAR-PRIVATE-RESEARCH-2026-11-09.md) records the strict direct integration and live verification. Earlier [audit findings](MODEL-DEPLOYMENT-AUDIT-2026-11-09.md) explain why authenticated deployment history must not be described as proof of currently loaded weights.
 
-The private owner CLI, local owner browser and dstack container package are implemented. [Live verification on 9 November](TDX-PRIVATE-STAGE-2026-11-09.md) independently reproduced the Neslos boot measurements and enabled encrypted owner status/audit on real TDX. AI research remains disabled pending inference deployment/routing approval. The temporary CVM was retired after its 09:26 Lagos deletion deadline on 9 November; no instance is currently running. The [owner guide](OWNER-WORKSPACE.md) covers finite schedules, credit caps and journal recovery. Local Docker tests use fake hardware and are separate packaging checks.
+The private owner CLI, local owner browser and dstack container package are implemented. [Live verification on 9 November](NEAR-PRIVATE-RESEARCH-2026-11-09.md) completed all three NEAR AI researchers inside independently verified Neslos TDX, with signed reports, encrypted audit, replay, restart persistence and exhausted-budget rejection. The finite CVM is retired and the vault restored paused; another run needs fresh reviewed approval and hosting. The direct policy explicitly trusts provider deployment/weight administration. The [owner guide](OWNER-WORKSPACE.md) covers finite schedules, credit caps and journal recovery. Local Docker tests use fake hardware and are separate packaging checks.
 
 An earlier package was rebuilt and smoke-tested on **6 November 2026** as `neslos-tee:readiness-20261106`, local image ID `sha256:b764b71ace136929ee8611409b1b9f87c853fa534816ffef3c3966b3c1f89a9c`. In a read-only, capability-dropped, network-disabled container it rejects fake evidence and reports `genuineHardwareVerified:false`, running as UID 1000. That local image was not published or deployed; the separate 9 November image and live checks are recorded above. [Current deployment limits](TDX-DEPLOYMENT-STATUS.md).
 
@@ -116,7 +116,19 @@ Select an explicit compose file and a nonempty, unique service list for the encl
 
 Gateway build verification requires the signed API and ingress images. It also verifies either VPC component when present, without requiring absent services in newer gateway layouts. All gateway images must use literal digests; unresolved images and unknown `nearaidev` repositories are rejected. Exact approved gateway Compose and boot measurements remain mandatory. This compatibility change does not approve an observed deployment automatically.
 
-The 7 November captures show different model deployments sharing the same signing public key, which the SDK also uses for model encryption. Signer filtering and a successful standalone preflight cannot establish routing to a unique approved VM. Before enabling private research, establish supported deployment isolation or approve the complete shared-key deployment scope; see the [routing evidence](BLOCK-ROOT-AUDIT-2026-11-07.md#why-inference-still-cannot-be-approved). No such approval has been made for the current fleet.
+The 7 November captures show different model deployments sharing a signing/encryption key. Signer filtering alone does not identify a serving VM. The opt-in direct policy replaces `gateway` with `direct:{baseUrl,spkiFingerprint,signingAddress,instanceId,approvedUntil,trust:"reviewed-provider-administration"}`. It still requires `model`, `modelDeployment`, `modelId` and `budget`. Only HTTPS `*.completions.near.ai/v1` origins are accepted. `connectAddress` optionally chooses an IPv4 route while preserving SNI, certificate/hostname validation and the exact TLS pin. E2EE, OHTTP, Ed25519, fresh verification and proxy/manager quote/instance association are mandatory. An unapproved fleet peer fails closed; there is no unpinned fallback.
+
+For reviewed maintenance, `modelDeployment.reviewedTrailingActions` contains exact `{index,sha256}` entries. Each hash is SHA-256 of Neslos canonical JSON for that indexed action. Only exact trailing restarts or disjoint launches may be reviewed this way. Modified, misplaced, unused or unreviewed actions reject; the full `actionsSha256` remains mandatory. Review routing, dependencies, mounts, effective administration and engine provenance separately. The policy explicitly trusts the provider's current deployment/weight administration; it does not independently attest loaded weight bytes.
+
+GLM's reviewed serving configuration supports `direct.reasoningEffort:"none"` with `direct.thinkingTokenBudget:null`. This disables reasoning instead of exhausting a small output allowance. Researchers request constrained JSON-schema output and still validate every response locally after checking its signature. The NVIDIA verifier retains the exact signed NRAS response for one three-second wait if its time claims are slightly ahead; all original time, signature, issuer and nonce checks remain mandatory.
+
+Run a free check against an independently reviewed gateway or direct runtime policy:
+
+```sh
+node --env-file=.env --import tsx scripts/inference-preflight.ts --policy reviewed-policy.json --out .private/fresh-preflight.json
+```
+
+An archived approval is specific to its reviewed history and expiry. Do not extend its expiry or copy new observed hashes without reviewing the changes. A free preflight does not spend inference credit or prove execution inside Neslos's TDX instance.
 
 Use Phala's **Encrypted Secrets** for the full set of runtime values from [secrets.example.env](../deploy/tee/secrets.example.env): mode `private`, network/vault, TEE policy JSON, inference policy JSON, the locally generated owner token, and NEAR AI key. `ONECLICK_JWT` is only needed for the current confidential-quote path; read-only research never requests a quote. No owner NEAR private key goes into the TEE. Keep Phala public logs disabled; Neslos does not log prompt/recipient/secret data. Secret updates replace the full set and restart the CVM, per [Phala's docs](https://docs.phala.com/phala-cloud/cvm/set-secure-environment-variables).
 
@@ -165,7 +177,7 @@ Governance requests also support `{"kind":"pause","paused":true}` and `{"kind":"
 
 ## Limits that remain
 
-- Real TDX owner controls have live evidence. Private AI research and funded confidential settlement remain unverified; Docker and fixture checks do not replace their evidence.
+- Private NEAR AI research and TDX owner controls have live evidence, including restart persistence. The finite server is retired; a new run needs fresh approval and bounded hosting. Loaded weights remain under explicit provider-administration trust. Funded confidential settlement remains unverified.
 - All three model reviewers must explicitly approve an eligible market; their assessments can veto or change selection. The separate [public commerce client](COMMERCE.md) routes lending/payment principal through the vault's limits and rejects confidential policies; it is not a TEE execution path. Funded lending validation remains unfinished, and Agent Market payment is disabled because its documented rail requires a wallet delegate.
 - The default browser remains a rehearsal. The separate localhost owner browser uses this same private client and exact transaction workflow. Its cloud-backed operation requires the approved runtime.
 - Immutable encrypted journal segments retain all history through bounded rotation (128 MB; 10,000 completed/failed commands). Keep the manifest and segments together. Finite research/observation schedules are supported. Rollback protection still depends on independently retained checkpoints; after storage failure the runtime fails closed. See the [backup procedure](OWNER-WORKSPACE.md#journal-backup-and-recovery).

@@ -31,6 +31,9 @@ describe('NEAR AI researcher orchestration with fixture SDK responses', () => {
     expect(options.modelVerification.verifiers.tdxQuote).toBeTypeOf('function');
     const reports = await researchers.research(evidence, DEFAULT_POLICY, 'Research supplied opportunities');
     expect(reports.map(r => r.agent)).toEqual(['lending', 'liquidity', 'risk']); expect(mocks.verify).toHaveBeenCalledTimes(3);
+    const request = mocks.create.mock.calls[0]![0];
+    expect(request.response_format).toMatchObject({ type: 'json_schema', json_schema: { strict: true, schema: { additionalProperties: false, required: ['summary', 'findings', 'marketIds', 'assessments'] } } });
+    expect(request.response_format.json_schema.schema.properties.assessments.items.properties.decision.enum).toEqual(['approve', 'reject', 'abstain']);
   });
   it('rejects gateway-only signatures', async () => {
     mocks.verify.mockResolvedValue({ signatureKind: 'gateway' });

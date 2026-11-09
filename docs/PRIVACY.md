@@ -8,7 +8,7 @@ Neslos protects private agent inputs and recipient openings in an attested execu
 | --- | --- | --- |
 | NEAR policy vault | Exact USDC daily and per-action caps, pause, policy version, nonce, authorization expiry, allowlist membership, destination-asset restriction, minimum output, executor signature | NEAR consensus, the configured token, owner governance |
 | Attested executor | Opens salted recipient/venue commitments, verifies a 1Click quote, checks live research, selects an action, signs its exact Borsh bytes | Intel TDX, dstack key derivation, independently approved code/OS measurements |
-| NEAR AI | Encrypted research inputs, gateway TLS binding, strict UpToDate TCB, model GPU evidence, pinned deployment measurements, verified provider_tee response | Approved model deployment, Intel/NVIDIA attestation roots and verification SDKs |
+| NEAR AI | E2EE research inputs, attested TLS, strict UpToDate TCB, GPU evidence, independently pinned boot measurements, reviewed deployment history, verified provider_tee response; the direct path also requires OHTTP and proxy/manager instance association | Intel/NVIDIA roots and SDKs; direct approval explicitly trusts reviewed provider administration for effective routing, runtime configuration and loaded weights |
 | Private channel | RFC 9180 HPKE with X25519, HKDF-SHA256 and AES-256-GCM; reply signature bound to attested executor | Owner must verify fresh evidence before sending a credential or private input |
 | Confidential Intents | Signed confidential-recipient routing, encrypted private orchestration, confidential output account | The quote provider and Confidential Intents service; Neslos does not independently attest the 1Click HTTPS endpoint |
 | Audit | AES-256-GCM payloads, Ed25519 signatures, ordered content hashes, durable encrypted TEE journal | Completeness and rollback resistance need an externally retained or on-chain checkpoint |
@@ -32,6 +32,10 @@ The live runtime refuses simulator endpoints. It validates Intel quote signature
 The owner obtains expected measurements independently from the reviewed OS/application build. Copying measurements from an untrusted server into the policy is not a verification procedure.
 
 The NEAR AI SDK checks attestation before sending a request. Neslos then verifies the response signature before using the model's answer and rejects gateway-only model responses. Model output cannot change balances, compute budget authority or sign a transfer.
+
+The opt-in direct NEAR policy pins one TLS key, signing key, instance and expiry. An optional connection address selects a route while preserving HTTPS hostname and certificate validation; it does not establish trust. Unknown TLS peers never receive application bytes. Only explicit TLS-handshake pin rejections may be retried, with a finite limit. Unknown inference outcomes remain charged and are never retried automatically.
+
+Compose Manager authenticates deployment attempts, not a current container/weight snapshot. Exact indexed maintenance approvals and a complete history hash detect unreviewed changes; they do not prove live weight integrity. The direct policy states `trust: "reviewed-provider-administration"` for this reason. See the [NEAR research proof and limits](NEAR-PRIVATE-RESEARCH-2026-11-09.md).
 
 ## 1Click signature coverage finding
 

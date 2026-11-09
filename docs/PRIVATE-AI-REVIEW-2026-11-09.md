@@ -1,6 +1,12 @@
 # Private AI readiness review — 9 November 2026
 
+> Historical snapshot, retained below. Later on 9 November, [private NEAR AI research passed inside independently verified TDX](NEAR-PRIVATE-RESEARCH-2026-11-09.md), including signed reports, audit opening, restart persistence and exhausted-budget rejection. The scoped direct policy explicitly trusts provider deployment/weight administration; it does not independently prove loaded weights. The finite CVM is retired and the testnet vault restored paused. Earlier statements about disabled research, zero calls, unchanged code or unfinished restart checks apply only to this snapshot.
+
 **Private AI research remains disabled.** This review refreshed provider evidence, checked two alternative models, and verified direct TLS connections. It made no inference request, started no hosting, changed no application code, and installed no weaker verification policy. The [readiness record](../deploy/inference-review-20261109/record.json) contains results and hashes of privately retained evidence. The [Vercel rehearsal](https://neslos.vercel.app) remains operational and uses deterministic research.
+
+**Later same-day follow-up:** the [deployment/history audit](MODEL-DEPLOYMENT-AUDIT-2026-11-09.md) explains the successful nginx restart and project-wide Compose semantics, verifies matching historical GLM service definitions and engine/base provenance, and proves that the two direct TLS keys reject cross-pinning. It also examines the missing manager-to-proxy instance enforcement and compares concrete alternatives. These findings narrow the unresolved work to current-state/weight/routing assurance and the eventual encrypted research proof; they do not enable research.
+
+The [Tinfoil continuation](PRIVATE-AI-ALTERNATIVE-2026-11-09.md) subsequently verified a live router, its pinned TLS channel and an available model's signed release, with four negative checks. It records why the published client and direct-model reachability still need work before a strict Neslos integration.
 
 ## Fresh provider checks
 

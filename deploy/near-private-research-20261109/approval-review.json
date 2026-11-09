@@ -1,0 +1,120 @@
+{
+  "checkedAt": "2026-11-09T15:23:19.254Z",
+  "trust": "reviewed-provider-administration",
+  "independentBootMatches": true,
+  "sourceDigest": "e88b040e8ecdb7869ac855880719f6d184c035f0199753bef64ed338f8622922",
+  "history": {
+    "file": "prod/GLM-5.3-Flash-SGL-TP2x4-W4AFP8-V12Q8.yaml",
+    "services": [
+      "proxy-glm53"
+    ],
+    "reviewedTrailingActions": [
+      {
+        "index": 248,
+        "sha256": "4fa478ef21b5d51215a9137b22bf9a7ab20a1d82f2c2aa508aa2e2f9e5485b87"
+      },
+      {
+        "index": 249,
+        "sha256": "5ef6beb0af986c6ef069f270cd5be703b54aace2bf0393fd0646c9b5d76f6739"
+      }
+    ],
+    "commit": "4d64477b298038f59e92b268a2a5feb34e597fe0",
+    "fileSha256": "e88b040e8ecdb7869ac855880719f6d184c035f0199753bef64ed338f8622922",
+    "actionsSha256": "8090b6ea45ed06a21a38ddd17ff27533c6631bcec916e529d3593236bc5e3d9c",
+    "managerImage": "nearaidev/compose-manager@sha256:a0c073085684e12e19f31bb279fc8da663a374199bfecc47b04167ae79eaa766"
+  },
+  "price": {
+    "modelId": "z-ai/glm-5.3-flash",
+    "inputCostPerToken": {
+      "amount": 80,
+      "scale": 9,
+      "currency": "USD"
+    },
+    "outputCostPerToken": {
+      "amount": 500,
+      "scale": 9,
+      "currency": "USD"
+    },
+    "costPerImage": {
+      "amount": 0,
+      "scale": 9,
+      "currency": "USD"
+    },
+    "cacheReadCostPerToken": {
+      "amount": 12,
+      "scale": 9,
+      "currency": "USD"
+    },
+    "metadata": {
+      "verifiable": true,
+      "contextLength": 1048576,
+      "modelDisplayName": "GLM 5.3 Flash",
+      "modelDescription": "GLM-5.3-Flash is a native multimodal mixture-of-experts model for coding, agentic workflows, reasoning, tool use, and visual understanding.",
+      "modelIcon": "https://avatars.githubusercontent.com/u/223098841?v=4",
+      "ownedBy": "nearai",
+      "aliases": [
+        "zai-org/GLM-5.3-Flash",
+        "GLM-5.3-Flash",
+        "glm-5.3-flash",
+        "zai-org/GLM-5.1-FP8",
+        "zai-org/GLM-5-FP8",
+        "glm-latest",
+        "zai-org/GLM-latest",
+        "GLM-5",
+        "zai-org/GLM-4.7",
+        "glm",
+        "GLM-5.1",
+        "zai-org/GLM-5.1",
+        "z-ai/glm-5.2",
+        "deepseek-ai/DeepSeek-V4-Flash"
+      ],
+      "providerType": "vllm",
+      "providerConfig": {
+        "long_context": {
+          "inference_url": "https://glm-5-3-flash-long.completions.near.ai",
+          "max_context_tokens": 1048576,
+          "base_max_context_tokens": 100000
+        }
+      },
+      "attestationSupported": true,
+      "architecture": {
+        "inputModalities": [
+          "text",
+          "image"
+        ],
+        "outputModalities": [
+          "text"
+        ]
+      },
+      "huggingFaceId": "zai-org/GLM-5.3-Flash",
+      "quantization": "fp8",
+      "maxOutputLength": 1048576,
+      "supportedSamplingParameters": [
+        "temperature",
+        "top_p",
+        "top_k",
+        "min_p",
+        "frequency_penalty",
+        "presence_penalty",
+        "repetition_penalty",
+        "max_tokens",
+        "stop",
+        "seed",
+        "logit_bias"
+      ],
+      "supportedFeatures": [
+        "tools",
+        "structured_outputs",
+        "reasoning",
+        "json_mode"
+      ],
+      "isReady": true,
+      "openrouterSlug": "z-ai/glm-5.3-flash"
+    }
+  },
+  "notes": [
+    "Registrar has no host mounts, privileges or build. Reviewed script registers the model route and sends fixed health probes. It can change routing; exact TLS pin fails on a different serving key.",
+    "Nginx restart and registrar launch are exact reviewed administrative exceptions. Their effects are trusted, not inferred as immutable state.",
+    "Current loaded model weights and effective runtime environment are not independently measured."
+  ]
+}

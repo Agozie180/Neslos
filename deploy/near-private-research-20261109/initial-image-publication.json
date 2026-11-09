@@ -1,0 +1,16 @@
+{
+  "at": "2026-11-09T15:48:28.828Z",
+  "image": "ghcr.io/agozie180/neslos-tee@sha256:3a977ef0b7ac7c5a7bc887ee129c594303a843e92bcfed066494adeab10c0eef",
+  "remoteTag": "ghcr.io/agozie180/neslos-tee:near-research-20261109",
+  "private": true,
+  "digestVerified": true,
+  "smoke": {
+    "containerChecks": "passed",
+    "bootstrapPrivateEndpoint": 503,
+    "fakeQuoteRejected": true,
+    "ownerOnlyFakeQuoteRejected": true,
+    "genuineHardwareVerified": false,
+    "uid": 1000
+  },
+  "configDigest": "sha256:87b757e9e61abc35dca31ccdddc3c8b67f6eb5499a30102b56bf979d16b2e25c"
+}
