@@ -1,0 +1,69 @@
+{
+  "format": "neslos-confidential-settlement-evidence-v1",
+  "recordedAt": "2026-11-09T18:32:34.577Z",
+  "status": "settlement-complete-native-fee-cap-failed",
+  "proofPassed": false,
+  "report": "../../docs/CONFIDENTIAL-SETTLEMENT-2026-11-09.md",
+  "artifacts": [
+    {
+      "path": "funding-runner.ts.txt",
+      "bytes": 21510,
+      "sha256": "57cbd18d4c466f7bf16a7fea913dbef589d3f78ef4dea54cd72eb6bfefcc1f47"
+    },
+    {
+      "path": "funding-confidential-auth.ts.txt",
+      "bytes": 18565,
+      "sha256": "2f328c69a67a87bc7f5b0e8c78ac06b16d47e86b03122e2493cfd81df169b0a2"
+    },
+    {
+      "path": "recovery-runner.ts.txt",
+      "bytes": 22764,
+      "sha256": "b7918cad465b12ee2c3af3e842b99c8c7bde8b8b7c6dffb537053273517901a2"
+    },
+    {
+      "path": "recovery-confidential-auth.ts.txt",
+      "bytes": 18874,
+      "sha256": "5f3f0ba830ea226e1a9591933d2b3df9234c7f2e69795768ac3cbc4c065aaa5e"
+    },
+    {
+      "path": "offline-checks.ts.txt",
+      "bytes": 5084,
+      "sha256": "7929c7998d2534d23029bee5f147cafe92fe964009d366856fe961de585186f9"
+    },
+    {
+      "path": "provider-native-deposit.ts.txt",
+      "bytes": 2095,
+      "sha256": "9573b69d63d3e5d108c7aa0a68055c6d34a05c93870b2c25fd1ad754f4ca71fb"
+    },
+    {
+      "path": "provider-full-swap.ts.txt",
+      "bytes": 4008,
+      "sha256": "b9741b9d502d4edbda51bf36e024a6509b502f53a2bc74f7a8aa84c67ac800ed"
+    },
+    {
+      "path": "funding-protocol.json",
+      "bytes": 13246,
+      "sha256": "2749bdbc7d343004cc10b158cf255b958b3093576329d04cc707f1eae3b881d5"
+    },
+    {
+      "path": "chain-return.json",
+      "bytes": 573,
+      "sha256": "4bbc5ea4f2f1e0c29175ca4dfb815fd020a1f478af164d59ca3ed0efff3c932c"
+    },
+    {
+      "path": "result.json",
+      "bytes": 2664,
+      "sha256": "6451ab0344cd5b0f68a176f5479f56ee50f1d2a7a257e97235f4bf55e954f636"
+    },
+    {
+      "path": "verification.json",
+      "bytes": 5175,
+      "sha256": "7415bc2772545d1f2f2f5f1aebd7e837d17832c928bfe8cf283cd209d6d0484a"
+    },
+    {
+      "path": "private-evidence-commitments.json",
+      "bytes": 1955,
+      "sha256": "9727ccb6c84b775a6fb0041a690c764bf058aa08b5a70ace864f6e01e312cc65"
+    }
+  ]
+}

@@ -2,6 +2,8 @@
 
 1Click has separate credentials for the integration and the account owner. A successful ownership proof and private-balance read do not establish access to confidential quotes or withdrawals.
 
+**9 November funded follow-up:** a separate [owner-wallet round trip](CONFIDENTIAL-SETTLEMENT-2026-11-09.md) deposited 0.001 native NEAR, verified private credit and returned the full amount. It exceeded the stated native fee cap, which remains recorded as a failure. The live provider returned an empty result for `?tokenIds=nep141%3Awrap.near` while the documented unfiltered endpoint returned the funded wNEAR entry. The balance helper now reads `/account/balances`, validates the bounded response and unique token IDs, and returns only wNEAR entries. Regression tests cover that failure and reject malformed, duplicate or public balances.
+
 | Endpoint | Credential and placement |
 | --- | --- |
 | `POST /v0/auth/authenticate` | Empty signed ownership intent in JSON `signedData`; no partner credential is required by its published OpenAPI. |

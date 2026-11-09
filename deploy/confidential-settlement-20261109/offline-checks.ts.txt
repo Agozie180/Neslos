@@ -1,0 +1,75 @@
+import assert from 'node:assert/strict';
+import { readFile, readdir } from 'node:fs/promises';
+import { canonical, sha256 } from '../../src/core/crypto.js';
+import { nativeTransferVerified, returnedPrincipal, statusQuoteVerified } from './run.js';
+
+const amount = '1000000000000000000000';
+const transfer = {
+  final_execution_status: 'FINAL', status: { SuccessValue: '' },
+  transaction: { signer_id: 'owner.near', receiver_id: 'deposit.near', actions: [{ Transfer: { deposit: amount } }] },
+  receipts_outcome: [{ outcome: { status: { SuccessValue: '' } } }],
+};
+let passed = 0;
+function check(value: unknown, expected: unknown) { assert.deepEqual(value, expected); passed += 1; }
+check(nativeTransferVerified(transfer, 'owner.near', 'deposit.near'), true);
+check(nativeTransferVerified(transfer, 'other.near', 'deposit.near'), false);
+check(nativeTransferVerified(transfer, 'owner.near', 'other.near'), false);
+for (const change of [
+  (x: any) => { x.transaction.actions[0].Transfer.deposit = '1'; },
+  (x: any) => { x.transaction.actions.push({ Transfer: { deposit: amount } }); },
+  (x: any) => { x.transaction.actions = []; },
+  (x: any) => { x.transaction.actions = [{ FunctionCall: { method_name: 'ft_transfer' } }]; },
+  (x: any) => { x.status = { Failure: {} }; },
+  (x: any) => { x.final_execution_status = 'EXECUTED'; },
+  (x: any) => { x.receipts_outcome = []; },
+  (x: any) => { x.receipts_outcome[0].outcome.status = { Failure: {} }; },
+  (x: any) => { delete x.receipts_outcome[0].outcome.status; },
+]) {
+  const changed = structuredClone(transfer); change(changed);
+  check(nativeTransferVerified(changed, 'owner.near', 'deposit.near'), false);
+}
+check(nativeTransferVerified(undefined, 'owner.near', 'deposit.near'), false);
+const balance = (native: bigint, wrapped: bigint) => ({ state: { balance: { total: native.toString() } }, token: { value: wrapped.toString() } });
+const native = 9000000000000000000000n, wrapped = 2500000000000000000000n;
+const before = balance(native, wrapped), principal = BigInt(amount);
+check(returnedPrincipal(before, balance(native + principal, wrapped)), { verified: true, nativeDelta: amount, wrappedDelta: '0', returnedAsset: 'native-near' });
+check(returnedPrincipal(before, balance(native, wrapped + principal)), { verified: true, nativeDelta: '0', wrappedDelta: amount, returnedAsset: 'wrap.near' });
+for (const after of [
+  balance(native, wrapped), balance(native + principal - 1n, wrapped), balance(native + principal + 1n, wrapped),
+  balance(native, wrapped + principal - 1n), balance(native, wrapped + principal + 1n),
+  balance(native + principal, wrapped + 1n), balance(native - 1n, wrapped + principal),
+  balance(native + principal / 2n, wrapped + principal / 2n), balance(native + principal, wrapped + principal),
+]) check(returnedPrincipal(before, after).verified, false);
+const captureRoot = '.private/confidential-settlement-20261109/http';
+const names = await readdir(captureRoot);
+const capture = async (prefix: string) => JSON.parse(JSON.parse(await readFile(captureRoot + '/' + names.filter(name => name.startsWith(prefix)).sort().at(-1), 'utf8')).responseText);
+const response = await capture('shield-quote-'), providerStatus = await capture('shield-before-');
+const savedQuote = { response, hash: sha256(canonical(response)) };
+check(statusQuoteVerified(savedQuote, providerStatus), true);
+check(statusQuoteVerified({ ...savedQuote, hash: '0'.repeat(64) }, providerStatus), false);
+check(statusQuoteVerified(savedQuote, {}), false);
+for (const change of [
+  (x: any) => { x.quoteResponse.quote.amountIn = '1'; },
+  (x: any) => { x.quoteResponse.quote.amountOut = '1'; },
+  (x: any) => { x.quoteResponse.quote.withdrawFee = '1'; },
+  (x: any) => { x.quoteResponse.quote.refundFee = '1'; },
+  (x: any) => { x.quoteResponse.quote.depositAddress = 'other.near'; },
+  (x: any) => { x.quoteResponse.quoteRequest.recipient = 'other.near'; },
+  (x: any) => { x.quoteResponse.quoteRequest.refundTo = 'other.near'; },
+  (x: any) => { x.quoteResponse.quoteRequest.confidentiality = 'public'; },
+  (x: any) => { x.quoteResponse.quoteRequest.insured = true; },
+  (x: any) => { x.quoteResponse.quoteRequest.insured = null; },
+  (x: any) => { x.quoteResponse.quoteRequest.quoteWaitingTimeMs = 1; },
+  (x: any) => { x.quoteResponse.quoteRequest.virtualChainRecipient = 'other'; },
+  (x: any) => { x.quoteResponse.quoteRequest.virtualChainRefundRecipient = 'other'; },
+  (x: any) => { x.quoteResponse.quoteRequest.referral = 'other'; },
+  (x: any) => { x.quoteResponse.quoteRequest.deadline = '2099-01-01T00:00:00.000Z'; },
+  (x: any) => { x.quoteResponse.quote.deadline = '2099-01-01T00:00:00.000Z'; },
+  (x: any) => { x.quoteResponse.quoteRequest.newField = null; },
+  (x: any) => { x.quoteResponse.newField = null; },
+  (x: any) => { delete x.quoteResponse.signature; },
+]) {
+  const changed = structuredClone(providerStatus); change(changed);
+  check(statusQuoteVerified(savedQuote, changed), false);
+}
+console.log(JSON.stringify({ offlineAssertionsPassed: passed, networkRequests: 0, signatures: 0, transactions: 0 }));

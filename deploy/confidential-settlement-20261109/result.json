@@ -1,0 +1,58 @@
+{
+  "format": "neslos-confidential-settlement-result-v1",
+  "network": "mainnet",
+  "observedAt": "2026-11-09T18:27:31.409Z",
+  "status": "settlement-complete-native-fee-cap-failed",
+  "proofPassed": false,
+  "settlement": {
+    "principalYocto": "1000000000000000000000",
+    "principalNear": "0.001",
+    "fundingAsset": "native-near",
+    "providerAsset": "nep141:wrap.near",
+    "returnedAsset": "native-near",
+    "shieldStatus": "SUCCESS",
+    "withdrawalStatus": "SUCCESS",
+    "exactPrivateCreditObserved": true,
+    "exactNativeReturnReceiptVerified": true,
+    "principalRestored": true,
+    "finalPrivateWnearEmpty": true,
+    "fundingTransactionHash": "4cYgdfMrJfrakjPpg45GNx1vMyAu2uaEAcba3Sbd5hjp",
+    "returnTransactionHash": "C4o7c1XW35uHmrSmffYGMHaEfxyJEFZ6qdAspqQmipJB",
+    "returnReceiptId": "3pvivhtJYB777jgyqjYToyHoNGRh2Le79wM1VAeEJxQ6",
+    "destinationWasOriginalOwner": true,
+    "wrappedWalletBalanceUnchanged": true
+  },
+  "costs": {
+    "nativeChargedYocto": "7114989537500000000000",
+    "nativeChargedNear": "0.0071149895375",
+    "statedNativeFeeCapYocto": "4000000000000000000000",
+    "statedNativeFeeCapNear": "0.004",
+    "nativeFeeCapPassed": false,
+    "overrunYocto": "3114989537500000000000",
+    "overrunNear": "0.0031149895375",
+    "protocolVersion": 88,
+    "protocolAccountCreationChargeYocto": "7000000000000000000000",
+    "protocolAccountCreationChargeNear": "0.007",
+    "otherNativeChargesYocto": "114989537500000000000",
+    "providerQuotedRefundFeeYocto": "0",
+    "providerQuotedWithdrawalFeeYocto": "0",
+    "providerPrincipalLossYocto": "0",
+    "reconciledAgainstWalletAndFinalizedReceipts": true
+  },
+  "execution": {
+    "ownerFundingTransactions": 1,
+    "signedSpendingIntents": 1,
+    "replacementFundingTransactions": 0,
+    "replacementSpendingIntents": 0,
+    "tdxDeployments": 0,
+    "paidInferenceCalls": 0,
+    "neslosVaultUsed": false
+  },
+  "limitations": [
+    "Owner-wallet provider integration only; no funded Neslos mainnet vault, TDX signing or research-to-settlement execution.",
+    "Private ledger credit is authenticated provider testimony over HTTPS. Public return is independently checked against NEAR RPC receipts.",
+    "Publishing both public transaction hashes deliberately links this demonstration and does not prove unlinkability.",
+    "The original filtered private-balance baseline was unreliable; the credit and final empty wNEAR balance were checked through the documented unfiltered endpoint.",
+    "Native cost control failed. The cap was not increased after the fact; remaining work returned the existing principal without another owner-funded native transaction."
+  ]
+}
