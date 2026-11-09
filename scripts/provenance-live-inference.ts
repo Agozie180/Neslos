@@ -19,8 +19,8 @@ function safeFailure(error: unknown): string {
   return error instanceof Error && /^[A-Z][A-Z0-9_]+(?=:|$)/.test(error.message) ? error.message.split(':')[0]! : 'VERIFICATION_OR_TRANSPORT_FAILED';
 }
 
-async function main() {
-  const { values } = parseArgs({ options: { policy: { type: 'string' }, out: { type: 'string' } }, strict: true });
+async function main(args: string[]) {
+  const { values } = parseArgs({ args, options: { policy: { type: 'string' }, out: { type: 'string' } }, strict: true });
   if (!values.policy || !values.out) throw new Error('POLICY_OUTPUT_REQUIRED');
   const policy = inferencePolicySchema.parse(JSON.parse(await readFile(values.policy, 'utf8')));
   if (BigInt(policy.budget.totalLimitNanoUsd) > 250_000_000n || policy.budget.maxOutputTokens !== 128) throw new Error('PROBE_BUDGET_LIMIT');
@@ -70,4 +70,10 @@ async function main() {
   console.log(JSON.stringify(summary, null, 2));
 }
 
-main().catch(error => { console.error(JSON.stringify({ responseVerified: false, failure: safeFailure(error), retryInference: false })); process.exitCode = 1; });
+/** Await the entire probe, including its durable output and failure reporting. */
+export async function runProvenanceLiveInference(args: string[]): Promise<number> {
+  try { await main(args); return 0; }
+  catch (error) { console.error(JSON.stringify({ responseVerified: false, failure: safeFailure(error), retryInference: false })); return 1; }
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exitCode = await runProvenanceLiveInference(process.argv.slice(2));

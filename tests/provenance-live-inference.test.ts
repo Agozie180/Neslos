@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { basename, join, relative, isAbsolute } from 'node:path';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { inferenceBootFixture, modelDeploymentFixture } from './fixtures/inference.js';
+import { runProvenanceLiveInference } from '../scripts/provenance-live-inference.js';
 
 const fixture = vi.hoisted(() => ({ directory: '', reservation: '', events: [] as string[], chat: vi.fn(), receipt: vi.fn() }));
 
@@ -63,7 +64,7 @@ vi.mock('../src/core/inference.js', async importOriginal => {
 const fs = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
 const completion = { id: 'fixture-completion', choices: [{ message: { content: 'Neslos verified inference.' } }], usage: { total_tokens: 8 } };
 let logged: ReturnType<typeof vi.spyOn>, failed: ReturnType<typeof vi.spyOn>;
-let originalExitCode: typeof process.exitCode;
+const running = new Set<Promise<number>>();
 
 beforeEach(async () => {
   fixture.directory = await fs.mkdtemp(join(tmpdir(), 'neslos-provenance-probe-test-'));
@@ -82,8 +83,6 @@ beforeEach(async () => {
   fixture.receipt.mockResolvedValue({ signatureKind: 'provider_tee' });
   logged = vi.spyOn(console, 'log').mockImplementation(() => {});
   failed = vi.spyOn(console, 'error').mockImplementation(() => {});
-  originalExitCode = process.exitCode;
-  process.exitCode = undefined;
   vi.stubEnv('NEARAI_API_KEY', 'fixture-api-key');
   vi.stubGlobal('fetch', vi.fn(async (url: string) => {
     expect(url).toBe('https://cloud-api.near.ai/v1/model/list');
@@ -97,31 +96,33 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  process.exitCode = originalExitCode;
+  // A failed assertion must not let a previous invocation use the next test's
+  // directory, network mocks or output spies while cleanup removes its files.
+  await Promise.allSettled([...running]);
   vi.unstubAllEnvs(); vi.unstubAllGlobals(); vi.restoreAllMocks();
   const parent = relative(tmpdir(), fixture.directory);
   assert.ok(!isAbsolute(parent) && !parent.startsWith('..') && basename(fixture.directory).startsWith('neslos-provenance-probe-test-'));
   await fs.rm(fixture.directory, { recursive: true, force: true });
 });
 
-async function invoke(output: string) {
-  const argv = process.argv;
-  process.argv = [process.execPath, 'provenance-live-inference.ts', '--policy', join(fixture.directory, 'policy.json'), '--out', join(fixture.directory, output)];
-  try { vi.resetModules(); await import('../scripts/provenance-live-inference.js'); }
-  finally { process.argv = argv; }
+function invoke(output: string) {
+  const task = runProvenanceLiveInference(['--policy', join(fixture.directory, 'policy.json'), '--out', join(fixture.directory, output)]);
+  running.add(task);
+  void task.then(() => running.delete(task), () => running.delete(task));
+  return task;
 }
 
 it('durably reserves before Chat/output and refuses a second invocation with a new output filename', async () => {
-  await invoke('first.json');
-  await vi.waitFor(() => expect(logged).toHaveBeenCalledTimes(1));
+  expect(await invoke('first.json')).toBe(0);
+  expect(logged).toHaveBeenCalledTimes(1);
   expect(failed).not.toHaveBeenCalled();
   expect(fixture.events.indexOf('reservation-synced')).toBeLessThan(fixture.events.indexOf('chat'));
   expect(fixture.events.indexOf('chat')).toBeLessThan(fixture.events.indexOf('output-saved'));
   const first = JSON.parse(await fs.readFile(join(fixture.directory, 'first.json'), 'utf8'));
   expect(first).toMatchObject({ callerExecution: 'local-unattested', inferenceCalls: 1, responseVerified: true });
   const guard = await fs.readFile(fixture.reservation, 'utf8');
-  await invoke('second.json');
-  await vi.waitFor(() => expect(failed).toHaveBeenCalledTimes(1));
+  expect(await invoke('second.json')).toBe(1);
+  expect(failed).toHaveBeenCalledTimes(1);
   expect(fixture.chat).toHaveBeenCalledTimes(1);
   expect(await fs.readFile(fixture.reservation, 'utf8')).toBe(guard);
   expect(await fs.readFile(join(fixture.directory, 'second.json'), 'utf8')).toBe('');
@@ -129,31 +130,34 @@ it('durably reserves before Chat/output and refuses a second invocation with a n
 
 it('retains the charged guard after an unknown Chat outcome and blocks a retry', async () => {
   fixture.chat.mockRejectedValue(new Error('PROVIDER_TIMEOUT'));
-  await invoke('failed.json');
-  await vi.waitFor(() => expect(failed).toHaveBeenCalledTimes(1));
+  expect(await invoke('failed.json')).toBe(1);
+  expect(failed).toHaveBeenCalledTimes(1);
   const guard = await fs.readFile(fixture.reservation, 'utf8');
   expect(JSON.parse(guard)).toMatchObject({ calls: 1, modelId: 'fixture-model' });
-  await invoke('retry.json');
-  await vi.waitFor(() => expect(failed).toHaveBeenCalledTimes(2));
+  expect(await invoke('retry.json')).toBe(1);
+  expect(failed).toHaveBeenCalledTimes(2);
   expect(fixture.chat).toHaveBeenCalledTimes(1);
   expect(fixture.receipt).not.toHaveBeenCalled();
   expect(await fs.readFile(fixture.reservation, 'utf8')).toBe(guard);
 });
 
 it('allows only one concurrent invocation to reach Chat without clobbering its reservation', async () => {
-  let release!: () => void;
+  let release!: () => void, entered!: () => void;
   const pending = new Promise<typeof completion>(resolve => { release = () => resolve(completion); });
-  fixture.chat.mockImplementation(() => pending);
+  const chatReached = new Promise<void>(resolve => { entered = resolve; });
+  fixture.chat.mockImplementation(() => { entered(); return pending; });
+  const first = invoke('concurrent-first.json');
   try {
-    await invoke('concurrent-first.json');
-    await vi.waitFor(() => expect(fixture.chat).toHaveBeenCalledTimes(1));
+    await Promise.race([chatReached, first.then(() => { throw new Error('Probe finished before reaching Chat'); })]);
+    expect(fixture.chat).toHaveBeenCalledTimes(1);
     const guard = await fs.readFile(fixture.reservation, 'utf8');
-    await invoke('concurrent-second.json');
-    await vi.waitFor(() => expect(failed).toHaveBeenCalledTimes(1));
+    expect(await invoke('concurrent-second.json')).toBe(1);
+    expect(failed).toHaveBeenCalledTimes(1);
     expect(fixture.chat).toHaveBeenCalledTimes(1);
     expect(await fs.readFile(fixture.reservation, 'utf8')).toBe(guard);
   } finally {
     release();
-    await vi.waitFor(() => expect(logged).toHaveBeenCalledTimes(1));
+    expect(await first).toBe(0);
+    expect(logged).toHaveBeenCalledTimes(1);
   }
 });

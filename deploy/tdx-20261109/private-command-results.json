@@ -1,0 +1,38 @@
+{
+  "at": "2026-11-09T07:59:43.157Z",
+  "endpoint": "https://a555e92fe263680b65331a165f2d8305b2099745-8443.dstack-pha1-prod9.phala.network",
+  "passed": true,
+  "checks": [
+    "Fresh DCAP-verified HPKE owner status, signed encrypted response; inference disabled with zero calls",
+    "Wrong owner token rejected",
+    "Research and preparation explicitly reject with PRIVATE_RESEARCH_DISABLED",
+    "Unknown authorization rejected without chain/provider calls; denial saved to encrypted journal",
+    "Signed encrypted audit exported and verified; receipt opened with verified executor signature"
+  ],
+  "status": {
+    "commandLimit": 10000,
+    "completedCommands": 0,
+    "inference": {
+      "calls": 0,
+      "day": "2026-11-09",
+      "dayNanoUsd": "0",
+      "enabled": false,
+      "limits": {
+        "dailyLimitNanoUsd": "0",
+        "inputNanoUsdPerToken": "0",
+        "maxCalls": 0,
+        "maxInputBytes": 24000,
+        "maxOutputTokens": 800,
+        "outputNanoUsdPerToken": "0",
+        "totalLimitNanoUsd": "0"
+      },
+      "totalNanoUsd": "0"
+    },
+    "journalLimitBytes": 128000000,
+    "ready": true
+  },
+  "auditEntries": 1,
+  "auditCheckpoint": "15ece265ae0efa9eb00f321e81ce317d4448971c92c6c8f8d9a37e707f5bd8ab",
+  "chainTransactions": 0,
+  "paidInferenceCalls": 0
+}

@@ -19,5 +19,6 @@ artifacts/*-results.json
 artifacts/*-verification.json
 artifacts/*-audit.json
 artifacts/wsl-run.json
+artifacts/tee-build.json
 artifacts/*.wasm
 artifacts/*_abi.*

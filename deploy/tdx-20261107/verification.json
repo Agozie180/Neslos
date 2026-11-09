@@ -1,0 +1,61 @@
+{
+  "startedAt": "2026-11-07T22:13:20.203Z",
+  "endpoint": "https://f2818f503981a8ca276012dfce7d828f7806fff0-8443.dstack-pha1-prod5.phala.network",
+  "checks": [
+    "HTTPS health: attestation-only",
+    "Private commands disabled (503)",
+    "Fresh nonce attestation endpoint",
+    "Intel/DCAP signature and collateral verified",
+    "TCB UpToDate",
+    "TDX debug mode disabled",
+    "Fresh nonce and both application keys cryptographically bound"
+  ],
+  "independentMeasurementsApproved": false,
+  "privateExecutionEnabled": false,
+  "genuineHardwareVerified": true,
+  "tcb": "UpToDate",
+  "quoteSha256": "56854ecc2ae20a3463a8204b076c18a0d8eaf132e5336012e7cf408a0f4d2995",
+  "observedMeasurements": {
+    "mrTd": "2a674327c50218dba880066b349b8d559d749ed68dce33fd651c184a877d084b07a9e583767a7ad5da13ed91deec2b70",
+    "rtMr0": "68102e7b524af310f7b7d426ce75481e36c40f5d513a9009c046e9d37e31551f0134d954b496a3357fd61d03f07ffe96",
+    "rtMr1": "89ef86c5125b986c325f0a94acfa87718a4ef3a4d4f237dbb72dda3cf777fd2c054555fb4407eb53338d7d67329a7333",
+    "rtMr2": "e9000e338f33233e8f51b7fd031e1c158bdcf8572eab041c0bc8eb7fef48b23259a6a556e6c8e2af99999fc39c793179",
+    "rtMr3": "e43ee850538e0ec329ce1a9bdb4b8367a2f453e0124802903b8062ba424b02a563e35b98d49fe8aed82473ce196d2dc0"
+  },
+  "executorPublicKey": "a6c61accd381dbed90966f06577c5a36833849a3e42eefb5e54cdc203092f729",
+  "transportPublicKey": "1deef79754e53bac094a9d22411bd0c8e605eaca0e6eb62f7872f3da6937627b",
+  "completedAt": "2026-11-07T22:13:26.569Z",
+  "checkedAt": "2026-11-07T22:14:57.224Z",
+  "id": "b2d971d2-ed2e-45af-af35-c4d4e77e0707",
+  "appId": "f2818f503981a8ca276012dfce7d828f7806fff0",
+  "status": "running",
+  "container": {
+    "id": "d786894669765e076a2619b81602e49b93378ac692bd7f07781f1983b74a7fc0",
+    "names": [
+      "/dstack-neslos-1"
+    ],
+    "image": "ghcr.io/agozie180/neslos-tee@sha256:e950fdb651ea681773b7f28e2d93e4e5f0698492bd25d3c292e8ebde161eda99",
+    "image_id": "sha256:20e4404781ef8712c20329a3406ab2c68fb42a4772e8bfc045514576a659b639",
+    "command": null,
+    "created": 1794089580,
+    "state": "running",
+    "status": "Up About a minute (healthy)",
+    "log_endpoint": null,
+    "predates_operation": false
+  },
+  "composeHash": "edefca87713f784418f93fb0f179ef8722f3dcb26d339326c5592dc36e66f454",
+  "scriptSha256": "cd2cffb788066a3e5cb58022c567beab68ab5ded6d62923c65847cc781a9c1a7",
+  "dockerComposeSha256": "a3427c9faa10cb0c7f0d1ab1f8755cf380669101bb51112780658e7a38949a33",
+  "scheduledDeleteAt": "2026-11-07T23:03:24.465000Z",
+  "hourlyRateUsd": "0.060780",
+  "runtimeEventDigestsVerified": 11,
+  "rtmr3ReplayMatchesVerifiedQuote": true,
+  "measuredComposeMatchesDeployedCompose": true,
+  "appInstanceAndOsMatch": true,
+  "independentBootMeasurementsApproved": false,
+  "cliCompositionIssue": "Installed CLI expects numeric manifest_version, API returns a string; authenticated raw composition read succeeded.",
+  "evidenceKind": "historical-live-verification",
+  "currentInstanceStatus": "deleted-confirmed-2026-11-09",
+  "freshChallengeAtCapture": true,
+  "liveNow": false
+}

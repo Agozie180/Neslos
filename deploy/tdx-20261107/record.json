@@ -1,0 +1,40 @@
+{
+  "format": "neslos-tdx-deployment-record-v1",
+  "recordedAt": "2026-11-09T07:02:59.685Z",
+  "verifiedAt": "2026-11-07T22:14:57.224Z",
+  "instanceId": "d6c42d8aca21b4919f0fc5a99f7cbb43f3053cda",
+  "appId": "f2818f503981a8ca276012dfce7d828f7806fff0",
+  "scheduledDeletion": "2026-11-07T23:03:24.465000Z",
+  "deletionConfirmedAt": "2026-11-09T07:00:48.038Z",
+  "activeCvmsAtCheck": 0,
+  "files": [
+    {
+      "name": "attestation.json",
+      "bytes": 17023,
+      "sha256": "a51237691eb15f1a9e453df73389ea5369a453b467403385658511a67b48d01e"
+    },
+    {
+      "name": "app-compose.json",
+      "bytes": 20854,
+      "sha256": "7ace29a4163c03510af15dfe71ce1e0ba81134a90cf33a383704945ec5ca695a"
+    },
+    {
+      "name": "verification.json",
+      "bytes": 3067,
+      "sha256": "05def89a8d294ab742cf3587d34bd62c5deb3cff5b86a133a6e6c56a9ff3aadc"
+    },
+    {
+      "name": "local-smoke.json",
+      "bytes": 3547,
+      "sha256": "cc563a72abee937a5065c0b01cb970bc5754cfa233b5b951355467d0b4c4c6f7"
+    },
+    {
+      "name": "registry-verification.json",
+      "bytes": 670,
+      "sha256": "9e1406b8cc176bfe60543c86f7130e829f41e6605465cea455fa580df3d27f1c"
+    }
+  ],
+  "independentBootApproval": false,
+  "privateCommandsEnabled": false,
+  "vmUuid": "b2d971d2-ed2e-45af-af35-c4d4e77e0707"
+}

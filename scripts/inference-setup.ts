@@ -8,10 +8,10 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { Quote } from '@phala/dcap-qvl';
-import { createTdxQuoteVerifier, verifyDeploymentImageProvenance, type MeasuredDeployment, type TdxQuoteVerifier } from '@nearai/inference-sdk/node';
+import { createTdxQuoteVerifier, type MeasuredDeployment, type TdxQuoteVerifier } from '@nearai/inference-sdk/node';
 import { z } from 'zod';
 import { sha256 } from '../src/core/crypto.js';
-import { GATEWAY_IMAGE_POLICIES, checkModelDeploymentReference, createBootPinnedTdxQuoteVerifier, inferenceBootPolicySchema, modelDeploymentPolicySchema, modelDeploymentSelectorSchema, modelDeploymentReference, verifyModelBuildProvenance } from '../src/core/inference-provenance.js';
+import { checkModelDeploymentReference, createBootPinnedTdxQuoteVerifier, inferenceBootPolicySchema, modelDeploymentPolicySchema, modelDeploymentSelectorSchema, modelDeploymentReference, verifyGatewayBuildProvenance, verifyModelBuildProvenance } from '../src/core/inference-provenance.js';
 import { InspectableInferenceClient } from '../src/core/inference-inspection.js';
 
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
@@ -70,7 +70,7 @@ async function main() {
   const verified = await client.verify(modelId);
   if (verified.models.length === 0) throw new Error('MODEL_TEE_REQUIRED');
   const builds = await Promise.allSettled([
-    verifyDeploymentImageProvenance({ appCompose: verified.gateway.deployment.appCompose, imagePolicies: GATEWAY_IMAGE_POLICIES, githubToken: process.env.GITHUB_TOKEN }),
+    verifyGatewayBuildProvenance(verified.gateway.deployment.appCompose, process.env.GITHUB_TOKEN),
     ...verified.models.map(m => selector ? verifyModelBuildProvenance(m.deployment, selector, process.env.GITHUB_TOKEN) : Promise.reject(new Error('MODEL_SELECTOR_REQUIRED'))),
   ]);
   const buildChecks = builds.map((b, index) => b.status === 'fulfilled' ? { kind: index ? 'model' : 'gateway', verified: true, result: b.value } : { kind: index ? 'model' : 'gateway', verified: false, failure: failureCode(b.reason) });

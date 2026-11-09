@@ -39,7 +39,7 @@ export async function verifyTeeEvidence(input: unknown, pinned: TeePolicy, expec
   return { verified: true as const, tcb: verified.status, executorPublicKey: evidence.executorPublicKey, transportPublicKey: evidence.transportPublicKey, measurements: teePolicySchema.parse(pinned), verifiedAt: new Date().toISOString() };
 }
 
-export interface TeeIdentity { signingKey: KeyObject; executorPublicKey: string; channelKeys: ChannelKeys; transportPublicKey: string; auditKey: Uint8Array; signingSeed: Uint8Array; attest: (nonce: string) => Promise<TeeEvidence> }
+export interface TeeIdentity { signingKey: KeyObject; executorPublicKey: string; channelKeys: ChannelKeys; transportPublicKey: string; auditKey: Uint8Array; signingSeed: Uint8Array; attest: (nonce: string) => Promise<TeeEvidence>; platformInfo?: () => Promise<{ format: 'neslos-platform-info-v1'; appId: string; instanceId: string; vmConfig: string | null }> }
 export async function createTeeIdentity(socket = '/var/run/dstack.sock'): Promise<TeeIdentity> {
   if (process.platform !== 'linux' || !socket.startsWith('/') || process.env.DSTACK_SIMULATOR_ENDPOINT || process.env.TAPPD_SIMULATOR_ENDPOINT) throw new Error('TEE_REQUIRED: use a real Linux dstack socket, without simulator endpoints.');
   const client = new DstackClient(socket);
@@ -59,6 +59,11 @@ export async function createTeeIdentity(socket = '/var/run/dstack.sock'): Promis
     const response = await client.getQuote(reportData(binding));
     return { format: 'neslos-tdx-evidence-v1', ...binding, quote: response.quote.replace(/^0x/, '').toLowerCase(), eventLog: response.event_log };
   };
-  return { signingKey: pair.privateKey, executorPublicKey: pair.publicKey, channelKeys, transportPublicKey, auditKey: audit!.key, signingSeed: signing!.key, attest };
+  const platformInfo = async () => {
+    const info = await client.info();
+    // Export only public verification inputs, never the complete guest response.
+    return { format: 'neslos-platform-info-v1' as const, appId: info.app_id, instanceId: info.instance_id, vmConfig: info.vm_config ?? null };
+  };
+  return { signingKey: pair.privateKey, executorPublicKey: pair.publicKey, channelKeys, transportPublicKey, auditKey: audit!.key, signingSeed: signing!.key, attest, platformInfo };
 }
 export function freshChallenge(): string { return randomBytes(32).toString('hex'); }

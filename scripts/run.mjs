@@ -18,7 +18,7 @@ function run(args) {
   }
 }
 const tests = () => run(['node_modules/vitest/vitest.mjs', 'run', '--reporter=default', '--reporter=json', '--outputFile=artifacts/unit-results.json', ...extra]);
-const build = () => { run(['node_modules/typescript/bin/tsc', '--noEmit']); run(['node_modules/vite/bin/vite.js', 'build']); run(['node_modules/typescript/bin/tsc', '-p', 'tsconfig.server.json']); };
+const build = () => { run(['node_modules/typescript/bin/tsc', '--noEmit']); run(['node_modules/vite/bin/vite.js', 'build']); run(['scripts/tee-build.mjs']); };
 switch (process.argv[2]) {
   case 'test': tests(); break;
   case 'build': build(); break;
@@ -36,6 +36,7 @@ switch (process.argv[2]) {
   case 'private': run(['--import', 'tsx', 'scripts/private.ts', ...extra]); break;
   case 'owner': run(['--import', 'tsx', 'scripts/owner.ts', ...extra]); break;
   case 'commerce': run(['--import', 'tsx', 'scripts/commerce.ts', ...extra]); break;
+  case 'confidential': run(['--import', 'tsx', 'scripts/confidential.ts', ...extra]); break;
   case 'start': run(['dist/server/server/index.js', ...extra]); break;
   default: throw new Error('Unknown Neslos task.');
 }

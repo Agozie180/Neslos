@@ -21,6 +21,7 @@
     "private": "node scripts/run.mjs private",
     "owner": "node scripts/run.mjs owner",
     "commerce": "node scripts/run.mjs commerce",
+    "confidential": "node scripts/run.mjs confidential",
     "cloud:status": "node scripts/cloud.mjs",
     "tee:bundle": "node scripts/tee-bundle.mjs",
     "build:contract": "node scripts/contract.mjs build",

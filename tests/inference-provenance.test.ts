@@ -1,8 +1,39 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Quote } from '@phala/dcap-qvl';
 import type { MeasuredDeployment, TdxQuoteVerificationResult } from '@nearai/inference-sdk/node';
-import { checkModelDeploymentReference, createBootPinnedTdxQuoteVerifier, inferenceBootPolicySchema, modelDeploymentPolicySchema, modelDeploymentReference, normalizeAuthenticatedCompose, verifyModelBuildProvenance } from '../src/core/inference-provenance.js';
+import { checkModelDeploymentReference, createBootPinnedTdxQuoteVerifier, gatewayImagePolicies, inferenceBootPolicySchema, modelDeploymentPolicySchema, modelDeploymentReference, normalizeAuthenticatedCompose, verifyModelBuildProvenance } from '../src/core/inference-provenance.js';
 import { canonical, sha256 } from '../src/core/crypto.js';
+import { gatewayAppComposeFixture } from './fixtures/inference.js';
+
+describe('gateway build scope across provider topologies', () => {
+  function app(extra: Record<string, { image: string }> = {}, omit?: string) {
+    const compose = JSON.parse(JSON.parse(gatewayAppComposeFixture).docker_compose_file);
+    Object.assign(compose.services, extra);
+    if (omit) delete compose.services[omit];
+    return JSON.stringify({ docker_compose_file: JSON.stringify(compose) });
+  }
+  it('verifies API and ingress without requiring absent VPC services', () => {
+    expect(Object.keys(gatewayImagePolicies(app()))).toEqual(['nearaidev/cloud-api', 'nearaidev/cvm-ingress']);
+  });
+  it('retains verification of every VPC component present in older gateway deployments', () => {
+    expect(Object.keys(gatewayImagePolicies(app({
+      vpc: { image: 'docker.io/nearaidev/dstack-vpc@sha256:' + 'c'.repeat(64) },
+      client: { image: 'nearaidev/dstack-vpc-client:v1@sha256:' + 'd'.repeat(64) },
+    })))).toHaveLength(4);
+  });
+  it.each(['api', 'ingress'])('rejects removal of the required %s image', name => {
+    expect(() => gatewayImagePolicies(app({}, name))).toThrow('PROVENANCE_GATEWAY_REQUIRED_IMAGE');
+  });
+  it.each(['nearaidev/dstack-vpc:latest', '${VPC_IMAGE}', 'alpine:latest', 'nearaidev/dstack-vpc@sha256:' + 'a'.repeat(64) + '\n'])('rejects mutable or unresolved images, including optional components: %s', image => {
+    expect(() => gatewayImagePolicies(app({ optional: { image } }))).toThrow('PROVENANCE_GATEWAY_IMAGE_PIN');
+  });
+  it('rejects an unreviewed provider repository instead of silently excluding it', () => {
+    expect(() => gatewayImagePolicies(app({ other: { image: 'nearaidev/unknown@sha256:' + 'c'.repeat(64) } }))).toThrow('PROVENANCE_GATEWAY_UNKNOWN_IMAGE');
+  });
+  it.each(['{}', 'not json', 'x'.repeat(1_000_001)])('rejects malformed or oversized measured Compose input', value => {
+    expect(() => gatewayImagePolicies(value)).toThrow('PROVENANCE_GATEWAY_COMPOSE');
+  });
+});
 
 describe('authenticated model compose normalization', () => {
   it('supports a bounded real-world number of repeated aliases and preserves selected images', () => {

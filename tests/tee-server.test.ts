@@ -38,4 +38,21 @@ describe('TEE HTTP surface and deployment configuration', () => {
     await expect(loadRuntimeOptions({})).rejects.toThrow('NESLOS_NETWORK');
     await expect(loadRuntimeOptions({ NESLOS_NETWORK: 'testnet', NESLOS_VAULT_ACCOUNT: 'vault.testnet', NESLOS_TEE_POLICY_FILE: '/private/pins.json', NESLOS_TEE_POLICY_JSON: '{}' })).rejects.toThrow('Choose FILE or JSON');
   });
+  it('allows explicit inference-disabled owner controls while still requiring a TEE policy and token', async () => {
+    const pins = { format: 'neslos-tdx-policy-v1', ...Object.fromEntries(['mrTd', 'rtMr0', 'rtMr1', 'rtMr2', 'rtMr3'].map(k => [k, 'ab'.repeat(48)])) };
+    const env = { NESLOS_NETWORK: 'testnet', NESLOS_VAULT_ACCOUNT: 'vault.testnet', NESLOS_TEE_POLICY_JSON: JSON.stringify(pins), NESLOS_OWNER_TOKEN: 'cd'.repeat(32), NESLOS_INFERENCE_ENABLED: 'false' };
+    expect(await loadRuntimeOptions(env)).toMatchObject({ inferenceEnabled: false, inferencePolicy: undefined, nearAiKey: undefined });
+    await expect(loadRuntimeOptions({ ...env, NESLOS_OWNER_TOKEN: '' })).rejects.toThrow('NESLOS_OWNER_TOKEN');
+    await expect(loadRuntimeOptions({ ...env, NEARAI_API_KEY: 'must-not-be-loaded' })).rejects.toThrow('INFERENCE_DISABLED_CONFIGURATION');
+    await expect(loadRuntimeOptions({ ...env, NESLOS_INFERENCE_ENABLED: 'true' })).rejects.toThrow('NESLOS_INFERENCE_POLICY_FILE');
+  });
+  it('exposes public platform inputs separately from nonce-bound attestation', async () => {
+    const { url, identity } = await start();
+    expect((await fetch(url + '/platform')).status).toBe(503);
+    identity.platformInfo = vi.fn(async () => ({ format: 'neslos-platform-info-v1' as const, appId: 'app', instanceId: 'instance', vmConfig: '{"cpu_count":1}' }));
+    const response = await fetch(url + '/platform');
+    expect(response.status).toBe(200); expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(await response.json()).toMatchObject({ format: 'neslos-platform-info-v1', vmConfig: '{"cpu_count":1}' });
+    expect(identity.attest).not.toHaveBeenCalled();
+  });
 });

@@ -3,3 +3,6 @@
 *.woff2 binary
 *.wasm binary
 *.zst binary
+
+# Deployment records checksum the original evidence bytes, including line endings.
+deploy/tdx-*/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

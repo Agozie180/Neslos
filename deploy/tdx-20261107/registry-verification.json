@@ -1,0 +1,16 @@
+{
+  "completedAt": "2026-11-07T21:51:28.231Z",
+  "status": "published-private-and-digest-verified",
+  "registryReference": "ghcr.io/agozie180/neslos-tee@sha256:e950fdb651ea681773b7f28e2d93e4e5f0698492bd25d3c292e8ebde161eda99",
+  "remoteTag": null,
+  "imageDigest": "sha256:e950fdb651ea681773b7f28e2d93e4e5f0698492bd25d3c292e8ebde161eda99",
+  "visibility": "private",
+  "packageUrl": "https://github.com/users/Agozie180/packages/container/package/neslos-tee",
+  "initialPush": {
+    "result": "platform-published-remainder-denied",
+    "indexPublished": false
+  },
+  "publishedPlatformMatchesLocalBuild": true,
+  "remotelyPulledSmokePassed": true,
+  "cloudRequests": 0
+}
