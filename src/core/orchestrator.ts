@@ -13,7 +13,7 @@ const stepDefinitions = [['policy', 'Policy set'], ['research', 'Discover & rese
 export class Orchestrator {
   private runs = new Map<string, MissionRun>();
   private requests = new Map<string, { fingerprint: string; runId: string }>();
-  constructor(readonly ledger: PolicyLedger, readonly audit: AuditLog, private research: ResearchService, private pace = 300) {}
+  constructor(readonly ledger: PolicyLedger, readonly audit: AuditLog, private research: ResearchService, private pace = 300, private backgroundTask?: (work: Promise<void>) => void) {}
   list(): MissionRun[] { return [...this.runs.values()].reverse().map(r => structuredClone(r)); }
   get(id: string): MissionRun | undefined { const r = this.runs.get(id); return r ? structuredClone(r) : undefined; }
   start(request: MissionRequest): MissionRun {
@@ -26,7 +26,9 @@ export class Orchestrator {
     const run: MissionRun = { id: randomUUID(), requestId: request.requestId, prompt: request.prompt, kind: request.kind, status: 'researching', mode: 'rehearsal', createdAt: now, updatedAt: now, reports: [], steps: stepDefinitions.map(([id, label], i) => ({ id: id!, label: label!, status: i === 0 ? 'complete' : i === 1 ? 'active' : 'waiting', detail: i === 0 ? `Policy v${this.ledger.policy.version} loaded.` : i === 1 ? 'Researchers are retrieving market evidence.' : '' })) };
     this.runs.set(run.id, run); this.requests.set(request.requestId, { fingerprint, runId: run.id });
     this.audit.append('mission.started', run.id, { request, policyVersion: this.ledger.policy.version });
-    void this.execute(run, request).catch(error => { run.status = 'failed'; run.error = error instanceof Error ? error.message : 'Mission failed.'; run.updatedAt = new Date().toISOString(); const active = run.steps.find(s => s.status === 'active'); if (active) { active.status = 'failed'; active.detail = run.error; } this.audit.append('mission.failed', run.id, { error: run.error }); });
+    const work = this.execute(run, request).catch(error => { run.status = 'failed'; run.error = error instanceof Error ? error.message : 'Mission failed.'; run.updatedAt = new Date().toISOString(); const active = run.steps.find(s => s.status === 'active'); if (active) { active.status = 'failed'; active.detail = run.error; } this.audit.append('mission.failed', run.id, { error: run.error }); });
+    // Serverless hosts must keep the invocation alive after the 202 response.
+    this.backgroundTask?.(work);
     return structuredClone(run);
   }
   private transition(run: MissionRun, status: RunStatus, activeIndex: number, detail: string): void {

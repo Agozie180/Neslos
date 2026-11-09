@@ -19,7 +19,7 @@ const missionSchema = z.object({
   attack: z.enum(['overspend', 'counterparty', 'slippage', 'privacy', 'stale-quote']).optional(),
 }).strict();
 interface Session { id: string; csrf: string; touched: number; ledger: PolicyLedger; audit: AuditLog; orchestrator: Orchestrator; lastQuote: number }
-interface Options { research?: ResearchService; pace?: number; allowedOrigins?: string[]; secureCookie?: boolean }
+interface Options { research?: ResearchService; pace?: number; allowedOrigins?: string[]; secureCookie?: boolean; backgroundTask?: (work: Promise<void>) => void }
 
 export function createApplication(options: Options = {}) {
   const app = express();
@@ -45,7 +45,7 @@ export function createApplication(options: Options = {}) {
     if (sessions.size >= 64) throw new Error('SESSION_CAPACITY: the demo is busy. Try again later.');
     const id = randomBytes(32).toString('hex'), csrf = randomBytes(32).toString('hex');
     const ledger = new PolicyLedger(DEFAULT_POLICY), audit = new AuditLog();
-    const session: Session = { id, csrf, ledger, audit, touched: Date.now(), orchestrator: new Orchestrator(ledger, audit, research, options.pace ?? 550), lastQuote: 0 };
+    const session: Session = { id, csrf, ledger, audit, touched: Date.now(), orchestrator: new Orchestrator(ledger, audit, research, options.pace ?? 550, options.backgroundTask), lastQuote: 0 };
     sessions.set(id, session);
     audit.append('policy.created', 'policy', { policy: ledger.policy, disclosure: 'Session rehearsal. No on-chain policy transaction has been made.' });
     res.cookie('neslos_session', id, { httpOnly: true, sameSite: 'strict', secure, path: '/', maxAge: 2 * 60 * 60 * 1000 });

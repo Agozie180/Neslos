@@ -1,0 +1,16 @@
+.git
+.vercel
+.env
+.env.*
+.private
+.local
+.tools
+node_modules
+dist
+artifacts
+contracts
+deploy
+docs
+test-results
+playwright-report
+*.log

@@ -6,5 +6,5 @@
     "resolveJsonModule": true, "skipLibCheck": true, "noEmit": true,
     "types": ["node", "vite/client"]
   },
-  "include": ["src", "tests", "scripts/*.ts", "vite.config.ts", "vitest.config.ts"]
+  "include": ["api", "src", "tests", "scripts/*.ts", "vite.config.ts", "vitest.config.ts"]
 }
