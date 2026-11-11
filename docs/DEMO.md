@@ -2,6 +2,8 @@
 
 The one sentence to remember: **agents can propose; only the policy can authorize.**
 
+The revised checkout also has a guided **Boundary challenge** and an in-app **Evidence room**. Use the [competition package](SUBMISSION.md) for its 60-second route, human narration and submission text. `npm run demo:record` records the actual local rehearsal after `npm run dev`; the script asserts successful outcomes before finishing. The recording is silent and requires human review before publication. Deploying this revision to the public demo remains a release gate.
+
 Use the [live Vercel rehearsal](https://neslos.vercel.app) or the local application. The hosted frontend/API and three production browser tests passed on 9 November. Present the retained [testnet commerce proof](VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) and [private NEAR AI research proof](NEAR-PRIVATE-RESEARCH-2026-11-09.md) alongside the rehearsal. All three researchers completed inside independently verified TDX. That temporary server was deleted after verification to stop hosting charges; the public demo and evidence archive support the presentation without a paid TDX instance running.
 
 | Time | Action | Evidence to show |

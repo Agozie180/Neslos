@@ -9,12 +9,16 @@ import type { AuditExport, MissionRequest, MissionRun, Policy, RankedMarket } fr
 import { formatUsdc, parseUsdc, units } from '../core/amounts.js';
 import { launchMission, request, savePolicy, type AppState, type MarketResponse } from './api.js';
 import { verifyInBrowser } from './verify.js';
+import { CompetitionIntro, EvidencePage } from './Competition.js';
+import { ChallengePage } from './Challenge.js';
+import { source } from './evidence.js';
 
-type Page = 'overview' | 'research' | 'policy' | 'audit';
+type Page = 'overview' | 'challenge' | 'research' | 'policy' | 'audit' | 'evidence';
 type Notice = { text: string; error?: boolean } | null;
 const pages: { id: Page; label: string; icon: typeof Activity }[] = [
   { id: 'overview', label: 'Control room', icon: LayoutDashboard }, { id: 'research', label: 'Yield research', icon: ScanSearch },
   { id: 'policy', label: 'Policy vault', icon: ShieldCheck }, { id: 'audit', label: 'Audit trail', icon: Fingerprint },
+  { id: 'challenge', label: 'Boundary challenge', icon: ShieldAlert }, { id: 'evidence', label: 'Evidence room', icon: FileLock2 },
 ];
 const stepLabels = ['Set policy', 'Research', 'Propose', 'Guardian', 'Execute', 'Settle & audit'];
 const stepIcons = [Settings2, ScanSearch, Sparkles, ShieldCheck, LockKeyhole, Fingerprint];
@@ -66,12 +70,14 @@ export function App() {
   const [counterparty, setCounterparty] = useState('treasury-reserve');
   const missionRef = useRef<HTMLTextAreaElement>(null);
   const marketRequest = useRef(0);
+  const stateRequest = useRef(0);
   const busy = state?.runs.some(r => activeStatuses.includes(r.status)) ?? false;
   const run = state?.runs.find(r => r.id === selectedRun) ?? state?.runs[0];
 
   const notify = useCallback((text: string, error = false) => setNotice({ text, error }), []);
   useEffect(() => { if (!notice) return; const id = setTimeout(() => setNotice(null), 6500); return () => clearTimeout(id); }, [notice]);
-  const refresh = useCallback(async () => { const next = await request<AppState>('/state'); setState(next); return next; }, []);
+  const acceptState = useCallback((next: AppState) => { ++stateRequest.current; setState(next); }, []);
+  const refresh = useCallback(async () => { const id = ++stateRequest.current; const next = await request<AppState>('/state'); if (id === stateRequest.current) setState(next); return next; }, []);
   const discover = useCallback(async (refreshData = false, refOnly = false) => {
     const requestId = ++marketRequest.current;
     setMarketLoading(true);
@@ -135,15 +141,16 @@ export function App() {
   function readiness() {
     if (!state) return;
     setDialog({ title: 'Execution readiness', content: <div className="readiness">
-      <p>The rehearsal exercises the complete control flow. These are the deployment requirements for funded execution.</p>
+      <p>This browser runs a simulated-funds rehearsal. Separate, dated records show what has been verified beyond the demo.</p>
       {[
-        ['NEAR policy vault', state.integrations.contractBuilt ? 'WASM built locally' : 'Contract source available'],
-        ['Owner’s on-chain policy', 'Deployment and owner transaction required'],
-        ['Intel TDX executor', 'Provisioning and independent measurement pinning required'],
-        ['NEAR AI private researchers', 'Model access and approved deployment measurements required'],
-        ['Confidential 1Click quotes', state.integrations.confidentialQuotes === 'configured' ? 'API token configured; verification required per quote' : 'API token required'],
-        ['Funded settlement', 'Owner-authorized mainnet transaction required'],
+        ['This browser session', 'Simulated funds and deterministic research; real signed audit receipts'],
+        ['NEAR policy vault', 'Testnet transfer, limit and replay proof completed 6 November; restored and paused'],
+        ['Intel TDX + NEAR AI', 'Three signed researchers verified 9 November; temporary server retired'],
+        ['Private inference trust', 'Provider administration trusted; loaded model weights not independently proved'],
+        ['Owner-wallet settlement', '0.001 NEAR returned; native fee cap failed (0.0071149895375 / 0.004 NEAR)'],
+        ['Complete private-vault payment', 'Funded TDX-to-mainnet-vault path remains unproved'],
       ].map(([name, value]) => <div className="readiness-row" key={name}><span>{name}</span><span>{value}</span></div>)}
+      <p><a className="text-link" href={source('docs/PROOF.md')} target="_blank" rel="noreferrer">Inspect the dated verification record <ExternalLink size={13} /></a></p>
       <p className="fine-print">Public deposits, withdrawal timing, and public DeFi positions remain observable. Native gas, storage, and inference fees have separate budgets. A funded reserve does not open a lending position.</p>
     </div> });
   }
@@ -155,6 +162,7 @@ export function App() {
   const currentTitle = pages.find(p => p.id === page)!.label;
 
   return <div className="app-shell">
+    <a className="skip-link" href="#main-content">Skip to content</a>
     <aside className="sidebar">
       <a href="#overview" className="brand-link" aria-label="Neslos control room" onClick={() => navigate('overview')}><Brand /></a>
       <div className="workspace-select"><span className="workspace-avatar">N</span><div><strong>Neslos treasury</strong><span>Personal workspace</span></div><span className="workspace-chevron">⌄</span></div>
@@ -166,15 +174,16 @@ export function App() {
         <div className="sidebar-profile"><span className="profile-dot">N</span><div><strong>Rehearsal workspace</strong><span>Session {state.sessionId.slice(0, 8)}</span></div><FlaskConical size={15} /></div>
       </div>
     </aside>
-    <main className="main">
+    <main className="main" id="main-content" tabIndex={-1}>
       <header className="topbar"><div className="breadcrumbs"><span>Workspace</span><ChevronRight size={13} /><strong>{currentTitle}</strong></div><div className="topbar-right"><span className="network-mark">И</span><span>NEAR</span><span className="top-divider" /><button className="mode-button" onClick={readiness}><FlaskConical size={13} /> Rehearsal <ChevronRight size={12} /></button></div></header>
       <div className="page">
-        <div className="page-heading"><div><div className="eyebrow">{page === 'overview' ? 'AUTONOMOUS FINANCE, UNDER CONTROL' : page === 'research' ? 'EVIDENCE BEFORE EXECUTION' : page === 'policy' ? 'YOUR CAPITAL. YOUR CONDITIONS.' : 'PRIVATE DETAILS. VERIFIABLE INTEGRITY.'}</div><h1>{page === 'overview' ? 'Your agents. Your rules' : currentTitle}<span className="heading-dot">.</span></h1><p>{page === 'overview' ? 'Discover opportunities. Set boundaries. Let your agents do the work.' : page === 'research' ? 'A clear view of NEAR yields, liquidity, and the risks behind the rate.' : page === 'policy' ? 'Define what your agents can spend, where they can go, and who they can pay.' : 'Every decision leaves a signed, encrypted trail you can independently verify.'}</p></div>
+        <div className="page-heading"><div><div className="eyebrow">{page === 'overview' ? 'AUTONOMOUS FINANCE, UNDER CONTROL' : page === 'research' ? 'EVIDENCE BEFORE EXECUTION' : page === 'policy' ? 'YOUR CAPITAL. YOUR CONDITIONS.' : 'PRIVATE DETAILS. VERIFIABLE INTEGRITY.'}</div><h1>{page === 'overview' ? 'Your agents. Your rules' : currentTitle}<span className="heading-dot">.</span></h1><p>{page === 'overview' ? 'Private agent research. Spending limits enforced on NEAR.' : page === 'research' ? 'A clear view of NEAR yields, liquidity, and the risks behind the rate.' : page === 'policy' ? 'Define what your agents can spend, where they can go, and who they can pay.' : page === 'challenge' ? 'Three checks that make the spending boundary tangible.' : page === 'evidence' ? 'Every claim has an environment, a date and a record.' : 'Every decision leaves a signed, encrypted trail you can independently verify.'}</p></div>
           {page === 'overview' ? <button className="button primary" onClick={() => { missionRef.current?.focus(); missionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}><Plus size={16} /> New mission</button> : page === 'research' ? <button className="button secondary" disabled={marketLoading} onClick={() => void discover(true, reference)}><RefreshCw size={15} className={marketLoading ? 'spin' : ''} /> Refresh research</button> : <Badge tone={state.policy.paused ? 'amber' : 'green'}><CircleDot size={11} />{state.policy.paused ? 'Policy paused' : 'Policy active'}</Badge>}
         </div>
         <div className="mode-strip"><FlaskConical size={14} /><span><strong>Rehearsal environment</strong><span className="mode-detail"> · Simulated funds. Real market sources and cryptographic receipts.</span></span><button onClick={readiness}>View readiness <ArrowUpRight size={13} /></button></div>
 
         {page === 'overview' && <>
+          <CompetitionIntro challenge={() => navigate('challenge')} inspect={() => navigate('evidence')} />
           <div className="metrics">
             <div className="metric main-metric"><div className="metric-label">Daily allowance remaining <Wallet size={16} /></div><div className="metric-value">{money(state.budget.remaining)}<span>USDC</span></div><div className="budget-track" role="progressbar" aria-label="Daily allowance used" aria-valuenow={usedPercent} aria-valuemin={0} aria-valuemax={100}><span style={{ width: usedPercent + '%' }} /></div><div className="metric-foot">{money(state.budget.spent)} of {money(state.policy.dailyLimit)} committed <span>Resets at 00:00 UTC</span></div></div>
             <div className="metric"><div className="metric-label">Policy boundaries <ShieldCheck size={16} /></div><div className="metric-value">{money(state.policy.perTransactionLimit)}<span>/ action</span></div><div className="metric-foot">{state.policy.maxSlippageBps} bps max slippage <span className="dot-separator">·</span> {state.policy.allowedVenues.length} venues</div><button className="metric-link" onClick={() => navigate('policy')}>Manage policy <ArrowUpRight size={13} /></button></div>
@@ -229,7 +238,9 @@ export function App() {
         {page === 'research' && <ResearchPage data={markets} loading={marketLoading} chosen={chosenMarket} refresh={() => void discover(true, reference)} inspect={m => setDialog({ title: m.protocol + ' · ' + m.symbol, content: <MarketDetail market={m} /> })} previewQuote={() => void previewQuote()} />}
         {page === 'policy' && <PolicyPage policy={state.policy} spent={state.budget.spent} save={updatePolicy} notify={notify} />}
         {page === 'audit' && <AuditPage bundle={state.audit} sessionId={state.sessionId} openReceipt={openReceipt} notify={notify} />}
-        <footer className="page-footer"><span><Brand small /> Agents propose. Your policy decides.</span><div><button onClick={readiness}>TEE deployment pending <ArrowUpRight size={12} /></button><span>Built on NEAR</span></div></footer>
+        <div hidden={page !== 'challenge'}><ChallengePage state={state} onState={acceptState} useReference={() => changeReference(true)} viewEvidence={() => navigate('evidence')} viewAudit={() => navigate('audit')} /></div>
+        {page === 'evidence' && <EvidencePage challenge={() => navigate('challenge')} />}
+        <footer className="page-footer"><span><Brand small /> Agents propose. Your policy decides.</span><div><button onClick={() => navigate('evidence')}>View verified evidence <ArrowUpRight size={12} /></button><span>Built on NEAR</span></div></footer>
       </div>
     </main>
     {notice && <div role={notice.error ? 'alert' : 'status'} className={'toast ' + (notice.error ? 'error' : '')}>{notice.error ? <ShieldAlert size={18} /> : <CheckCircle2 size={18} />}<span>{notice.text}</span><button aria-label="Dismiss notification" onClick={() => setNotice(null)}><X size={15} /></button></div>}

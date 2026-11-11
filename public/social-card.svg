@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs><radialGradient id="glow"><stop stop-color="#617f2a" stop-opacity=".22"/><stop offset="1" stop-color="#10150e" stop-opacity="0"/></radialGradient></defs>
+  <rect width="1200" height="630" fill="#10150e"/>
+  <ellipse cx="1030" cy="330" rx="460" ry="400" fill="url(#glow)"/>
+  <rect x="24" y="24" width="1152" height="582" rx="18" fill="none" stroke="#35442b"/>
+  <g font-family="Inter, Segoe UI, Arial, sans-serif">
+    <rect x="70" y="67" width="44" height="44" rx="12" fill="#d5f77d"/>
+    <path d="M81 99V79h5l17 20h-6L86 85v14zm16-20h5v17l-5-6z" fill="#17200e"/>
+    <text x="130" y="101" fill="#eef2e9" font-size="36" font-weight="650" letter-spacing="-2">neslos<tspan fill="#d5f77d">.</tspan></text>
+    <text x="952" y="97" fill="#b2c59c" font-size="14" letter-spacing="2">BUILT ON NEAR</text>
+    <text x="70" y="206" fill="#b4c89b" font-size="13" letter-spacing="3">AUTONOMY WITH A HARD LIMIT</text>
+    <text x="65" y="304" fill="#edf3e5" font-size="76" font-weight="550" letter-spacing="-4">Agents propose.</text>
+    <text x="65" y="391" fill="#d5f77d" font-size="76" font-weight="550" letter-spacing="-4">Your policy decides.</text>
+    <text x="70" y="449" fill="#b4c2a8" font-size="23">Private research. Spending limits enforced on NEAR.</text>
+    <path d="M1040 212 1110 242v55c0 57-70 95-70 95s-70-38-70-95v-55z" fill="#d5f77d09" stroke="#94b95a" stroke-width="2"/>
+    <path d="m1010 293 20 20 41-46" fill="none" stroke="#d5f77d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M70 508h1060" stroke="#36462a"/>
+    <text x="70" y="552" fill="#d5f77d" font-size="17">Take the boundary challenge</text>
+    <path d="M342 546h23m-8-7 8 7-8 7" stroke="#d5f77d" stroke-width="1.5" fill="none"/>
+    <text x="955" y="552" fill="#a6b494" font-size="17">neslos.vercel.app</text>
+  </g>
+</svg>

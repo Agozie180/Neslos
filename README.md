@@ -8,6 +8,8 @@ Neslos is an agent treasury for people who want help researching opportunities a
 
 [Try the live demo](https://neslos.vercel.app) · [Track fit](#hackathon-tracks) · [Run locally](#run-locally) · [Inspect the evidence](#what-has-been-verified) · [Roadmap](roadmap.md) · [Read the architecture](docs/ARCHITECTURE.md)
 
+**For judges:** start with the [competition package](docs/SUBMISSION.md). This checkout adds a **Boundary challenge** that runs a rejected $501 proposal, an allowed $150 reserve and browser receipt/tamper verification, plus an **Evidence room** with direct testnet receipts and dated private-research results. Run locally below; deployment of this revised walkthrough is a [release gate](docs/SUBMISSION.md#release-gates).
+
 ![Neslos control room showing a blocked overspend, a completed 150-token rehearsal and 350 tokens of remaining allowance](docs/images/control-room.png)
 
 *The public demo is a rehearsal: simulated funds, deterministic research and real cryptographic audit receipts. This screenshot uses the labelled reference dataset. Public testnet enforcement and private AI research have separate verification records below.*
@@ -32,6 +34,12 @@ Open **[neslos.vercel.app](https://neslos.vercel.app)**. No wallet, API key or f
 5. **Check the evidence.** Open **Audit trail**, select **Verify integrity**, then **Test a tampered copy**. The original verifies; the altered copy fails.
 
 The reference market capture is dated **1 November 2026**. A reserve in this demo simulates earmarking funds; it does not open a lending position. [Full demo script](docs/DEMO.md) · [Audit screenshot](artifacts/neslos-audit.png) · [Mobile screenshot](artifacts/neslos-mobile.png)
+
+### Guided challenge in this checkout
+
+After `npm run dev`, open **http://127.0.0.1:5173/#challenge** and choose **Start the challenge**. This explicitly resets only the simulated workspace, pins the fresh session's audit identity and uses the reference dataset. Follow **Run the $150 mission**, then **Verify & tamper-test receipts**. The challenge checks actual API outcomes and browser cryptography before showing a pass. An uncertain start response reuses its original request ID to recover the mission.
+
+Open **Evidence room** to inspect the separate real testnet and archived TDX evidence, including the failed native fee-cap result. Download the challenge proof to retain its pinned key, starting checkpoint and original audit history. The evidence index contains selected archived public fields and links; it does not verify private prompts or create a new attestation. [Recording instructions and submission copy](docs/SUBMISSION.md).
 
 ## What has been verified
 
@@ -158,6 +166,7 @@ The local [owner workspace](docs/OWNER-WORKSPACE.md) provides policy review, fun
 | [Owner workspace](docs/OWNER-WORKSPACE.md) · [Commerce](docs/COMMERCE.md) | Local controls, funding, schedules and transaction recovery |
 | [Deployment](docs/DEPLOYMENT.md) · [TEE runbook](docs/TEE-RUNBOOK.md) | Reproduction, optional private sessions and budget controls |
 | [Demo script](docs/DEMO.md) · [Hackathon research](docs/RESEARCH.md) | Walkthrough, official requirements and submission preparation |
+| [Competition package](docs/SUBMISSION.md) | Guided judge route, narration, submission text, questions and release gates |
 
 Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. The [four track statements](#hackathon-tracks) link each claim to evidence; publication, the human's demo post and final submission are tracked in the [submission checklist](docs/DEMO.md#submission-preparation).
 
