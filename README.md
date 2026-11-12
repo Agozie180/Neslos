@@ -4,7 +4,7 @@
 
 **Private agent research. Spending limits enforced on NEAR.**
 
-**Verification:** **645 tests passed** with 5 platform-specific skips under `npm run verify` at source commit `22af763`. The command also runs strict TypeScript checks and the production web/server builds. [CI and detailed verification history](docs/PROOF.md).
+**Verification:** **645 tests passed** with 5 platform-specific skips under `npm run verify` at source commit [`dc529f0`](https://github.com/Agozie180/Neslos/commit/dc529f0/checks). The command also runs strict TypeScript checks and the production web/server builds. [Detailed verification history](docs/PROOF.md).
 
 Neslos is an agent treasury for people who want help researching opportunities and preparing payments while keeping control of their funds. Three researchers assess lending, liquidity and risk; a strategist proposes an action; a deterministic guardian checks the owner's policy. The NEAR vault enforces the spending limit before funds leave custody.
 
