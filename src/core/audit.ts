@@ -4,15 +4,31 @@ import type { AuditEntry, AuditExport, ExecutionMode } from './types.js';
 
 export const GENESIS = '0'.repeat(64);
 const header = (e: AuditEntry) => ({ index: e.index, id: e.id, runId: e.runId, type: e.type, createdAt: e.createdAt, mode: e.mode, previousHash: e.previousHash });
+export interface AuditLogState {
+  mode: ExecutionMode;
+  signingSeed: string;
+  encryptionKey: string;
+  bundle: AuditExport;
+}
 
 export class AuditLog {
   readonly publicKey: string;
   private readonly signingKey: KeyObject;
+  private readonly signingSeed: Uint8Array;
   private readonly encryptionKey: Uint8Array;
   private entries: AuditEntry[] = [];
   constructor(private mode: ExecutionMode = 'rehearsal', keys?: { signingSeed: Uint8Array; encryptionKey: Uint8Array }) {
-    const pair = keyFromSeed(keys?.signingSeed ?? randomBytes(32)); this.publicKey = pair.publicKey; this.signingKey = pair.privateKey;
+    this.signingSeed = keys?.signingSeed ?? randomBytes(32);
+    const pair = keyFromSeed(this.signingSeed); this.publicKey = pair.publicKey; this.signingKey = pair.privateKey;
     this.encryptionKey = keys?.encryptionKey ?? randomBytes(32);
+  }
+  static restore(state: AuditLogState): AuditLog {
+    const audit = new AuditLog(state.mode, { signingSeed: Buffer.from(state.signingSeed, 'base64url'), encryptionKey: Buffer.from(state.encryptionKey, 'base64url') });
+    audit.restore(state.bundle);
+    return audit;
+  }
+  exportState(): AuditLogState {
+    return { mode: this.mode, signingSeed: Buffer.from(this.signingSeed).toString('base64url'), encryptionKey: Buffer.from(this.encryptionKey).toString('base64url'), bundle: this.export() };
   }
   append(type: string, runId: string, value: unknown): AuditEntry {
     const metadata = { index: this.entries.length, id: randomUUID(), runId, type, createdAt: new Date().toISOString(), mode: this.mode, previousHash: this.entries.at(-1)?.hash ?? GENESIS };

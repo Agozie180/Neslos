@@ -48,6 +48,6 @@ export function EvidencePage({ challenge }: { challenge: () => void }) {
       ['DeFi', 'Rhea yield, liquidity and risk analysis that produces policy-constrained proposals.'],
       ['Swarms', 'Three researchers and a strategist share one policy; models cannot enlarge their authority.'],
     ].map(([track, detail]) => <article key={track}><strong>{track}</strong><p>{detail}</p></article>)}</div></section>
-    <section className="proof-boundaries"><h2>What remains to prove</h2><p>A complete funded TDX-to-mainnet-vault payment, a funded lending cycle and a live owner-browser session. Native-fee preflight and independent security review remain open. The public rehearsal opens no lending position.</p><EvidenceLink href={source('roadmap.md')}>Inspect the roadmap</EvidenceLink></section>
+    <section className="proof-boundaries"><h2>What remains to prove</h2><p>A single retained flow binding private TDX research to vault dispatch and confidential settlement, plus a vault-custodied Rhea cycle. Native-fee preflight and independent security review remain open. The funded owner-wallet Rhea cycle and fresh owner-browser validation are already retained separately.</p><EvidenceLink href={source('docs/STATUS.md')}>Review current status</EvidenceLink></section>
   </div>;
 }

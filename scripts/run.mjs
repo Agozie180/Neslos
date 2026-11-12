@@ -29,7 +29,7 @@ switch (process.argv[2]) {
     const results = JSON.parse(readFileSync(resolve(root, 'artifacts/unit-results.json'), 'utf8'));
     finishCheck(results.success, { passedTests: results.numPassedTests, failedTests: results.numFailedTests, build: 'passed', runtime: node });
     break;
-  case 'browser': run(['node_modules/@playwright/test/cli.js', 'test', ...extra]); break;
+  case 'browser': run(['scripts/browser.mjs', ...extra]); break;
   case 'research': run(['--import', 'tsx', 'scripts/research.ts', ...extra]); break;
   case 'quote': run(['--import', 'tsx', 'scripts/quote.ts', ...extra]); break;
   case 'attestation': run(['--import', 'tsx', 'scripts/verify-attestation.ts', ...extra]); break;

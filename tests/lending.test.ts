@@ -53,10 +53,36 @@ describe('Rhea lending protocol adapter', () => {
   it('binds every read to the same finalized block', async () => {
     const s = snapshot();
     const read = vi.fn(async (_contract, method, _args, _network, hash) => ({ value: method === 'get_asset' ? s.asset : method === 'get_account' ? s.position : method === 'ft_metadata' ? { decimals: 6 } : s.walletBalance, blockHash: hash ?? s.blockHash, blockHeight: 123 }));
-    const result = await readLendingPosition(s.account, s.token, s.network, read);
+    const inspect = vi.fn(async (_contract, _network, hash) => ({ methods: ['ft_metadata', 'ft_transfer_call'], blockHash: hash ?? s.blockHash, blockHeight: 123 }));
+    const result = await readLendingPosition(s.account, s.token, s.network, read, inspect);
     expect(result.blockHash).toBe(s.blockHash);
     for (const call of read.mock.calls.slice(1)) expect(call[4]).toBe(s.blockHash);
     expect(read).toHaveBeenCalledTimes(4);
+    expect(inspect).toHaveBeenCalledWith(s.token, s.network, s.blockHash);
+  });
+  it('stops immediately when Rhea has not listed the configured token', async () => {
+    const s = snapshot();
+    const read = vi.fn(async () => ({ value: null, blockHash: s.blockHash, blockHeight: s.blockHeight }));
+    const inspect = vi.fn();
+    await expect(readLendingPosition(s.account, s.token, s.network, read, inspect)).rejects.toThrow('LENDING_ASSET_UNSUPPORTED');
+    expect(read).toHaveBeenCalledTimes(1);
+    expect(inspect).not.toHaveBeenCalled();
+  });
+  it('rejects tokens missing required metadata or transfer-call methods', async () => {
+    const s = snapshot();
+    const read = vi.fn(async () => ({ value: s.asset, blockHash: s.blockHash, blockHeight: s.blockHeight }));
+    const inspect = (methods: string[]) => vi.fn(async () => ({ methods, blockHash: s.blockHash, blockHeight: s.blockHeight }));
+    await expect(readLendingPosition(s.account, s.token, s.network, read, inspect(['ft_transfer_call']))).rejects.toThrow('LENDING_TOKEN_METADATA_UNAVAILABLE');
+    await expect(readLendingPosition(s.account, s.token, s.network, read, inspect(['ft_metadata']))).rejects.toThrow('LENDING_TOKEN_TRANSFER_CALL_UNAVAILABLE');
+  });
+  it('labels a failing metadata view instead of leaking an ambiguous RPC error', async () => {
+    const s = snapshot();
+    const read = vi.fn(async (_contract, method) => {
+      if (method === 'ft_metadata') throw new Error('ContractMethodNotFoundError');
+      return { value: method === 'get_asset' ? s.asset : method === 'get_account' ? s.position : s.walletBalance, blockHash: s.blockHash, blockHeight: s.blockHeight };
+    });
+    const inspect = vi.fn(async () => ({ methods: ['ft_metadata', 'ft_transfer_call'], blockHash: s.blockHash, blockHeight: s.blockHeight }));
+    await expect(readLendingPosition(s.account, s.token, s.network, read, inspect)).rejects.toThrow('LENDING_TOKEN_METADATA_UNAVAILABLE');
   });
   it('does not mistake a successful transfer for an observed lending position', () => {
     const before = snapshot(), after = structuredClone(before); after.blockHeight++;

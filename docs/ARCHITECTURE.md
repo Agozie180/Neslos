@@ -2,7 +2,7 @@
 
 **Thesis: agents propose; an exact, policy-bound authorization is the only way to spend.**
 
-Updated 9 November 2026. The public rehearsal, public testnet vault and private TDX runtime have separate operating environments and verification records. [Current status](STATUS.md) identifies completed proofs and remaining integrations; [PROOF](PROOF.md) links to the recorded revisions and receipts.
+Updated 12 November 2026. The public rehearsal, public testnet vault, public owner-wallet Rhea cycle and private TDX runtime have separate operating environments and verification records. [Current status](STATUS.md) identifies completed proofs and remaining integrations; [PROOF](PROOF.md) links to the recorded revisions and receipts.
 
 ## User flow
 
@@ -21,7 +21,7 @@ flowchart TD
   S --> A
 ```
 
-The diagram describes the implemented private payment design. The public demo rehearses its stages using simulated funds. Public testnet commerce, private TDX research and a funded owner-wallet Confidential Intents round trip have separate evidence. The [round trip](CONFIDENTIAL-SETTLEMENT-2026-11-09.md) returned full principal but failed its native fee cap; it did not use the Neslos vault or TDX. The complete funded private-vault path remains unproved. An allocation reserve does not open a lending position. Public DeFi positions stay public; a strict confidential policy refuses public lending actions.
+The diagram describes the implemented private payment design. The public demo rehearses its stages using simulated funds. Public vault commerce, private TDX research, a funded public owner-wallet Rhea cycle and a funded owner-wallet Confidential Intents round trip have separate evidence. The [Rhea cycle](RHEA-TESTNET-VALIDATION-2026-11-12.md) used a listed fake test asset and no vault/TEE. The [Confidential Intents round trip](CONFIDENTIAL-SETTLEMENT-2026-11-09.md) returned full principal but failed its native fee cap and also used no vault/TEE. The complete funded private-vault path remains unproved. An allocation reserve does not open a lending position. Public DeFi positions stay public; a strict confidential policy refuses public lending actions.
 
 ## Trust boundaries
 
@@ -61,7 +61,7 @@ React + Vite control room; TypeScript policy/research/orchestration/API; Rust ne
 
 Finite research and settlement-observation schedules are implemented in the local owner server. They retain request IDs, pause on failure, share the runtime inference allowance and never submit transactions. [Owner architecture and operation](OWNER-WORKSPACE.md).
 
-Further work includes funded lending validation and additional budget assets. The [public owner-commerce client](COMMERCE.md) routes principal through the vault's on-chain limits; it executes through owner authority and rejects confidential policies. Agent Market payment remains disabled because its documented wallet-delegate rail does not support vault funding.
+The [public owner-commerce client](COMMERCE.md) routes principal through the vault's on-chain limits; it executes through owner authority and rejects confidential policies. The historical testnet vault is fixed to a minimal fixture token and is not a Rhea-compatible deployment; preflight now reports that directly. A separate funded owner-wallet cycle with Rhea-listed fake USDC proved supply, share creation, withdrawal and principal return. [Validation](RHEA-TESTNET-VALIDATION-2026-11-12.md). It does not establish vault-custodied lending. Agent Market payment remains disabled because its documented wallet-delegate rail does not support vault funding.
 
 ## Runtime lifecycle and cost
 

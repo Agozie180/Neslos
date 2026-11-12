@@ -1,0 +1,99 @@
+{
+  "format": "neslos-rhea-funded-cycle-record-v1",
+  "verifiedAt": "2026-11-12T14:34:05.523Z",
+  "environment": {
+    "os": "Ubuntu WSL2",
+    "kernel": "6.18.54.1-microsoft-standard-WSL2",
+    "network": "testnet",
+    "rpc": "https://rpc.testnet.near.org"
+  },
+  "identity": {
+    "owner": "neslos.testnet",
+    "token": "usdc.fakes.testnet",
+    "rhea": "contract.1689937928.burrow.testnet"
+  },
+  "foundationAudit": {
+    "originalFixtureToken": "token.neslos.testnet",
+    "originalVault": "vault.neslos.testnet",
+    "rheaOwner": "ref-finance.sputnikv2.testnet",
+    "rheaAssetCount": 17,
+    "fixtureListedByRhea": false,
+    "fixtureMethods": [
+      "contract_source_metadata",
+      "ft_balance_of",
+      "ft_transfer",
+      "new"
+    ],
+    "missingFixtureMethods": [
+      "ft_metadata",
+      "ft_transfer_call",
+      "ft_resolve_transfer",
+      "storage_deposit"
+    ],
+    "vaultTokenMutable": false,
+    "rootCause": "A deliberately minimal sandbox fixture and immutable fixture-token vault were deployed before Rhea commerce was added. The later validation incorrectly routed a funded owner-wallet test through that fixture deployment instead of an asset already registered by Rhea. The client also failed to validate a null Rhea asset before starting token reads, masking the primary incompatibility."
+  },
+  "sources": {
+    "burrowland": "0dbfa1803bf26353ffbee2ffd4f494bab23b2756",
+    "burrowSdkPython": "baebda7a084343c29d11c88395fe9a9647242e46",
+    "rheaSdkDocs": "fa77fe1af7db16451531f2d784aad17f9d6a0dc6"
+  },
+  "plan": {
+    "approveHash": "ea6f8ad054013853928d363de13fc62df96124202bf447280fc047cc634ec21d",
+    "mintAmount": "1000000",
+    "supplyAmount": "100000",
+    "tokenStorageYocto": "1250000000000000000000",
+    "rheaStorageYocto": "100000000000000000000000",
+    "initialOwnerNearBalanceYocto": "4935332344202145099999999"
+  },
+  "transactions": [
+    {
+      "step": "token-storage",
+      "hash": "46uuTmmX6s7e5AEJYdVCjVbHRt9C56LdpgFP3TwLJ8db"
+    },
+    {
+      "step": "rhea-storage",
+      "hash": "EuWwX4KfJo8o5rPve11XLJx7pXTJ8EyNdWu6AbvXGJ3Q"
+    },
+    {
+      "step": "mint",
+      "hash": "3NYPeacjgocdmN2BaAT5mwdXth8F6ZsYrJWSVLgV6HXm"
+    },
+    {
+      "step": "supply",
+      "hash": "6Fsge4MMh4Y936XujgLo8N69xWouu7tgAbzDSJ4FGDRV"
+    },
+    {
+      "step": "withdraw",
+      "hash": "J8xQfmf8xxPMYMGauqz54XQkSUXB6jkXWfWWyAqCgm7x"
+    }
+  ],
+  "observations": {
+    "beforeSupply": {
+      "blockHeight": 277375738,
+      "walletBalance": "1000000",
+      "shares": "0",
+      "protocolBalance": "0"
+    },
+    "afterSupply": {
+      "blockHeight": 277375768,
+      "walletBalance": "900000",
+      "shares": "7265160304104410",
+      "protocolBalance": "100000030289635349"
+    },
+    "afterWithdraw": {
+      "blockHeight": 277375798,
+      "walletBalance": "1000000",
+      "shares": "2705961886",
+      "protocolBalance": "37245765755"
+    },
+    "supplyResolverUsedAmount": "100000",
+    "withdrawTokenTransferAmount": "100000",
+    "principalReturned": true,
+    "residualUnderlyingAtomicUnits": "0",
+    "residualProtocolDust": "37245765755",
+    "finalOwnerNearBalanceYocto": "4830868304541310099999997",
+    "ownerNearCostYocto": "104464039660835000000002"
+  },
+  "conclusion": "A complete funded public Rhea testnet supply/withdrawal cycle succeeded from neslos.testnet with a Rhea-supported fake USDC asset. This proves owner-wallet protocol compatibility and settlement, not vault custody, confidentiality, mainnet execution, or yield profitability."
+}

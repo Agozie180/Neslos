@@ -4,6 +4,13 @@ import { checkPolicy, policySchema } from './policy.js';
 import type { BudgetSnapshot, GuardianDecision, Policy, Proposal } from './types.js';
 
 interface Reservation { id: string; fingerprint: string; amount: bigint; day: string; status: 'reserved' | 'dispatched' | 'settled' | 'dispatch-failed' | 'unknown'; decision: GuardianDecision }
+export interface PolicyLedgerState {
+  active: Policy;
+  usage: [string, string][];
+  reservations: (Omit<Reservation, 'amount'> & { amount: string })[];
+  nonce: string;
+  balance: string;
+}
 
 /** Session rehearsal only. Real authority lives in the Rust contract. All mutations are synchronous. */
 export class PolicyLedger {
@@ -13,6 +20,22 @@ export class PolicyLedger {
   private nonce = 0n;
   private balance: bigint;
   constructor(policy: Policy, balance = '10000000000', private clock = () => Date.now()) { this.active = policySchema.parse(policy); this.balance = units(balance); }
+  static restore(state: PolicyLedgerState, clock = () => Date.now()): PolicyLedger {
+    const ledger = new PolicyLedger(state.active, state.balance, clock);
+    ledger.usage = new Map(state.usage.map(([day, amount]) => [day, units(amount)]));
+    ledger.reservations = new Map(state.reservations.map(reservation => [reservation.id, { ...reservation, amount: units(reservation.amount) }]));
+    ledger.nonce = units(state.nonce);
+    return ledger;
+  }
+  exportState(): PolicyLedgerState {
+    return {
+      active: this.policy,
+      usage: [...this.usage].map(([day, amount]) => [day, amount.toString()]),
+      reservations: [...this.reservations.values()].map(reservation => ({ ...structuredClone(reservation), amount: reservation.amount.toString() })),
+      nonce: this.nonce.toString(),
+      balance: this.balance.toString(),
+    };
+  }
   get policy(): Policy { return structuredClone(this.active); }
   snapshot(): BudgetSnapshot {
     const day = utcDay(this.clock());

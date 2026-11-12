@@ -1,10 +1,22 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { Server } from 'node:http';
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import type { AppState } from '../src/web/api.js';
 
-const { waitUntil } = vi.hoisted(() => ({ waitUntil: vi.fn<(work: Promise<void>) => void>() }));
-vi.mock('@vercel/functions', () => ({ waitUntil }));
+const { waitUntil, cacheValues, getCache } = vi.hoisted(() => {
+  const cacheValues = new Map<string, unknown>();
+  return {
+    waitUntil: vi.fn<(work: Promise<void>) => void>(), cacheValues,
+    getCache: vi.fn(() => ({
+      get: async (key: string) => structuredClone(cacheValues.get(key) ?? null),
+      set: async (key: string, value: unknown) => { cacheValues.set(key, structuredClone(value)); },
+      delete: async (key: string) => { cacheValues.delete(key); },
+      expireTag: async () => {},
+    })),
+  };
+});
+vi.mock('@vercel/functions', () => ({ waitUntil, getCache }));
 let server: Server, base: string;
 beforeAll(async () => {
   vi.stubEnv('VERCEL_URL', 'neslos-preview.example');
@@ -32,6 +44,11 @@ async function session() {
 const mission = () => ({ requestId: randomUUID(), prompt: 'Research NEAR stablecoin yields.', amount: '150000000', kind: 'allocation-reserve', counterparty: 'treasury-reserve', referenceOnly: true });
 
 describe('Vercel rehearsal API', () => {
+  it('routes the owner SPA entry through the built frontend', () => {
+    const config = JSON.parse(readFileSync('vercel.json', 'utf8')) as { rewrites: { source: string; destination: string }[] };
+    expect(config.rewrites).toContainEqual({ source: '/owner', destination: '/index.html' });
+  });
+
   it('serves health and keeps a mission alive through settlement after responding', async () => {
     expect(await (await fetch(base + '/api/health')).json()).toMatchObject({ ok: true, mode: 'rehearsal', realFunds: false });
     const s = await session();

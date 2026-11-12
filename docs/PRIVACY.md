@@ -23,7 +23,7 @@ On NEAR, input amounts, token transfers, contract policy parameters, nonces, out
 
 The quote provider sees the fields required to route a quote, including assets, amount, refund account and recipient. HTTPS and a provider signature do not by themselves prove all provider-side processing took place in a TEE.
 
-A public Rhea lending position remains public. The private payment path supports an **allocation reserve**; it does not open or manage a lending position, and the rehearsal simulates that reserve. The separate [owner-commerce path](COMMERCE.md) implements public lending supply/withdrawal through the vault, but a funded Rhea position remains unproved. Both the guardian and vault reject public lending when confidentiality is required.
+A public Rhea lending position remains public. The private payment path supports an **allocation reserve**; it does not open or manage a lending position, and the rehearsal simulates that reserve. The separate [owner-commerce path](COMMERCE.md) implements public lending supply/withdrawal through a compatible vault. The historical fixture vault is not compatible, but a separate 12 November owner-wallet testnet cycle supplied and withdrew Rhea-listed fake USDC with full principal returned. That proof is public and outside the TEE/vault boundary. Both the guardian and vault reject public lending when confidentiality is required.
 
 ## A verified flag is not verification
 
@@ -52,7 +52,7 @@ Reproduce the coverage finding in tests/intents.test.ts. The fixture is syntheti
 - Unknown status remains charged. A provider timeout never triggers a second deposit.
 - A late refund does not replenish daily allowance automatically.
 - The owner can recover tokens to their own account after pausing the vault. This is an owner authority, separate from agent spending.
-- Rehearsal sessions hold no real keys or assets; they expire after two hours and are memory-only.
+- Rehearsal sessions hold no real keys or assets and expire after two hours. They are memory-only locally; Vercel temporarily caches the simulated policy, allowance, mission/idempotency state and rehearsal audit identity/history so another function instance can restore the same browser session.
 - A TEE restart restores and verifies its encrypted journal. Filesystem rollback cannot be solved by an encrypted file alone; compare on-chain records/checkpoints and retain evidence independently.
 
 ## Budget scope

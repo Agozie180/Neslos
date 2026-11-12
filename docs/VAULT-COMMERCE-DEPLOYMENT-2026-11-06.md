@@ -1,5 +1,7 @@
 # Vault commerce deployment — 6 November 2026
 
+> This report is scoped to the historical fixture-token vault deployment. A later [funded public owner-wallet Rhea cycle](RHEA-TESTNET-VALIDATION-2026-11-12.md) completed separately and does not change this vault proof's custody or asset boundary.
+
 The existing `vault.neslos.testnet` was upgraded in place. Its sole retained owner key authorized one `DeployContract` action. Downloaded code matched the reviewed WASM, and the full raw storage fingerprint and configuration were identical before and after deployment. No initializer, migration, new vault account or balance transfer was part of that upgrade.
 
 | Evidence | Result |

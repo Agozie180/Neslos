@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { units } from './amounts.js';
 import { canonical, sha256 } from './crypto.js';
-import { viewNear, type NearNetwork } from './near.js';
+import { nearContractMethods, viewNear, type NearNetwork } from './near.js';
 import { nearAccount } from './wire.js';
 
 export const RHEA_CONTRACTS = { mainnet: 'contract.main.burrow.near', testnet: 'contract.1689937928.burrow.testnet' } as const;
@@ -23,18 +23,33 @@ export const lendingSnapshotSchema = z.object({
 export type LendingSnapshot = z.infer<typeof lendingSnapshotSchema>;
 
 /** All balances and conversion inputs are queried at one finalized block. */
-export async function readLendingPosition(account: string, token: string, network: NearNetwork, read = viewNear): Promise<LendingSnapshot> {
+export async function readLendingPosition(account: string, token: string, network: NearNetwork, read = viewNear, inspect = nearContractMethods): Promise<LendingSnapshot> {
   nearAccount.parse(account); nearAccount.parse(token);
   const contract = RHEA_CONTRACTS[network];
   const asset = await read(contract, 'get_asset', { token_id: token }, network);
-  const [position, balance, metadata] = await Promise.all([
+  if (asset.value === null || asset.value === undefined) throw new Error('LENDING_ASSET_UNSUPPORTED');
+  const parsedAsset = assetSchema.safeParse(asset.value);
+  if (!parsedAsset.success) throw new Error('LENDING_ASSET_INVALID', { cause: parsedAsset.error });
+  let tokenInterface: Awaited<ReturnType<typeof nearContractMethods>>;
+  try { tokenInterface = await inspect(token, network, asset.blockHash); }
+  catch (error) { throw new Error('LENDING_TOKEN_INTERFACE_UNAVAILABLE', { cause: error }); }
+  if (tokenInterface.blockHash !== asset.blockHash || tokenInterface.blockHeight !== asset.blockHeight) throw new Error('LENDING_SNAPSHOT_CHANGED');
+  const methods = new Set(tokenInterface.methods);
+  if (!methods.has('ft_metadata')) throw new Error('LENDING_TOKEN_METADATA_UNAVAILABLE');
+  if (!methods.has('ft_transfer_call')) throw new Error('LENDING_TOKEN_TRANSFER_CALL_UNAVAILABLE');
+  const results = await Promise.allSettled([
     read(contract, 'get_account', { account_id: account }, network, asset.blockHash),
     read(token, 'ft_balance_of', { account_id: account }, network, asset.blockHash),
     read(token, 'ft_metadata', {}, network, asset.blockHash),
   ]);
+  const positionResult = results[0]!, balanceResult = results[1]!, metadataResult = results[2]!;
+  if (metadataResult.status === 'rejected') throw new Error('LENDING_TOKEN_METADATA_UNAVAILABLE', { cause: metadataResult.reason });
+  if (positionResult.status === 'rejected') throw positionResult.reason;
+  if (balanceResult.status === 'rejected') throw balanceResult.reason;
+  const position = positionResult.value, balance = balanceResult.value, metadata = metadataResult.value;
   for (const result of [position, balance, metadata]) if (result.blockHash !== asset.blockHash) throw new Error('LENDING_SNAPSHOT_CHANGED');
   const snapshot = lendingSnapshotSchema.parse({ format: 'neslos-rhea-snapshot-v1', network, contract, account, token,
-    asset: asset.value, position: position.value, walletBalance: balance.value, tokenDecimals: z.object({ decimals: z.number() }).parse(metadata.value).decimals,
+    asset: parsedAsset.data, position: position.value, walletBalance: balance.value, tokenDecimals: z.object({ decimals: z.number() }).parse(metadata.value).decimals,
     blockHash: asset.blockHash, blockHeight: asset.blockHeight, fetchedAt: new Date().toISOString() });
   assertSnapshot(snapshot);
   return snapshot;

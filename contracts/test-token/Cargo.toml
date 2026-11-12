@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.93"
 publish = false
-description = "Local sandbox-only USDC test fixture for Neslos"
+description = "Minimal sandbox and public-testnet receipt fixture for Neslos; not a protocol-compatible token"
 [lib]
 crate-type = ["cdylib", "rlib"]
 [dependencies]

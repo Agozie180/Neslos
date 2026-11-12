@@ -41,6 +41,18 @@ export async function viewNear(account: string, method: string, args: unknown, n
   if (blockHash && response.block_hash !== blockHash) throw new Error('NEAR_SNAPSHOT: provider returned a different block from the requested one.');
   return { value: JSON.parse(Buffer.from(response.result).toString('utf8')), blockHash: response.block_hash, blockHeight: response.block_height };
 }
+/** Inspect callable WASM exports at the same finalized block used for protocol state. */
+export async function nearContractMethods(account: string, network: NearNetwork, blockHash?: string) {
+  nearAccount.parse(account);
+  const response = await retryNearRead(() => nearProvider(network).viewContractCode({
+    contractId: account, blockQuery: blockHash ? { blockId: blockHash } : { finality: 'final' },
+  }));
+  if (blockHash && response.block_hash !== blockHash) throw new Error('NEAR_SNAPSHOT: provider returned different contract code from the requested block.');
+  const methods = WebAssembly.Module.exports(new WebAssembly.Module(Uint8Array.from(response.code).buffer))
+    .filter(entry => entry.kind === 'function')
+    .map(entry => entry.name);
+  return { methods, blockHash: response.block_hash, blockHeight: response.block_height };
+}
 export async function readVault(vault: string, network: 'mainnet' | 'testnet') {
   const configView = await viewNear(vault, 'get_config', {}, network);
   const config = vaultConfigSchema.parse(configView.value);

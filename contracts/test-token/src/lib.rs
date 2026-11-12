@@ -1,5 +1,6 @@
-//! Deliberately minimal local test fixture, not a production token implementation.
-//! Implements the NEP-141 transfer behavior needed to exercise real cross-contract receipts.
+//! Deliberately minimal receipt-test fixture used by local sandboxes and public testnet vault proofs.
+//! It is not a production, standards-complete or Rhea-compatible token implementation.
+//! Implements only the transfer behavior needed to exercise real cross-contract receipts.
 use near_sdk::{env, near, store::LookupMap, AccountId, PanicOnDefault, json_types::U128};
 #[near(contract_state)]
 #[derive(PanicOnDefault)]

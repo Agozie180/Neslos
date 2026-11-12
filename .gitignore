@@ -23,3 +23,4 @@ artifacts/wsl-run.json
 artifacts/tee-build.json
 artifacts/*.wasm
 artifacts/*_abi.*
+artifacts/neslos-demo.mp4

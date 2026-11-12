@@ -29,6 +29,7 @@
     "build:contract": "node scripts/contract.mjs build",
     "test:contract": "node scripts/contract.mjs test",
     "test:contract:unit": "node scripts/contract.mjs unit",
+    "verify:rhea": "node scripts/verify-rhea-record.mjs",
     "verify:attestation": "node scripts/run.mjs attestation"
   },
   "dependencies": {
