@@ -20,7 +20,7 @@ The next practical pilot is a tightly bounded, single-asset treasury workflow af
 
 ## Reviewer route
 
-The revised walkthrough runs in this checkout with `npm run dev` and an older revision is deployed at [neslos.vercel.app](https://neslos.vercel.app). Its health endpoint is live. The 12 November hosted suite exposed cross-instance session loss and a missing `/owner` rewrite. Both are fixed in this checkout with Runtime Cache restoration and an SPA rewrite; deployment and a fresh hosted 10/10 run still require owner authorization.
+The walkthrough runs from this repo with `npm run dev` and is deployed at [neslos.vercel.app](https://neslos.vercel.app). Its health endpoint is live. Production includes Runtime Cache restoration for cross-instance sessions, the `/owner` SPA rewrite, the **Boundary challenge** and the **Evidence room**.
 
 | Time | Action | Visible result |
 | --- | --- | --- |
@@ -70,7 +70,7 @@ Attach the human-reviewed recording or screenshots. The post must be published b
 ## Release gates
 
 - [x] Deploy this reviewed revision to the public rehearsal and verify its health endpoint.
-- [x] Fix process-local production session loss in the checkout with Runtime Cache restoration and cross-instance regression coverage.
+- [x] Fix process-local production session loss in the repo with Runtime Cache restoration and cross-instance regression coverage.
 - [ ] Deploy the authorized revision, then rerun all ten hosted challenge/control-room/owner checks.
 - [ ] Owner handles repository visibility and verifies its evidence links while signed out.
 - [ ] Have the human review/record the final demo, publish the X post and retain its URL.

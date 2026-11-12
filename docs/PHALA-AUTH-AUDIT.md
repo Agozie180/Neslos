@@ -48,7 +48,7 @@ phala login --no-open
 npm run cloud:status
 ```
 
-This checkout has official CLI **1.1.22** installed in the ignored tools directory. On this Windows machine it can be invoked with:
+This repo has official CLI **1.1.22** installed in the ignored tools directory. On this Windows machine it can be invoked with:
 
 ```powershell
 .\.tools\node-v24.22.2-win-x64\node.exe .\.tools\phala-cli\node_modules\phala\dist\index.js login --no-open

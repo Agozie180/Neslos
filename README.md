@@ -4,13 +4,15 @@
 
 **Private agent research. Spending limits enforced on NEAR.**
 
+**Verification:** **645 tests passed** with 5 platform-specific skips under `npm run verify` at source commit `22af763`. The command also runs strict TypeScript checks and the production web/server builds. [CI and detailed verification history](docs/PROOF.md).
+
 Neslos is an agent treasury for people who want help researching opportunities and preparing payments while keeping control of their funds. Three researchers assess lending, liquidity and risk; a strategist proposes an action; a deterministic guardian checks the owner's policy. The NEAR vault enforces the spending limit before funds leave custody.
 
 **Agents propose. Your policy decides.**
 
 [Try the live demo](https://neslos.vercel.app) · [Track fit](#hackathon-tracks) · [Run locally](#run-locally) · [Inspect the evidence](#what-has-been-verified) · [Current status](docs/STATUS.md) · [Read the architecture](docs/ARCHITECTURE.md)
 
-**For judges:** start with the [competition package](docs/SUBMISSION.md). This checkout adds a **Boundary challenge** that runs a rejected $501 proposal, an allowed $150 reserve and browser receipt/tamper verification, plus an **Evidence room** with direct vault/Rhea receipts and dated private-research results. Run it locally below or use the hosted rehearsal; the [current status](docs/STATUS.md) records the 12 November hosted findings and the fixes prepared in this checkout.
+**For judges:** start with the [competition package](docs/SUBMISSION.md). This repo includes a **Boundary challenge** that runs a rejected $501 proposal, an allowed $150 reserve and browser receipt/tamper verification, plus an **Evidence room** with direct vault/Rhea receipts and dated private-research results. Run it locally below or use the hosted rehearsal; the [current status](docs/STATUS.md) records the production verification.
 
 ![Neslos control room showing a blocked overspend, a completed 150-token rehearsal and 350 tokens of remaining allowance](docs/images/control-room.png)
 
@@ -37,7 +39,7 @@ Open **[neslos.vercel.app](https://neslos.vercel.app)**. No wallet, API key or f
 
 The reference market capture is dated **1 November 2026**. A reserve in this demo simulates earmarking funds; it does not open a lending position. [Full demo script](docs/DEMO.md) · [Audit screenshot](artifacts/neslos-audit.png) · [Mobile screenshot](artifacts/neslos-mobile.png)
 
-### Guided challenge in this checkout
+### Guided challenge in this repo
 
 After `npm run dev`, open **http://127.0.0.1:5173/#challenge** and choose **Start the challenge**. This explicitly resets only the simulated workspace, pins the fresh session's audit identity and uses the reference dataset. Follow **Run the $150 mission**, then **Verify & tamper-test receipts**. The challenge checks actual API outcomes and browser cryptography before showing a pass. An uncertain start response reuses its original request ID to recover the mission.
 
@@ -47,14 +49,14 @@ Open **Evidence room** to inspect the separate real vault-testnet, funded Rhea a
 
 Results below include proofs through **12 November 2026**, with the contract's public commerce proof dated **6 November**. Each claim links to the environment and evidence that support it.
 
-| Claim | Evidence | Scope |
-| --- | --- | --- |
-| The browser workflow runs and rejects policy violations | [Browser tests](tests/e2e/control-room.spec.ts), three passing production tests and retained [verification record](docs/PROOF.md) | Desktop/mobile rehearsal, policy changes, successful mission and audit tamper detection; simulated funds |
-| Spending rules execute on NEAR | [Public vault](https://testnet.nearblocks.io/address/vault.neslos.testnet), [commerce proof](docs/VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) and [transaction record](deploy/testnet-commerce-proof-20261106.json) | Real testnet receipts, fixture-token balances, limit/replay rejection and preserved state across upgrades |
-| A funded Rhea supply/withdrawal cycle executes | [Root-cause audit and validation](docs/RHEA-TESTNET-VALIDATION-2026-11-12.md) and [sanitized record](deploy/rhea-funded-cycle-20261112/record.json) | `neslos.testnet` supplied 0.1 Rhea-listed fake USDC, created shares and recovered full principal; public owner-wallet testnet proof, not vault or TDX execution |
-| Three private AI researchers completed inside verified Intel TDX | [Research report](docs/NEAR-PRIVATE-RESEARCH-2026-11-09.md), [result](deploy/near-private-research-20261109/research-proof.json) and [checksum index](deploy/near-private-research-20261109/record.json) | Signed NEAR AI reports covering two live markets; encrypted audit, wrong-owner rejection, replay, restart persistence and exhausted-budget rejection |
-| A funded Confidential Intents round trip returned its full principal | [Settlement report](docs/CONFIDENTIAL-SETTLEMENT-2026-11-09.md) and [evidence](deploy/confidential-settlement-20261109/record.json) | 0.001 native NEAR entered an owner-controlled private balance and returned to the same wallet; finalized return receipt verified. Native charges were 0.0071149895375 NEAR, exceeding the stated 0.004 NEAR cap |
-| Application, contract and container checks pass | [Current pushed CI run for `6c5c97c`](https://github.com/Agozie180/Neslos/actions/runs/43080014909), [workflow](.github/workflows/verify.yml) and [retained Linux checks](deploy/near-private-research-20261109/local-checks.json) | Application and contract jobs passed for the pushed revision. The current local lending changes additionally passed 642 application tests with five platform skips, TypeScript and the production web build; the focused lending/commerce suite passed 31 tests natively in Ubuntu WSL |
+| Claim | Network | Evidence | Scope |
+| --- | --- | --- | --- |
+| The browser workflow runs and rejects policy violations | Local/Vercel rehearsal (no chain) | [Browser tests](tests/e2e/control-room.spec.ts), production browser checks and retained [verification record](docs/PROOF.md) | Desktop/mobile rehearsal, policy changes, successful mission and audit tamper detection; simulated funds |
+| Spending rules execute on NEAR | **Testnet** | [Public vault](https://testnet.nearblocks.io/address/vault.neslos.testnet), [commerce proof](docs/VAULT-COMMERCE-DEPLOYMENT-2026-11-06.md) and [transaction record](deploy/testnet-commerce-proof-20261106.json) | Real testnet receipts, fixture-token balances, limit/replay rejection and preserved state across upgrades |
+| A funded Rhea supply/withdrawal cycle executes | **Testnet** | [Root-cause audit and validation](docs/RHEA-TESTNET-VALIDATION-2026-11-12.md) and [sanitized record](deploy/rhea-funded-cycle-20261112/record.json) | `neslos.testnet` supplied 0.1 Rhea-listed fake USDC, created shares and recovered full principal; public owner-wallet proof, not vault or TDX execution |
+| Three private AI researchers completed inside verified Intel TDX | **NEAR AI (no chain)** | [Research report](docs/NEAR-PRIVATE-RESEARCH-2026-11-09.md), [result](deploy/near-private-research-20261109/research-proof.json) and [checksum index](deploy/near-private-research-20261109/record.json) | Signed NEAR AI reports covering two live markets; encrypted audit, wrong-owner rejection, replay, restart persistence and exhausted-budget rejection |
+| A funded Confidential Intents round trip returned its full principal | **MAINNET (real funds, 0.001 NEAR round trip)** | [Settlement report](docs/CONFIDENTIAL-SETTLEMENT-2026-11-09.md) and [evidence](deploy/confidential-settlement-20261109/record.json) | 0.001 native NEAR entered an owner-controlled private balance and returned to the same wallet; finalized return receipt verified. Native charges were 0.0071149895375 NEAR, exceeding the stated 0.004 NEAR cap |
+| Application, contract and container checks pass | Local/GitHub CI (no chain) | [Current CI workflow](https://github.com/Agozie180/Neslos/actions/workflows/verify.yml), [workflow source](.github/workflows/verify.yml) and [retained Linux checks](deploy/near-private-research-20261109/local-checks.json) | Application, browser, contract and restricted-container jobs cover the pushed revision; detailed counts and historical runs remain in [PROOF](docs/PROOF.md) |
 
 The private research run used encrypted NEAR AI inference, fresh Intel/NVIDIA verification, independently reproduced boot measurements and exact TLS/signer/instance pins. Its reviewed policy explicitly trusts NEAR's administration of routing, runtime and model weights. Loaded weight bytes are not independently proved. The [public archive](deploy/near-private-research-20261109/record.json) contains hardware/build evidence and sanitized results; private prompts and receipt openings remain with the owner. Their hashes identify retained bytes but do not disclose or independently verify the private contents.
 
@@ -77,7 +79,7 @@ flowchart TD
   S --> A
 ```
 
-This is the implemented execution design. The public demo rehearses its stages. Public vault transfers, private TDX research, the public owner-wallet Rhea cycle and the owner-wallet Confidential Intents round trip have separate evidence. A funded payment through the complete TDX-to-mainnet-vault path and vault-custodied Rhea execution remain unproved.
+This is the implemented execution design. The public demo rehearses its stages. The deployed Neslos vault and the funded Rhea cycle are **testnet** proofs. The private TDX research ran on **NEAR AI with no chain transaction**. The Confidential Intents proof was a separate **mainnet owner-wallet round trip of 0.001 NEAR in real funds**; it did not use the Neslos vault or TDX, and its native fee cap failed. No Neslos vault is deployed on mainnet. A single funded research-to-vault-to-settlement path and vault-custodied Rhea execution remain unproved.
 
 | Attempt | Enforced behavior | Inspect |
 | --- | --- | --- |
@@ -103,7 +105,7 @@ npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:5173**. API health is at **http://127.0.0.1:8787/api/health** and reports `mode: "rehearsal"`, `realFunds: false`. A fresh checkout needs no `.env`, wallet, provider account or paid inference. Select the reference dataset for a repeatable demo without live market access.
+Open **http://127.0.0.1:5173**. API health is at **http://127.0.0.1:8787/api/health** and reports `mode: "rehearsal"`, `realFunds: false`. A fresh clone needs no `.env`, wallet, provider account or paid inference. Select the reference dataset for a repeatable demo without live market access.
 
 For the compiled local application:
 
@@ -125,7 +127,7 @@ npm run test:browser
 npm run research -- --reference
 ```
 
-`verify` runs the application tests, TypeScript checks and production web/server builds. The browser suite covers the public rehearsal and the local owner UI with labelled fixtures. On Linux, install Chromium's system dependencies with `npx playwright install --with-deps chromium` if needed. Linux-specific SDK/tooling tests run in Ubuntu CI; Windows skips those checks. The table above cites CI for pushed revision `6c5c97c`; current uncommitted changes have local Windows and focused Ubuntu WSL results only. The retained private-research archive separately records 638 tests at its earlier revision. Test counts identify their recorded run, not every platform or future revision.
+`verify` runs the application tests, TypeScript checks and production web/server builds. The browser suite covers the public rehearsal and the local owner UI with labelled fixtures. On Linux, install Chromium's system dependencies with `npx playwright install --with-deps chromium` if needed. Linux-specific SDK/tooling tests run in Ubuntu CI; Windows skips those checks. The headline result near the top identifies the exact command and source commit; detailed current and historical counts remain in [PROOF](docs/PROOF.md).
 
 Contract checks require **Rust 1.93.0**, the **wasm32-unknown-unknown** target and **cargo-near 0.22.0**. Use Linux or Ubuntu WSL on Windows; [setup instructions](docs/DEPLOYMENT.md#local-near-proof) include system dependencies.
 
@@ -172,6 +174,6 @@ The local [owner workspace](docs/OWNER-WORKSPACE.md) provides policy review, fun
 | [Judge-safe Rhea reproduction](docs/JUDGE-RHEA-REPRODUCTION.md) | Credential-free receipt verification without changing testnet state |
 | [Competition package](docs/SUBMISSION.md) | Guided judge route, narration, submission text, questions and release gates |
 
-Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. The [four track statements](#hackathon-tracks) link each claim to evidence; publication, the human's demo post and final submission are tracked in the [submission checklist](docs/DEMO.md#submission-preparation).
+Built for [NEAR HACKATHON](https://nearhackathon.com/), 1–14 November 2026. The [four track statements](#hackathon-tracks) link each claim to evidence; publication, the demo video and final submission are tracked in the [submission checklist](docs/DEMO.md#submission-preparation).
 
 Neslos is an AI-assisted implementation built from the official NEAR contract scaffold and the libraries pinned in its npm/Cargo lockfiles. Project code is [MIT licensed](LICENSE); the bundled Inter font retains its OFL license. [Source acknowledgements](docs/RESEARCH.md#sources-studied)

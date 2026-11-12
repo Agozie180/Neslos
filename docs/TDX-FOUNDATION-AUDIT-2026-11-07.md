@@ -37,7 +37,7 @@ The [provider reply](TDX-PROVIDER-FOLLOWUP-2026-11-07.md) declines to identify t
 
 The TDX Dockerfile now disables npm lifecycle scripts for both installation stages; its production install uses the same flags as the independently measured inline dependency install. The full-image path still requires publication and an actual registry manifest digest before deployment.
 
-The tooling tests now bind subprocesses to their own temporary source fixtures. Previously, an inherited WSL `NESLOS_SOURCE_ROOT` made these fixtures repeatedly hash the real Windows-mounted checkout; three timed out in the initial run. No timeout was increased to hide that failure.
+The tooling tests now bind subprocesses to their own temporary source fixtures. Previously, an inherited WSL `NESLOS_SOURCE_ROOT` made these fixtures repeatedly hash the real Windows-mounted repo; three timed out in the initial run. No timeout was increased to hide that failure.
 
 ## Verification and artifacts
 
