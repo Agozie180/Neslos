@@ -1,5 +1,7 @@
 # Neslos
 
+[![Verify Neslos](https://github.com/Agozie180/Neslos/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/Agozie180/Neslos/actions/workflows/verify.yml) · **NEAR HACKATHON:** Security · Privacy · DeFi · Swarms
+
 **Private agent research. Spending limits enforced on NEAR.**
 
 Neslos is an agent treasury for people who want help researching opportunities and preparing payments while keeping control of their funds. Three researchers assess lending, liquidity and risk; a strategist proposes an action; a deterministic guardian checks the owner's policy. The NEAR vault enforces the spending limit before funds leave custody.
