@@ -8,7 +8,7 @@ The 6–7 November inline provisioning attempts are [historical investigations](
 
 ## Local application
 
-Use Node 24.22.2 (minimum 24.22.1), npm, and the checked-in lockfile.
+Use exactly Node 24.22.2, npm, and the checked-in lockfile.
 
     npm ci
     npm run dev

@@ -21,7 +21,7 @@ flowchart TD
   S --> A
 ```
 
-The diagram describes the implemented private payment design. The public demo rehearses its stages using simulated funds. Public vault commerce, private TDX research, a funded public owner-wallet Rhea cycle and a funded owner-wallet Confidential Intents round trip have separate evidence. The [Rhea cycle](RHEA-TESTNET-VALIDATION-2026-11-12.md) used a listed fake test asset and no vault/TEE. The [Confidential Intents round trip](CONFIDENTIAL-SETTLEMENT-2026-11-09.md) returned full principal but failed its native fee cap and also used no vault/TEE. The complete funded private-vault path remains unproved. An allocation reserve does not open a lending position. Public DeFi positions stay public; a strict confidential policy refuses public lending actions.
+The diagram describes the implemented private payment design. The public rehearsal uses simulated funds. Public vault commerce, private research in TDX, a funded public owner-wallet Rhea cycle and a funded owner-wallet Confidential Intents round trip have separate evidence. The [Rhea cycle](RHEA-TESTNET-VALIDATION-2026-11-12.md) used a listed fake test asset and no vault/TEE; its finalized supply and withdrawal transactions are public. The [Confidential Intents round trip](CONFIDENTIAL-SETTLEMENT-2026-11-09.md) returned full principal but failed its native fee cap and also used no vault/TEE. The complete funded private-vault path remains unproved. Public DeFi positions stay public; a strict confidential policy refuses public lending actions.
 
 ## Trust boundaries
 

@@ -29,8 +29,6 @@ All track IDs: defi, thesis, privacy, business, swarms, security, agents, realwo
 | **DeFi** (`defi`) | Neslos analyzes live Rhea lending markets for yield, liquidity and risk to produce allocation proposals governed by the owner's treasury policy. | [Live market research](NEAR-PRIVATE-RESEARCH-2026-11-09.md), [deterministic eligibility/ranking](../src/core/research.ts) and a separate [funded public owner-wallet testnet cycle](RHEA-TESTNET-VALIDATION-2026-11-12.md) |
 | **Swarms** (`swarms`) | Neslos coordinates three specialist researchers, a strategist and a deterministic guardian under one shared treasury policy, with research findings able to veto or narrow a proposal. | [Three signed researcher reports](NEAR-PRIVATE-RESEARCH-2026-11-09.md) and [strategy constraints](../src/core/strategy.ts); the guardian retains deterministic control |
 
-The **Agents** (`agents`) track is excluded until a compatible paid-job integration is demonstrated. The [README track summary](../README.md#hackathon-tracks) presents the four claimed tracks for judges.
-
 ## Sources studied
 
 | Source | Finding |

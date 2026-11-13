@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Private NEAR agents with an on-chain spending policy.",
   "engines": {
-    "node": ">=24.22.1"
+    "node": "24.22.2"
   },
   "scripts": {
     "dev": "node scripts/dev.mjs",
@@ -29,6 +29,8 @@
     "build:contract": "node scripts/contract.mjs build",
     "test:contract": "node scripts/contract.mjs test",
     "test:contract:unit": "node scripts/contract.mjs unit",
+    "verify:boundary": "node scripts/verify-boundary.mjs",
+    "verify:evidence": "node scripts/verify-readme-evidence.mjs",
     "verify:rhea": "node scripts/verify-rhea-record.mjs",
     "verify:attestation": "node scripts/run.mjs attestation"
   },
