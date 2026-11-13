@@ -1,10 +1,10 @@
-# Judge-safe Rhea reproduction
+# Rhea evidence reproduction
 
 This is the safe reproduction path for the funded Rhea testnet claim. It needs no wallet, credential file, test token or transaction approval, and it cannot mint, supply, withdraw or change account state.
 
 ## One-command verification
 
-Use Node 24.22.2 (minimum 24.22.1) and the checked-in lockfile:
+Use exactly Node 24.22.2 and the checked-in lockfile:
 
 ```sh
 npm ci
@@ -38,9 +38,9 @@ The readable [funded-cycle report](RHEA-TESTNET-VALIDATION-2026-11-12.md#funded-
 
 The retained snapshots show 1,000,000 wallet units before supply, 900,000 plus Rhea shares after supply, and 1,000,000 after withdrawal. The residual Rhea balance is below one underlying atomic unit and the record marks underlying residual principal as zero.
 
-## Why judges should not repeat the funded mutation
+## Why the funded mutation is not repeated
 
-The historical transaction receipts are immutable and reproducible without keys. Repeating mint/supply/withdraw against `neslos.testnet` would mutate owner state, consume testnet NEAR and create a second proof with different hashes. The repository therefore does not expose a one-command funded replay for judges.
+The historical transaction receipts are immutable and reproducible without keys. Repeating mint/supply/withdraw against `neslos.testnet` would mutate owner state, consume testnet NEAR and create a second proof with different hashes. The repository therefore exposes read-only receipt verification instead of a funded replay command.
 
 Any new funded cycle should use a fresh disposable testnet owner, a newly reviewed plan hash, bounded test-token amounts and its own journal/evidence directory. It must not reuse the retained hashes or be described as reproduction of the 12 November cycle.
 

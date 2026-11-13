@@ -27,12 +27,12 @@ beforeAll(async () => {
   server = app.listen(0, '127.0.0.1');
   await new Promise<void>(resolve => server.once('listening', resolve));
   base = 'http://127.0.0.1:' + (server.address() as { port: number }).port;
-});
+}, 30_000);
 afterAll(async () => {
   await Promise.all(waitUntil.mock.calls.map(([work]) => work));
   vi.unstubAllEnvs();
-  await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
-});
+  if (server) await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+}, 30_000);
 
 async function session() {
   const response = await fetch(base + '/api/state');

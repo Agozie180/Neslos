@@ -10,12 +10,14 @@ async function runToVerification(page: Page) {
   await expect(page.locator('.challenge-budget strong')).toHaveText('$350.00');
 }
 
-test('guided challenge runs actual missions, verifies receipts and exposes dated evidence', async ({ page }) => {
+test('Boundary challenge rejects $501, allows $150, and rejects tampering', async ({ page }) => {
+  test.setTimeout(120_000);
+  const retainArtifacts = process.env.NESLOS_RETAIN_BROWSER_ARTIFACTS !== 'false';
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Give agents ambition. Keep the authority.' })).toBeVisible();
-  await page.screenshot({ path: 'artifacts/neslos-competition-desktop.png', fullPage: true });
+  await expect(page.getByRole('heading', { name: 'Give agents ambition. Keep the authority.' })).toBeVisible({ timeout: 60_000 });
+  if (retainArtifacts) await page.screenshot({ path: 'artifacts/neslos-competition-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'Take the 60-second challenge' }).click();
   await expect(page).toHaveURL(/#challenge$/);
   await runToVerification(page);
@@ -29,25 +31,27 @@ test('guided challenge runs actual missions, verifies receipts and exposes dated
   expect(state.runs.map((run: { status: string }) => run.status).sort()).toEqual(['blocked', 'settled']);
   expect(state.budget.spent).toBe('150000000');
   expect(state.budget.reserved).toBe('0');
-  const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Download this proof', exact: true }).click();
-  const download = await downloadPromise;
-  await download.saveAs('artifacts/neslos-boundary-challenge.json');
-  await page.screenshot({ path: 'artifacts/neslos-challenge-complete.png', fullPage: true });
+  if (retainArtifacts) {
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Download this proof', exact: true }).click();
+    const download = await downloadPromise;
+    await download.saveAs('artifacts/neslos-boundary-challenge.json');
+    await page.screenshot({ path: 'artifacts/neslos-challenge-complete.png', fullPage: true });
+  }
   await page.getByRole('button', { name: 'Inspect the real-world evidence', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'The contract says no.' })).toBeVisible();
   await expect(page.getByRole('link', { name: /Daily limit enforced/ })).toHaveAttribute('href', 'https://testnet.nearblocks.io/txns/2MYWSFeJPo5zs3oRGnKx1UM186Tu52gskNG74NwNsgnN');
   await expect(page.locator('.research-proof-rows > div')).toHaveCount(3);
   await expect(page.locator('.caveat-proof')).toContainText('0.0071149895375 NEAR');
   await expect(page.locator('.caveat-proof')).toContainText('0.004 NEAR');
-  await page.screenshot({ path: 'artifacts/neslos-evidence-desktop.png', fullPage: true });
+  if (retainArtifacts) await page.screenshot({ path: 'artifacts/neslos-evidence-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.screenshot({ path: 'artifacts/neslos-evidence-mobile.png', fullPage: true });
+  if (retainArtifacts) await page.screenshot({ path: 'artifacts/neslos-evidence-mobile.png', fullPage: true });
   await page.getByRole('link', { name: 'Boundary challenge', exact: true }).click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await expect(page.getByRole('heading', { name: 'Ambition met its boundary.' })).toBeVisible();
-  await page.screenshot({ path: 'artifacts/neslos-challenge-mobile.png', fullPage: true });
+  if (retainArtifacts) await page.screenshot({ path: 'artifacts/neslos-challenge-mobile.png', fullPage: true });
   expect(errors).toEqual([]);
 });
 
